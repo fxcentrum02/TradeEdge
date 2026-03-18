@@ -112,6 +112,43 @@ export async function distributeRoiCommissions(
 }
 
 /**
+ * Predict exact referral earnings for the next settlement cycle based on currently active plans.
+ */
+export async function getEstimatedTomorrowReferralEarnings(userId: string | ObjectId): Promise<number> {
+    const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
+    const tierTree = await getReferralTreeByTier(_userId, REFERRAL_COMMISSIONS.MAX_TIER);
+    const unlockInvestment = await getTierUnlockInvestment(_userId);
+    
+    let estimatedEarnings = 0;
+    const db = await getDB();
+    const now = new Date();
+
+    for (let i = 1; i <= REFERRAL_COMMISSIONS.MAX_TIER; i++) {
+        const treeData = tierTree.find(t => t.tier === i);
+        if (!treeData || treeData.userIds.length === 0) continue;
+
+        const isUnlocked = i === 1 || unlockInvestment >= ((i - 1) * REFERRAL_COMMISSIONS.INVESTMENT_TO_UNLOCK_PER_TIER);
+        if (!isUnlocked) continue;
+
+        const percentage = getTierCommissionPercentage(i);
+        if (percentage <= 0) continue;
+
+        // Fetch active plans and cross-reference planar daily ROI
+        const activePlans = await db.collection(Collections.USER_PLANS).aggregate([
+            { $match: { userId: { $in: treeData.userIds }, isActive: true, endDate: { $gt: now } } },
+            { $lookup: { from: Collections.PLANS, localField: 'planId', foreignField: '_id', as: 'planData' } },
+            { $unwind: '$planData' }
+        ]).toArray();
+
+        for (const up of activePlans) {
+            const dailyRoiAmount = (up.amount * up.planData.dailyRoi) / 100;
+            estimatedEarnings += (dailyRoiAmount * percentage) / 100;
+        }
+    }
+    return estimatedEarnings;
+}
+
+/**
  * Distribute referral commissions when a user's MP purchase is approved.
  * [DEPRECATED] Now handled via ROI settlement.
  */

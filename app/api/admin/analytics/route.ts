@@ -251,6 +251,22 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             ]).toArray(),
         ]);
 
+        // Calculate global predicted referral earnings
+        let totalPredictedReferral = 0;
+        try {
+            const { getEstimatedTomorrowReferralEarnings } = await import('@/lib/referral');
+            const activeReferrers = await db.collection(Collections.USERS)
+                .find({ totalDownlineCount: { $gt: 0 } })
+                .project({ _id: 1 })
+                .toArray();
+            
+            for (const u of activeReferrers) {
+                totalPredictedReferral += await getEstimatedTomorrowReferralEarnings(u._id);
+            }
+        } catch (e) {
+            console.error('[admin/analytics] Failed to estimate global referral earnings:', e);
+        }
+
         // Settlement Monitor: Check if latest 04:30 UTC settlement ran
         const settlementTarget = new Date();
         settlementTarget.setUTCHours(4, 30, 0, 0);
@@ -293,6 +309,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                 cards: {
                     tomorrowSettlement: tomorrowSettlementAgg[0]?.total || 0,
                     tomorrowSettlementCount: tomorrowSettlementAgg[0]?.count || 0,
+                    tomorrowPredictedReferral: totalPredictedReferral,
                     plansEndingToday,
                     totalActivePlans,
                     roiPaid: roiPaidAgg[0]?.total || 0,

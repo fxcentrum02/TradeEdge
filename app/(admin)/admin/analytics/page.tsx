@@ -37,6 +37,7 @@ interface AnalyticsData {
     cards: {
         tomorrowSettlement: number;
         tomorrowSettlementCount: number;
+        tomorrowPredictedReferral: number;
         plansEndingToday: number;
         totalActivePlans: number;
         roiPaid: number;
@@ -204,11 +205,25 @@ export default function AdminAnalyticsPage() {
     const cards = data?.cards;
     const statCards = [
         {
-            label: "Tomorrow's Settlement",
+            label: "Tomorrow's Total Settlement",
+            value: formatCurrency((cards?.tomorrowSettlement || 0) + (cards?.tomorrowPredictedReferral || 0)),
+            icon: <AccountBalanceIcon />,
+            color: '#10b981',
+            sub: `ROI: ${formatCurrency(cards?.tomorrowSettlement || 0)} | Ref: ${formatCurrency(cards?.tomorrowPredictedReferral || 0)}`,
+        },
+        {
+            label: "Tomorrow's ROI Settlement",
             value: formatCurrency(cards?.tomorrowSettlement || 0),
             icon: <ScheduleIcon />,
             color: '#f59e0b',
             sub: `${cards?.tomorrowSettlementCount || 0} plans to settle`,
+        },
+        {
+            label: "Tomorrow's Referral Settlement",
+            value: formatCurrency(cards?.tomorrowPredictedReferral || 0),
+            icon: <PeopleIcon />,
+            color: '#3b82f6',
+            sub: `Predicted commissions`,
         },
         {
             label: 'Plans Ending Today',
