@@ -7,6 +7,8 @@ import { Collections } from '@/lib/db/collections';
 import { pusherServer } from '@/lib/pusher';
 
 export async function GET(request: NextRequest) {
+    return NextResponse.json({ success: false, error: 'Forbidden in production' }, { status: 403 });
+    /*
     try {
         const authHeader = request.headers.get('authorization');
         const cronSecret = process.env.CRON_SECRET;
@@ -102,4 +104,5 @@ export async function GET(request: NextRequest) {
         console.error('[test-cron] Error:', error);
         return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
     }
+    */
 }

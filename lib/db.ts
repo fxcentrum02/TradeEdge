@@ -6,8 +6,8 @@ import { MongoClient, Db } from 'mongodb';
 
 const MONGODB_URI = process.env.DATABASE_URL!;
 const MONGODB_DB = process.env.MONGODB_DB_NAME || 'TradeEdge';
-// const BACKUP_MONGODB_URI = process.env.BACKUP_DATABASE_URL;
-// const BACKUP_MONGODB_DB = process.env.BACKUP_MONGODB_DB_NAME || MONGODB_DB;
+const BACKUP_MONGODB_URI = process.env.BACKUP_DATABASE_URL;
+const BACKUP_MONGODB_DB = process.env.BACKUP_MONGODB_DB_NAME || MONGODB_DB;
 
 if (!MONGODB_URI) {
     throw new Error('[DB] DATABASE_URL environment variable is not defined!');
@@ -57,8 +57,6 @@ let cachedBackupClient: MongoClient | null = null;
 let cachedBackupDb: Db | null = null;
 
 export async function getBackupDB(): Promise<Db | null> {
-    return null;
-    /*
     if (!BACKUP_MONGODB_URI) return null;
     
     if (cachedBackupDb && cachedBackupClient) {
@@ -66,20 +64,23 @@ export async function getBackupDB(): Promise<Db | null> {
     }
 
     try {
+        console.log('[DB] Connecting to BACKUP MongoDB...');
         const client = await MongoClient.connect(BACKUP_MONGODB_URI, {
             maxPoolSize: 5,
             serverSelectionTimeoutMS: 10000,
+            connectTimeoutMS: 10000,
         });
 
         const db = client.db(BACKUP_MONGODB_DB);
         cachedBackupClient = client;
         cachedBackupDb = db;
+        
+        console.log('[DB] Backup MongoDB connected successfully. DB:', BACKUP_MONGODB_DB);
         return db;
     } catch (error) {
         console.error('[DB] Backup MongoDB connection FAILED:', error);
         return null;
     }
-    */
 }
 
 export default { connectDB, getDB, getBackupDB };

@@ -22,8 +22,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         }
 
         const { searchParams } = new URL(request.url);
-        const page = parseInt(searchParams.get('page') || '1');
-        const limit = parseInt(searchParams.get('limit') || '20');
+        const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+        const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '20')));
         const type = searchParams.get('type');
         const search = searchParams.get('search');
 
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             db.collection(Collections.TRANSACTIONS).countDocuments(query),
         ]);
 
-        const formattedTransactions: Transaction[] = transactions.map(t => ({
+        const formattedTransactions: Transaction[] = (transactions || []).map(t => ({
             id: t._id.toString(),
             userId: t.userId.toString(),
             type: t.type,
@@ -61,11 +61,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             success: true,
             data: {
                 items: formattedTransactions,
-                total,
+                total: total || 0,
                 page,
                 limit,
-                totalPages: Math.ceil(total / limit),
-                hasMore: skip + limit < total,
+                totalPages: Math.ceil((total || 0) / limit),
+                hasMore: skip + limit < (total || 0),
             },
         });
 

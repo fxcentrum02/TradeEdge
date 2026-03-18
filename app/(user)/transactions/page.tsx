@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Box, Typography, Paper, List, ListItem, ListItemText,
-    Divider, CircularProgress, Chip, Avatar, Stack, TextField
+    Divider, CircularProgress, Chip, Avatar, Stack, TextField, Button
 } from '@mui/material';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/utils';
@@ -39,6 +39,7 @@ export default function TransactionsPage() {
     const [activeType, setActiveType] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
     // Observer for Infinite Scroll
     const observer = useRef<IntersectionObserver | null>(null);
@@ -75,19 +76,31 @@ export default function TransactionsPage() {
         else setLoadingMore(true);
 
         try {
+            setError(null);
             const res = await authFetch(`/api/transactions?page=${pageNum}&limit=20&type=${activeType}&search=${debouncedSearch}`);
+            
+            if (!res.ok) {
+                throw new Error(`Failed to fetch: ${res.statusText}`);
+            }
+
             const data = await res.json();
 
-            if (data.success) {
+            if (data.success && data.data) {
+                const newItems = data.data.items || [];
                 if (pageNum === 1) {
-                    setTransactions(data.data.items);
+                    setTransactions(newItems);
                 } else {
-                    setTransactions(prev => [...prev, ...data.data.items]);
+                    setTransactions(prev => [...prev, ...newItems]);
                 }
-                setHasMore(data.data.hasMore);
+                setHasMore(data.data.hasMore && newItems.length > 0);
+            } else {
+                setHasMore(false);
+                if (pageNum === 1) setError(data.error || 'Failed to load transactions');
             }
-        } catch (error) {
-            console.error('Failed to fetch transactions:', error);
+        } catch (err: any) {
+            console.error('Failed to fetch transactions:', err);
+            setHasMore(false);
+            if (pageNum === 1) setError(err.message || 'Network error occurred');
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -178,6 +191,18 @@ export default function TransactionsPage() {
                 {loading && page === 1 ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                         <CircularProgress sx={{ color: 'var(--brand-main)' }} />
+                    </Box>
+                ) : error ? (
+                    <Box sx={{ py: 8, textAlign: 'center', px: 2 }}>
+                        <Typography color="error" gutterBottom sx={{ fontWeight: 600 }}>{error}</Typography>
+                        <Button 
+                            variant="outlined" 
+                            size="small" 
+                            onClick={() => fetchTransactions(1)}
+                            sx={{ borderRadius: 2, mt: 1, textTransform: 'none' }}
+                        >
+                            Try Again
+                        </Button>
                     </Box>
                 ) : transactions.length === 0 ? (
                     <Box sx={{ py: 8, textAlign: 'center' }}>
