@@ -15,7 +15,7 @@ export const REFERRAL_COMMISSIONS = {
     ],
     // Investment required per tier to unlock (Total of Personal + Direct Downlines)
     INVESTMENT_TO_UNLOCK_PER_TIER: 100, 
-    MIN_CLAIM_AMOUNT: 50,
+    MIN_CLAIM_AMOUNT: 10,
 } as const;
 
 /**
