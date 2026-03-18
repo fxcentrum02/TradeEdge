@@ -82,7 +82,18 @@ export async function creditPlanRoi(userPlanId: string | ObjectId): Promise<void
         throw new Error('Plan has expired');
     }
 
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    // The system settles at 04:30 UTC (10:00 AM IST).
+    // We want to calculate how many "settlement days" have passed.
+    // To do this simply, we can shift time back by 4 hours and 30 minutes,
+    // so that 04:30 UTC becomes 00:00 UTC of the nominal "settlement day".
+    
+    // Create a helper to get the "settlement day" start for any date
+    const getSettlementDayStart = (date: Date) => {
+        const shifted = new Date(date.getTime() - (4 * 60 + 30) * 60 * 1000);
+        return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+    };
+
+    const todaySettlementStart = getSettlementDayStart(now);
     
     // Calculate how many days we need to pay for
     // If lastRoiDate is missing, we start from the day after startDate
@@ -90,12 +101,11 @@ export async function creditPlanRoi(userPlanId: string | ObjectId): Promise<void
         ? new Date(userPlan.lastRoiDate) 
         : new Date(userPlan.startDate);
     
-    // Normalize lastRoi to start of day UTC
-    const lastRoiDay = new Date(Date.UTC(lastRoi.getUTCFullYear(), lastRoi.getUTCMonth(), lastRoi.getUTCDate()));
+    const lastRoiSettlementStart = getSettlementDayStart(lastRoi);
     
     // Calculate days difference
     const msPerDay = 1000 * 60 * 60 * 24;
-    const daysToPay = Math.floor((today.getTime() - lastRoiDay.getTime()) / msPerDay);
+    const daysToPay = Math.floor((todaySettlementStart.getTime() - lastRoiSettlementStart.getTime()) / msPerDay);
 
     if (daysToPay <= 0) {
         console.log(`[ROI] Plan ${_userPlanId} already processed for today. Skipping.`);
@@ -103,10 +113,13 @@ export async function creditPlanRoi(userPlanId: string | ObjectId): Promise<void
     }
 
     // ATOMIC CLAIM: Still use atomicClaimRoi to lock the plan for "today"
-    const claimedPlan = await atomicClaimRoi(_userPlanId, today);
+    // Since atomicClaimRoi expects the limit to compare against, we pass the real-world threshold 
+    // which is the current real-world start of the settlement cycle (today at 04:30 UTC)
+    const currentSettlementThreshold = new Date(todaySettlementStart.getTime() + (4 * 60 + 30) * 60 * 1000);
+    const claimedPlan = await atomicClaimRoi(_userPlanId, currentSettlementThreshold);
 
     if (!claimedPlan) {
-        console.log(`[ROI] Plan ${_userPlanId} already processed for today. Skipping to prevent double-payout.`);
+        console.log(`[ROI] Plan ${_userPlanId} już processed for today. Skipping to prevent double-payout.`);
         return;
     }
 
@@ -165,22 +178,25 @@ export function isEligibleForRoi(userPlan: any): boolean {
     // UTC "today" at 00:00:00
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
+    const getSettlementDayStart = (date: Date) => {
+        const shifted = new Date(date.getTime() - (4 * 60 + 30) * 60 * 1000);
+        return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+    };
+
+    const todaySettlementStart = getSettlementDayStart(now);
+
     // Check if plan is active
     if (!userPlan.isActive) return false;
 
     // Check if plan has expired
     if (now > userPlan.endDate) return false;
 
-    // Check if ROI was already credited today (UTC)
+    // Check if ROI was already credited today (Relative to 04:30 UTC boundary)
     if (userPlan.lastRoiDate) {
-        const lastRoiDay = new Date(Date.UTC(
-            userPlan.lastRoiDate.getUTCFullYear(),
-            userPlan.lastRoiDate.getUTCMonth(),
-            userPlan.lastRoiDate.getUTCDate()
-        ));
+        const lastRoiSettlementStart = getSettlementDayStart(new Date(userPlan.lastRoiDate));
 
-        if (lastRoiDay >= today) {
-            return false; // Already credited today
+        if (lastRoiSettlementStart >= todaySettlementStart) {
+            return false; // Already credited for this settlement cycle
         }
     }
 

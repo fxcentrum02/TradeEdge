@@ -53,8 +53,17 @@ export async function findAllActivePlans() {
 export async function findPlansEligibleForRoi() {
     const db = await getDB();
     const now = new Date();
-    // UTC "today" at 00:00:00
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    
+    // Shift the current time by 4 hours 30 minutes backwards
+    // so that 04:30 UTC essentially becomes 00:00 UTC of the "settlement day"
+    const shifted = new Date(now.getTime() - (4 * 60 + 30) * 60 * 1000);
+    // Get the start of this nominal "settlement day" at 00:00 UTC
+    const todaySettlementStart = new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+    
+    // The actual real-world time that this settlement cycle started (04:30 UTC today)
+    // We use this to compare against lastRoiDate in the database because 
+    // lastRoiDate maps to the real-world time the claim was made
+    const currentSettlementThreshold = new Date(todaySettlementStart.getTime() + (4 * 60 + 30) * 60 * 1000);
 
     return db.collection<UserPlanDocument>(Collections.USER_PLANS)
         .find({
@@ -62,7 +71,7 @@ export async function findPlansEligibleForRoi() {
             endDate: { $gt: now },
             $or: [
                 { lastRoiDate: { $exists: false } },
-                { lastRoiDate: { $lt: today } },
+                { lastRoiDate: { $lt: currentSettlementThreshold } },
             ],
         })
         .toArray();
