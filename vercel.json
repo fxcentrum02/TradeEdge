@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/roi-settlement",
       "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/cron/backup",
+      "schedule": "0 0 * * *"
     }
   ]
 }

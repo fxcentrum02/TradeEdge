@@ -16,15 +16,15 @@ const webhookUrl = urlArg.endsWith('/api/bot') ? urlArg : `${urlArg.replace(/\/$
 
 async function setWebhook() {
     console.log(`🚀 Setting webhook to: ${webhookUrl}...`);
-    
+
     try {
         const response = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook?url=${webhookUrl}`);
         const data = await response.json();
-        
+
         if (data.ok) {
             console.log('✅ Webhook set successfully!');
             console.log('Payload:', JSON.stringify(data, null, 2));
-            
+
             console.log('\n--- Status Check ---');
             const statusRes = await fetch(`https://api.telegram.org/bot${botToken}/getWebhookInfo`);
             const statusData = await statusRes.json();
