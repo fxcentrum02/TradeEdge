@@ -251,8 +251,8 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
     );
 
     // 5. Build referral link
-    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'AiEarnGenBot';
-    const miniAppName = process.env.NEXT_PUBLIC_TELEGRAM_MINI_APP_NAME || 'AiEarnGen';
+    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'infinityy_global_bot';
+    const miniAppName = process.env.NEXT_PUBLIC_TELEGRAM_MINI_APP_NAME || 'infinity_global';
 
     const [totalEarnings, wallet, tradePower, settings, totalClaimed] = await Promise.all([
         getTotalReferralEarnings(_userId),

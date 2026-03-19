@@ -114,7 +114,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                         },
                     }}
                 >
-                    <BottomNavigationAction label="AiEarn" icon={<HomeIcon />} />
+                    <BottomNavigationAction label="Home" icon={<HomeIcon />} />
                     <BottomNavigationAction label="Friends" icon={<PeopleIcon />} />
                     <BottomNavigationAction label="History" icon={<ReceiptLongIcon />} />
                 </BottomNavigation>
