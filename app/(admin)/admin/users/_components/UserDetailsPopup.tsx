@@ -217,6 +217,11 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                     <Typography color="text.secondary" variant="body2" gutterBottom>
                                         @{data.profile.telegramUsername || data.profile.telegramId} • ID: {data.profile.id}
                                     </Typography>
+                                    {data.profile.referredBy && (
+                                        <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: 0.5, fontWeight: 500 }}>
+                                            Referred by: <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>{data.profile.referredBy.name}</Box> (@{data.profile.referredBy.telegramHandle})
+                                        </Typography>
+                                    )}
                                     <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
                                         <Chip label={`Joined ${formatDateTime(data.profile.createdAt)}`} size="small" variant="outlined" sx={{ borderRadius: 1.5 }} />
                                         <Chip

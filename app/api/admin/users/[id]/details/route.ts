@@ -38,6 +38,21 @@ export async function GET(
             return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
         }
 
+        // 1.1 Get Referrer Profile
+        let referredBy = null;
+        if (user.referredById) {
+            const referrer = await db.collection(Collections.USERS).findOne(
+                { _id: user.referredById },
+                { projection: { firstName: 1, lastName: 1, telegramUsername: 1, telegramId: 1 } }
+            );
+            if (referrer) {
+                referredBy = {
+                    name: `${referrer.firstName || 'User'} ${referrer.lastName || ''}`.trim(),
+                    telegramHandle: referrer.telegramUsername || referrer.telegramId
+                };
+            }
+        }
+
         // 2. Get Wallets
         const wallet = await findWalletByUserId(_userId);
         const referralWallet = await findReferralWalletByUserId(_userId);
@@ -171,6 +186,7 @@ export async function GET(
                     id: user._id.toString(),
                     walletBalance: wallet?.balance || 0,
                     referralWalletBalance: referralWallet?.balance || 0,
+                    referredBy,
                 },
                 plans: formattedUserPlans,
                 referralEarnings: formattedReferralEarnings,
