@@ -61,20 +61,25 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         console.log(`[cron] Expired ${expireResult.modifiedCount} completed plans across ${userIdsToUpdate.length} users`);
 
         // 1c. Update stats for all users who had plans expire (re-calculates tradePower and updates uplines)
-        const { updateUserStatsRecursively } = await import('@/lib/referral');
-        for (const userId of userIdsToUpdate) {
-            try {
-                await updateUserStatsRecursively(userId);
-                console.log(`[cron] Refreshed stats for user ${userId} after plan expiry`);
-            } catch (statsError) {
-                console.error(`[cron] Failed to update stats for user ${userId}:`, statsError);
-            }
-        }
+        const usersToRefresh = new Set<string>(userIdsToUpdate);
 
         // Step 2: Process daily ROI for all remaining active plans
         const result = await processDailyRoiSettlement();
 
-        console.log('[cron] ROI settlement completed:', result);
+        // Accumulate affected users for batch stats update
+        result.affectedUserIds.forEach(id => usersToRefresh.add(id));
+
+        console.log(`[cron] ROI settlement logic complete. Refreshing stats for ${usersToRefresh.size} users.`);
+
+        // Step 3: Refresh all affected user stats in one batch (Deduplicated)
+        const { refreshUserStatsBatch } = await import('@/lib/referral');
+        await refreshUserStatsBatch(usersToRefresh);
+
+        console.log('[cron] ROI settlement and stats refresh completed:', {
+            processed: result.processed,
+            totalAmount: result.totalAmount,
+            expiredPlans: expireResult.modifiedCount
+        });
 
         // Notify admins and users of the settlement
         await pusherServer.trigger('admin-notifications', 'cron-event', {

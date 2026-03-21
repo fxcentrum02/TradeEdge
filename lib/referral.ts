@@ -56,59 +56,85 @@ export async function distributeRoiCommissions(
     roiAmount: number,
     sourceId: ObjectId
 ): Promise<{ tier: number; userId: string; amount: number }[]> {
-    const distributions: { tier: number; userId: string; amount: number }[] = [];
-
-    const subscriber = await findUserById(fromUserId);
-    if (!subscriber?.referredById) {
-        return distributions;
-    }
-
-    let currentReferrerId: ObjectId | undefined = subscriber.referredById || undefined;
-    let tier = 1;
-
-    while (currentReferrerId && tier <= REFERRAL_COMMISSIONS.MAX_TIER) {
-        const referrer = await findUserById(currentReferrerId);
-        if (!referrer) break;
-
-        // Check if this tier is unlocked for the referrer
-        const unlocked = await isTierUnlocked(referrer._id, tier);
-
-        if (unlocked) {
-            const percentage = getTierCommissionPercentage(tier);
-            const commission = (roiAmount * percentage) / 100;
-
-            if (commission > 0) {
-                // Create referral earning record
-                await createReferralEarning({
-                    userId: referrer._id,
-                    fromUserId,
-                    tier,
-                    amount: commission,
-                    isFirstPurchaseBonus: false,
-                    sourceType: 'roi_settlement',
-                    sourceId,
-                });
-
-                // Credit REFERRAL wallet
-                await creditReferralWallet(
-                    referrer._id,
-                    commission,
-                    `Tier ${tier} referral commission from ROI settlement`
-                );
-
-                distributions.push({
-                    tier,
-                    userId: referrer._id.toString(),
-                    amount: commission,
-                });
-            }
-        }
-
-        currentReferrerId = referrer.referredById || undefined;
-        tier++;
+    const { distributions } = await distributeRoiCommissionsBatch([{ fromUserId, roiAmount, sourceId }]);
+    
+    // For backward compatibility, we still trigger recursive update here 
+    // BUT in the optimized cron job we should use the batch version.
+    if (distributions.length > 0) {
+        await updateUserStatsRecursively(new ObjectId(distributions[0].userId));
     }
 
     return distributions;
+}
+
+/**
+ * Optimized batch version of distributeRoiCommissions.
+ * Does NOT update user stats; returns the affected referrers so they can be updated in bulk later.
+ */
+export async function distributeRoiCommissionsBatch(
+    payouts: { fromUserId: ObjectId; roiAmount: number; sourceId: ObjectId }[]
+): Promise<{ 
+    distributions: { tier: number; userId: string; amount: number; sourceId: ObjectId; fromUserId: ObjectId }[], 
+    affectedReferrers: Set<string> 
+}> {
+    const allDistributions: { tier: number; userId: string; amount: number; sourceId: ObjectId; fromUserId: ObjectId }[] = [];
+    const affectedReferrers = new Set<string>();
+    
+    const userCache = new Map<string, UserDocument | null>();
+    const unlockCache = new Map<string, boolean>();
+
+    const getUser = async (id: ObjectId) => {
+        const sid = id.toString();
+        if (userCache.has(sid)) return userCache.get(sid)!;
+        const user = await findUserById(id);
+        userCache.set(sid, user);
+        return user;
+    };
+
+    const getCachedTierUnlock = async (userId: ObjectId, tier: number) => {
+        const key = `${userId.toString()}_${tier}`;
+        if (unlockCache.has(key)) return unlockCache.get(key)!;
+        const unlocked = await isTierUnlocked(userId, tier);
+        unlockCache.set(key, unlocked);
+        return unlocked;
+    };
+
+    for (const payout of payouts) {
+        const { fromUserId, roiAmount, sourceId } = payout;
+        const subscriber = await getUser(fromUserId);
+        if (!subscriber?.referredById) continue;
+
+        let currentReferrerId: ObjectId | undefined = subscriber.referredById;
+        let tier = 1;
+
+        while (currentReferrerId && tier <= REFERRAL_COMMISSIONS.MAX_TIER) {
+            const referrer = await getUser(currentReferrerId);
+            if (!referrer) break;
+
+            const unlocked = await getCachedTierUnlock(referrer._id, tier);
+
+            if (unlocked) {
+                const percentage = getTierCommissionPercentage(tier);
+                const commission = (roiAmount * percentage) / 100;
+
+                if (commission > 0) {
+                    allDistributions.push({
+                        tier,
+                        userId: referrer._id.toString(),
+                        fromUserId,
+                        amount: commission,
+                        sourceId,
+                    });
+                    affectedReferrers.add(referrer._id.toString());
+                }
+            }
+
+            currentReferrerId = referrer.referredById || undefined;
+            tier++;
+        }
+    }
+
+    return { distributions: allDistributions, affectedReferrers };
 }
 
 /**
@@ -304,8 +330,60 @@ export async function updateUserStatsRecursively(userId: string | ObjectId, dept
     if (depth > REFERRAL_COMMISSIONS.MAX_TIER) return;
 
     const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
-    const db = await getDB();
+    
+    await recalculateAndSaveUserStats(_userId);
 
+    // 3. Move up to the next parent
+    const db = await getDB();
+    const user = await db.collection(Collections.USERS).findOne({ _id: _userId }, { projection: { referredById: 1 } });
+    if (user?.referredById) {
+        await updateUserStatsRecursively(user.referredById, depth + 1);
+    }
+}
+
+/**
+ * Recalculate and update stats for a batch of users and their upline chains.
+ * Deduplicates users to avoid redundant calculations.
+ */
+export async function refreshUserStatsBatch(userIds: Set<string | ObjectId>): Promise<void> {
+    const db = await getDB();
+    const allAffected = new Set<string>();
+
+    for (const id of userIds) {
+        let currentId: ObjectId | undefined = typeof id === 'string' ? new ObjectId(id) : id;
+        let depth = 0;
+        while (currentId && depth <= REFERRAL_COMMISSIONS.MAX_TIER) {
+            const sid = currentId.toString();
+            if (allAffected.has(sid)) break;
+            allAffected.add(sid);
+            const user = await db.collection(Collections.USERS).findOne(
+                { _id: currentId }, 
+                { projection: { referredById: 1 } }
+            ) as { _id: ObjectId; referredById: ObjectId | null } | null;
+            currentId = user?.referredById || undefined;
+            depth++;
+        }
+    }
+
+    if (allAffected.size === 0) return;
+    console.log(`[Stats] Batch refreshing ${allAffected.size} unique users`);
+
+    // Process in sequential chunks to keep memory/connections stable
+    // We don't want too much parallelism here as EACH refresh is heavy
+    const userArray = Array.from(allAffected);
+    for (let i = 0; i < userArray.length; i += 5) {
+        const chunk = userArray.slice(i, i + 5);
+        await Promise.all(chunk.map(uid => recalculateAndSaveUserStats(new ObjectId(uid))));
+    }
+    console.log(`[Stats] Batch refresh complete`);
+}
+
+/**
+ * Internal helper to recalculate stats for ONE user and save to DB.
+ */
+async function recalculateAndSaveUserStats(userId: ObjectId): Promise<void> {
+    const db = await getDB();
+    
     // 1. Recalculate Stats for THIS user
     const [
         directCount,
@@ -314,11 +392,11 @@ export async function updateUserStatsRecursively(userId: string | ObjectId, dept
         totalEarnings,
         tradePower
     ] = await Promise.all([
-        db.collection(Collections.USERS).countDocuments({ referredById: _userId }),
-        getReferralTreeByTier(_userId, REFERRAL_COMMISSIONS.MAX_TIER),
-        countAllDescendants(_userId),
-        getTotalReferralEarnings(_userId),
-        getTotalActiveAmount(_userId)
+        db.collection(Collections.USERS).countDocuments({ referredById: userId }),
+        getReferralTreeByTier(userId, REFERRAL_COMMISSIONS.MAX_TIER),
+        countAllDescendants(userId),
+        getTotalReferralEarnings(userId),
+        getTotalActiveAmount(userId)
     ]);
 
     // totalReferralCount = sum of all user IDs in the 10-tier tree
@@ -326,7 +404,7 @@ export async function updateUserStatsRecursively(userId: string | ObjectId, dept
 
     // 2. Update the user document
     await db.collection(Collections.USERS).updateOne(
-        { _id: _userId },
+        { _id: userId },
         {
             $set: {
                 directReferralCount: directCount,
@@ -338,10 +416,4 @@ export async function updateUserStatsRecursively(userId: string | ObjectId, dept
             },
         }
     );
-
-    // 3. Move up to the next parent
-    const user = await db.collection(Collections.USERS).findOne({ _id: _userId }, { projection: { referredById: 1 } });
-    if (user?.referredById) {
-        await updateUserStatsRecursively(user.referredById, depth + 1);
-    }
 }
