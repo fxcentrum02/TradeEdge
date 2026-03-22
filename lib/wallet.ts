@@ -22,8 +22,34 @@ export async function getWalletSummary(userId: string | ObjectId) {
     const db = await getDB();
     const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
 
-    const wallet = await walletRepo.findWalletByUserId(_userId);
-    const refWallet = await findReferralWalletByUserId(_userId);
+    // Parallelize all lookups to reduce sequential RTTs
+    const [wallet, refWallet, transactionResults, pendingResult] = await Promise.all([
+        walletRepo.findWalletByUserId(_userId),
+        findReferralWalletByUserId(_userId),
+        db.collection(Collections.TRANSACTIONS).aggregate([
+            { $match: { userId: _userId } },
+            { 
+                $facet: {
+                    referralEarnings: [
+                        { $match: { type: 'REFERRAL_EARNING' } },
+                        { $group: { _id: null, total: { $sum: '$amount' } } }
+                    ],
+                    roiEarnings: [
+                        { $match: { type: 'ROI_EARNING' } },
+                        { $group: { _id: null, total: { $sum: '$amount' } } }
+                    ],
+                    withdrawals: [
+                        { $match: { type: 'WITHDRAWAL' } },
+                        { $group: { _id: null, total: { $sum: '$amount' } } }
+                    ]
+                }
+            }
+        ]).toArray(),
+        db.collection(Collections.WITHDRAWALS).aggregate([
+            { $match: { userId: _userId, status: { $in: ['PENDING', 'PROCESSING'] } } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]).toArray()
+    ]);
 
     if (!wallet) {
         return {
@@ -37,34 +63,7 @@ export async function getWalletSummary(userId: string | ObjectId) {
         };
     }
 
-    // Get aggregates from transactions using a single $facet aggregation for efficiency
-    const results = await db.collection(Collections.TRANSACTIONS).aggregate([
-        { $match: { userId: _userId } },
-        { 
-            $facet: {
-                referralEarnings: [
-                    { $match: { type: 'REFERRAL_EARNING' } },
-                    { $group: { _id: null, total: { $sum: '$amount' } } }
-                ],
-                roiEarnings: [
-                    { $match: { type: 'ROI_EARNING' } },
-                    { $group: { _id: null, total: { $sum: '$amount' } } }
-                ],
-                withdrawals: [
-                    { $match: { type: 'WITHDRAWAL' } },
-                    { $group: { _id: null, total: { $sum: '$amount' } } }
-                ]
-            }
-        }
-    ]).toArray();
-
-    // Pending withdrawals are from a different collection
-    const pendingResult = await db.collection(Collections.WITHDRAWALS).aggregate([
-        { $match: { userId: _userId, status: { $in: ['PENDING', 'PROCESSING'] } } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]).toArray();
-
-    const facet = results[0];
+    const facet = transactionResults[0];
     const totalReferralEarnings = facet?.referralEarnings[0]?.total || 0;
     const totalRoiEarnings = facet?.roiEarnings[0]?.total || 0;
     const totalWithdrawals = Math.abs(facet?.withdrawals[0]?.total || 0);
