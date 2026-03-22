@@ -78,8 +78,9 @@ export function verifyTelegramWebAppData(telegramInitData: string): TelegramInit
 
 import { getDB } from './db';
 import { Collections } from './db/collections';
+import type { UserDocument } from './db/types';
 
-export async function getTelegramUserFromRequest(request: NextRequest): Promise<{ userId: string; telegramId: string; isAdmin: boolean; } | null> {
+export async function getTelegramUserFromRequest(request: NextRequest): Promise<UserDocument | null> {
     const initData = request.headers.get('x-telegram-init-data');
     if (!initData) return null;
 
@@ -106,7 +107,7 @@ export async function getTelegramUserFromRequest(request: NextRequest): Promise<
     if (!telegramId) return null;
 
     const db = await getDB();
-    const user = await db.collection(Collections.USERS).findOne({ telegramId });
+    const user = await db.collection(Collections.USERS).findOne({ telegramId }) as UserDocument | null;
     if (!user) return null;
 
     // ========================================================
@@ -121,10 +122,5 @@ export async function getTelegramUserFromRequest(request: NextRequest): Promise<
         return null;
     }
 
-    return {
-        userId: user._id.toString(),
-        telegramId: user.telegramId,
-        isAdmin: user.isAdmin
-    };
+    return user;
 }
-

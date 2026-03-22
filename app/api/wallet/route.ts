@@ -14,15 +14,14 @@ import type { ApiResponse, WalletSummary } from '@/types';
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<WalletSummary>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
 
-        if (!session) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
-        const summary = await getWalletSummary(session.userId);
+        const summary = await getWalletSummary(user._id.toString());
         const settings = await getSettings();
-        const user = await findUserById(session.userId);
 
         return NextResponse.json({
             success: true,

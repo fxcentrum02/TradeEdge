@@ -15,9 +15,9 @@ import type { ApiResponse, PaginatedResponse, Transaction } from '@/types';
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<PaginatedResponse<Transaction>>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
 
-        if (!session || !session.userId) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
         }
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         const skip = (page - 1) * limit;
 
         const db = await getDB();
-        const userId = new ObjectId(session.userId);
+        const userId = user._id;
 
         const query: any = { userId };
         if (type && type !== 'ALL') query.type = type;

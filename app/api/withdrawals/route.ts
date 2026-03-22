@@ -18,9 +18,9 @@ import type { ApiResponse, PaginatedResponse, Withdrawal } from '@/types';
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<PaginatedResponse<Withdrawal>>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
 
-        if (!session) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
 
-        const withdrawals = await findWithdrawalsByUserId(session.userId);
+        const withdrawals = await findWithdrawalsByUserId(user._id.toString());
 
         // Paginate in memory (for simplicity, can be moved to repository)
         const skip = (page - 1) * limit;
@@ -68,9 +68,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
  */
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<Withdrawal>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
 
-        if (!session) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -107,13 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         }
 
         // Get user for validation and notifications
-        const db = await import('@/lib/db').then(m => m.getDB());
-        const dbCollections = await import('@/lib/db/collections').then(m => m.Collections);
-        const user = await db.collection(dbCollections.USERS).findOne({ _id: new ObjectId(session.userId) });
-
-        if (!user) {
-            return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
-        }
+        // User is already in session (from getTelegramUserFromRequest)
 
         // Check 24-hour cooldown
         if (user.lastWithdrawalAt) {
@@ -131,7 +125,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         }
 
         // Check balance
-        const wallet = await findWalletByUserId(new ObjectId(session.userId));
+        const wallet = await findWalletByUserId(new ObjectId(user._id));
         if (!wallet || wallet.balance < amount) {
             return NextResponse.json({ success: false, error: 'Insufficient balance' }, { status: 400 });
         }
@@ -148,7 +142,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         // Debit wallet
         const debitResult = await debitWallet(
-            session.userId,
+            user._id.toString(),
             amount,
             'WITHDRAWAL',
             `Withdrawal request: ${netAmount} USDT`
@@ -160,7 +154,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         // Create withdrawal record
         const withdrawal = await createWithdrawal({
-            userId: new ObjectId(session.userId),
+            userId: new ObjectId(user._id),
             amount,
             fee,
             netAmount,
@@ -180,9 +174,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             userId: withdrawal.userId.toString(),
         };
 
-        // Update user's lastWithdrawalAt and lastWithdrawalAddress
+        // Update stats for the user and their entire upline chain (to sync tradePower)
         try {
-            await updateUser(session.userId, { 
+            await updateUser(user._id.toString(), { 
                 lastWithdrawalAt: new Date(),
                 lastWithdrawalAddress: walletAddress 
             });

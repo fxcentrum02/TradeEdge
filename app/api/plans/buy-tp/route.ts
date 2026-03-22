@@ -22,8 +22,8 @@ const MIN_DEPOSIT = 10; // Minimum 10 USDT
  */
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<PaymentTicket>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
-        if (!session) {
+        const user = await getTelegramUserFromRequest(request);
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             return NextResponse.json({ success: false, error: 'Platform is in maintenance mode. New investments are temporarily disabled.' }, { status: 503 });
         }
 
-        remoteLog('buy-tp: request received', { userId: session.userId, amount, hasTransactionId: !!transactionId });
+        remoteLog('buy-tp: request received', { userId: user._id.toString(), amount, hasTransactionId: !!transactionId });
 
         const db = await import('@/lib/db').then(m => m.getDB());
         const dbCollections = await import('@/lib/db/collections').then(m => m.Collections);
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         // Create payment ticket (PENDING — awaits admin approval)
         const ticket = await createPaymentTicket({
-            userId: new ObjectId(session.userId),
+            userId: user._id,
             planId: plan._id,
             amount,
             paymentAddress: BEP20_ADDRESS,
@@ -107,8 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         remoteLog('buy-tp: ticket created', { ticketId: ticket._id.toString(), status: 'PENDING' });
 
-        // Get user for notification
-        const user = await db.collection(dbCollections.USERS).findOne({ _id: new ObjectId(session.userId) });
+        // User is already in session
 
         // Notify admins of new ticket
         await pusherServer.trigger('admin-notifications', 'new-ticket', {

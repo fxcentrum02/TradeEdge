@@ -15,8 +15,8 @@ import type { ApiResponse } from '@/types';
  */
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
-        if (!session) {
+        const user = await getTelegramUserFromRequest(request);
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             // No body or invalid JSON is fine, just use undefined for full claim
         }
 
-        const result = await transferToMainWallet(session.userId, amount);
+        const result = await transferToMainWallet(user._id.toString(), amount);
 
         if (!result.success) {
             return NextResponse.json({ success: false, error: result.error }, { status: 400 });

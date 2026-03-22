@@ -11,9 +11,9 @@ import type { ApiResponse, PaginatedResponse } from '@/types';
 
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<PaginatedResponse<any>>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
 
-        if (!session) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         }
 
         const matchStage = {
-            userId: new ObjectId(session.userId),
+            userId: user._id,
             ...dateFilter
         };
 

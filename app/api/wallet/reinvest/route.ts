@@ -27,8 +27,8 @@ import type { ApiResponse } from '@/types';
  */
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
-        if (!session) {
+        const user = await getTelegramUserFromRequest(request);
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -56,9 +56,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             );
         }
 
-        // Debit main wallet
+        // Debit wallet
         const debitResult = await debitWallet(
-            session.userId,
+            user._id.toString(),
             amount,
             'REINVEST',
             `Reinvest ${amount} USDT to Compounding Power`
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         // Create UserPlan with isReinvest: true
         const userPlan = await createUserPlan({
-            userId: new ObjectId(session.userId),
+            userId: new ObjectId(user._id),
             planId: plan._id,
             amount,
             startDate,
@@ -91,13 +91,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         // Update stats for the user and their entire upline chain (to sync tradePower)
         try {
-            await updateUserStatsRecursively(session.userId);
+            await updateUserStatsRecursively(user._id);
         } catch (error) {
             remoteLog('Recursive stats update failed (reinvest)', { error: String(error) }, 'WARN');
         }
 
         remoteLog('Reinvest success', {
-            userId: session.userId,
+            userId: user._id.toString(),
             amount,
             planTier: plan.name,
             userPlanId: userPlan._id.toString(),

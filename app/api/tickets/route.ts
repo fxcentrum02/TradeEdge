@@ -10,12 +10,12 @@ import type { ApiResponse } from '@/types';
 
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
-        if (!session) {
+        const user = await getTelegramUserFromRequest(request);
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
-        const tickets = await findPaymentTicketsByUserId(session.userId);
+        const tickets = await findPaymentTicketsByUserId(user._id.toString());
 
         // Enrich with plan details
         const planCache = new Map<string, { name: string; dailyRoi: number; duration: number }>();

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         // Ensure endDate is at the end of the day
         endDate.setHours(23, 59, 59, 999);
 
-        const insights = await getReferralEarningsByTierAndDateRange(user.userId, startDate, endDate);
+        const insights = await getReferralEarningsByTierAndDateRange(user._id.toString(), startDate, endDate);
 
         return NextResponse.json(insights);
     } catch (error) {

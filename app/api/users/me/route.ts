@@ -15,19 +15,16 @@ import { ObjectId } from 'mongodb';
  * GET /api/users/me - Get current user profile with real dashboard data
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<UserDashboard & { activePlanDetails: any[] }>>> {
+    const startTime = performance.now();
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
+        const userFetchTime = performance.now();
 
-        if (!session) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
         const db = await getDB();
-        const user = await findUserById(session.userId);
-
-        if (!user) {
-            return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
-        }
 
         const now = new Date();
         const { findActivePlans } = await import('@/lib/repositories/plan.repository');
@@ -37,9 +34,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                 .toArray(),
             findActivePlans()
         ]);
+        const plansFetchTime = performance.now();
 
         // Get wallet summary
         const wallet = await getWalletSummary(user._id.toString());
+        const walletTime = performance.now();
 
         // Map plans for quick lookup to avoid N+1
         const plansMap = new Map(allPlans.map(p => [p._id.toString(), p]));
@@ -76,6 +75,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                 { $set: { tradePower, updatedAt: new Date() } }
             );
         }
+        const tradePowerUpdateTime = performance.now();
 
         const totalDailyEarnings = activePlanDetails.reduce((sum, p) => sum + p.dailyRoiAmount, 0);
 
@@ -90,14 +90,15 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                 };
             }
         }
+        const uplineTime = performance.now();
 
-        // Optimized: Instead of fetching all again, we can just use totalInvestment if it's already on the user object
-        // or just fetch it once.
-        const totalInvestment = (await db.collection(Collections.USER_PLANS)
+        const totalInvestmentResult = await db.collection(Collections.USER_PLANS)
             .aggregate([
                 { $match: { userId: user._id } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
-            ]).toArray())[0]?.total || 0;
+            ]).toArray();
+        const totalInvestment = totalInvestmentResult[0]?.total || 0;
+        const totalInvestmentTime = performance.now();
 
         // ROI Sparkline: last 7 days of ROI credits
         const sevenDaysAgo = new Date();
@@ -112,6 +113,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             })
             .sort({ createdAt: 1 })
             .toArray();
+        
+        const sparklineFetchTime = performance.now();
 
         // Group by day
         const sparklineMap: Record<string, number> = {};
@@ -156,6 +159,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                 }))
             };
         }
+        const extraDataTime = performance.now();
 
         const dashboard = {
             ...user,
@@ -177,6 +181,18 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             sparklineData,
             ...additionalData
         };
+
+        const endTime = performance.now();
+        console.log(`[PERF] /api/users/me total: ${(endTime - startTime).toFixed(2)}ms`);
+        console.log(`[PERF] - userAuth+Fetch: ${(userFetchTime - startTime).toFixed(2)}ms`);
+        console.log(`[PERF] - plansFetch: ${(plansFetchTime - userFetchTime).toFixed(2)}ms`);
+        console.log(`[PERF] - walletCalc: ${(walletTime - plansFetchTime).toFixed(2)}ms`);
+        console.log(`[PERF] - tradePowerUpdate: ${(tradePowerUpdateTime - walletTime).toFixed(2)}ms`);
+        console.log(`[PERF] - uplineFetch: ${(uplineTime - tradePowerUpdateTime).toFixed(2)}ms`);
+        console.log(`[PERF] - totalInvestmentCalc: ${(totalInvestmentTime - uplineTime).toFixed(2)}ms`);
+        console.log(`[PERF] - sparklineFetch: ${(sparklineFetchTime - totalInvestmentTime).toFixed(2)}ms`);
+        console.log(`[PERF] - extraDataFetch: ${(extraDataTime - sparklineFetchTime).toFixed(2)}ms`);
+        console.log(`[PERF] - totalReturn: ${(endTime - extraDataTime).toFixed(2)}ms`);
 
         return NextResponse.json({ success: true, data: dashboard as any });
 

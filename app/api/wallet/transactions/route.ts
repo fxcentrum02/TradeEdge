@@ -12,9 +12,9 @@ import type { ApiResponse, PaginatedResponse, Transaction } from '@/types';
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<PaginatedResponse<Transaction>>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
 
-        if (!session) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
 
-        const data = await getTransactionHistory(session.userId, page, limit);
+        const data = await getTransactionHistory(user._id.toString(), page, limit);
 
         return NextResponse.json({ success: true, data: data as any });
 

@@ -12,13 +12,13 @@ import type { ApiResponse, ReferralStats } from '@/types';
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<ReferralStats>>> {
     try {
-        const session = await getTelegramUserFromRequest(request);
+        const user = await getTelegramUserFromRequest(request);
 
-        if (!session) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         }
 
-        const stats = await getReferralStats(session.userId);
+        const stats = await getReferralStats(user._id);
 
         return NextResponse.json({ success: true, data: stats });
 
