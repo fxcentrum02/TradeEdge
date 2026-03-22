@@ -43,12 +43,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             return NextResponse.json({ success: false, error: 'Init data required' }, { status: 400 });
         }
 
-        // Parse init data once and reuse
         const parsedData = parseInitData(initData);
         const telegramUser = parsedData.user as TelegramUserData | undefined;
 
-        // 1. Check PENDING_REFERRALS collection FIRST for absolute "First-Referrer Loyalty"
-        if (telegramUser?.id) {
+        if (!telegramUser?.id) {
+            remoteLog('User ID missing in telegram data', null, 'ERROR');
+            return NextResponse.json({ success: false, error: 'User data not found in initData' }, { status: 400 });
+        }
+
+        // 1. Initial user lookup (Fast path)
+        let user: any = await findUserByTelegramId(String(telegramUser.id));
+
+        // 2. Resolve Referral logic ONLY if user is new or doesn't have a referrer yet
+        if (!user || !user.referredById) {
+            // Check PENDING_REFERRALS collection FIRST for absolute "First-Referrer Loyalty"
             try {
                 const db = await getDB();
                 const pending = await db.collection(Collections.PENDING_REFERRALS).findOne({ 
@@ -56,29 +64,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
                 });
                 if (pending?.referralCode) {
                     referralCode = pending.referralCode;
-                    remoteLog('Resolved referralCode from PENDING_REFERRALS (Sticky Priority)', { referralCode });
                 }
             } catch (dbError) {
                 remoteLog('DB ERROR during pending referral lookup', { error: String(dbError) }, 'WARN');
             }
-        }
 
-        // 2. If no sticky referral found in DB, check the request body and initData
-        if (!referralCode) {
-            // Check body first (already extracted at the top)
-            if (!referralCode && initData) {
-                remoteLog('No sticky referral, checking initData fallback', { 
-                    allKeys: Object.keys(parsedData),
-                    start_param: parsedData.start_param 
-                });
-                if (parsedData.start_param) {
-                    referralCode = parsedData.start_param as string;
-                    remoteLog('Resolved referralCode from initData.start_param', { referralCode });
-                }
+            // Fallback to initData.start_param
+            if (!referralCode && parsedData.start_param) {
+                referralCode = parsedData.start_param as string;
             }
 
-            // Save this as the "Sticky" referral if we found one now
-            if (referralCode && telegramUser?.id) {
+            // Save sticky referral for new users
+            if (referralCode && !user) {
                 try {
                     const db = await getDB();
                     await db.collection(Collections.PENDING_REFERRALS).updateOne(
@@ -89,54 +86,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
                         },
                         { upsert: true }
                     );
-                    remoteLog('Saved new referral code as sticky', { referralCode });
-                } catch (dbError) {
-                    remoteLog('DB ERROR saving sticky referral', { error: String(dbError) }, 'WARN');
-                }
+                } catch {}
             }
         }
-
-        remoteLog('Login attempt', { 
-            hasInitData: !!initData, 
-            referralCode: referralCode || 'none',
-            hasReferralInBody: !!body.referralCode 
-        });
 
         // Validate the Telegram HMAC signature
         const isValid = validateInitData(initData);
 
-        remoteLog('Init data validation', {
-            isValid,
-            keys: Object.keys(parsedData),
-            isDev: process.env.NODE_ENV !== 'production',
-        });
-
         // In production: require valid signature
-        // In development: allow through even if validation fails (for local testing)
         if (!isValid && process.env.NODE_ENV === 'production') {
-            remoteLog('Validation failed in production', null, 'ERROR');
             return NextResponse.json({ success: false, error: 'Invalid init data' }, { status: 401 });
         }
 
         if (!isValid) {
-            remoteLog('Validation failed but allowing in dev mode', null, 'WARN');
+            // Validation failed but allowing in dev mode (for local testing)
         }
-
-        remoteLog('Telegram user from initData', { id: telegramUser?.id, username: telegramUser?.username });
 
         if (!telegramUser?.id) {
-            remoteLog('User ID missing in telegram data', null, 'ERROR');
             return NextResponse.json({ success: false, error: 'User data not found in initData' }, { status: 400 });
-        }
-
-        // Find or create user
-        let user;
-        try {
-            user = await findUserByTelegramId(String(telegramUser.id));
-            remoteLog('DB lookup', { found: !!user, telegramId: telegramUser.id });
-        } catch (dbError) {
-            remoteLog('DB ERROR: findUserByTelegramId', { error: String(dbError) }, 'ERROR');
-            return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
         }
 
         let isNewUser = false;
@@ -146,120 +113,74 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         if (!user) {
             isNewUser = true;
-            remoteLog('Creating new user', { telegramId: telegramUser.id, username: telegramUser.username });
 
-            // Resolve referrer
+            // Resolve referrer from code
             let referredById = undefined;
             if (referralCode) {
-                remoteLog('Processing referral code', { referralCode });
                 try {
                     const referrer = await findUserByReferralCode(referralCode);
-                    if (referrer) {
-                        referredById = referrer._id;
-                        remoteLog('Referrer found', { referrerId: referredById.toString(), referrerUsername: referrer.telegramUsername });
-                    } else {
-                        remoteLog('Referral code not found in DB', { referralCode }, 'WARN');
-                    }
-                } catch (refError) {
-                    remoteLog('Referral lookup error', { error: String(refError) }, 'WARN');
-                }
-            } else {
-                remoteLog('No referral code provided (startParam was empty)');
+                    if (referrer) referredById = referrer._id;
+                } catch {}
             }
 
             // Check if admin
             const adminIds = (process.env.ADMIN_TELEGRAM_IDS || '').split(',').map(id => id.trim()).filter(Boolean);
             const isAdmin = adminIds.includes(String(telegramUser.id));
-            remoteLog('Admin check', { telegramId: telegramUser.id, isAdmin });
 
-            try {
-                user = await createUser({
-                    telegramId: String(telegramUser.id),
-                    telegramUsername: telegramUser.username || undefined,
-                    firstName: telegramUser.first_name || undefined,
-                    lastName: telegramUser.last_name || undefined,
-                    photoUrl: telegramUser.photo_url || undefined,
-                    referralCode: generateReferralCode(),
-                    referredById,
-                    directReferralCount: 0,
-                    totalReferralCount: 0,
-                    totalDownlineCount: 0,
-                    totalEarnings: 0,
-                    tradePower: 0,
-                    lastIp: ip,
-                    isAdmin,
-                    isActive: true,
-                    currentSessionId,
-                });
-                remoteLog('User created', { userId: user?._id?.toString() });
-            } catch (createError) {
-                remoteLog('DB ERROR: createUser', { error: String(createError) }, 'ERROR');
-                return NextResponse.json({ success: false, error: 'Failed to create user' }, { status: 500 });
-            }
+            user = await createUser({
+                telegramId: String(telegramUser.id),
+                telegramUsername: telegramUser.username || undefined,
+                firstName: telegramUser.first_name || undefined,
+                lastName: telegramUser.last_name || undefined,
+                photoUrl: telegramUser.photo_url || undefined,
+                referralCode: generateReferralCode(),
+                referredById,
+                directReferralCount: 0,
+                totalReferralCount: 0,
+                totalDownlineCount: 0,
+                totalEarnings: 0,
+                tradePower: 0,
+                lastIp: ip,
+                isAdmin,
+                isActive: true,
+                currentSessionId,
+            });
 
             if (!user) {
-                remoteLog('createUser returned null', null, 'ERROR');
                 return NextResponse.json({ success: false, error: 'User creation failed' }, { status: 500 });
             }
 
-            // Create wallet for new user
-            try {
-                await getOrCreateWallet(user._id);
-                remoteLog('Wallet created');
-            } catch (walletError) {
-                remoteLog('Wallet creation error (non-fatal)', { error: String(walletError) }, 'WARN');
-            }
-
-            // Update referral counts
+            // Background tasks: wallet and stats
+            await getOrCreateWallet(user._id).catch(() => {});
             if (referredById) {
-                try {
-                    await updateUserStatsRecursively(referredById);
-                } catch { /* non-fatal */ }
+                updateUserStatsRecursively(referredById).catch(() => {});
             }
 
         } else {
-            // Existing user: update latest Telegram profile info and set new session ID
-            remoteLog('Existing user login', { userId: user._id.toString(), hasReferrer: !!user.referredById });
-            try {
-                const updates: any = {
-                    telegramUsername: telegramUser.username || user.telegramUsername,
-                    firstName: telegramUser.first_name || user.firstName,
-                    lastName: telegramUser.last_name || user.lastName,
-                    photoUrl: telegramUser.photo_url || user.photoUrl,
-                    lastIp: ip,
-                    currentSessionId,
-                    updatedAt: new Date(),
-                };
-
-                // Late referral binding: if user has no referrer and a referral code is provided, bind now
-                if (referralCode) {
-                    if (!user.referredById) {
-                        remoteLog('Late referral binding attempt', { referralCode, userId: user._id.toString() });
-                        try {
-                            const referrer = await findUserByReferralCode(referralCode);
-                            if (referrer && referrer._id.toString() !== user._id.toString()) {
-                                updates.referredById = referrer._id;
-                                remoteLog('Late referral bound', { referrerId: referrer._id.toString(), referrerUsername: referrer.telegramUsername });
-
-                                // Update referrer's chain stats
-                                try { await updateUserStatsRecursively(referrer._id); } catch { /* non-fatal */ }
-                            } else if (referrer) {
-                                remoteLog('Self-referral blocked', null, 'WARN');
-                            }
-                        } catch (refError) {
-                            remoteLog('Late referral binding error', { error: String(refError) }, 'WARN');
-                        }
-                    } else {
-                        remoteLog('Referral binding skipped: User already has a referrer', {
-                            userId: user._id.toString(),
-                            existingReferrer: user.referredById.toString(),
-                            providedCode: referralCode
-                        });
+            // Existing user: check if profile update is needed
+            const updates: any = {};
+            if (telegramUser.username && telegramUser.username !== user.telegramUsername) updates.telegramUsername = telegramUser.username;
+            if (telegramUser.first_name && telegramUser.first_name !== user.firstName) updates.firstName = telegramUser.first_name;
+            if (telegramUser.last_name && telegramUser.last_name !== user.lastName) updates.lastName = telegramUser.last_name;
+            if (telegramUser.photo_url && telegramUser.photo_url !== user.photoUrl) updates.photoUrl = telegramUser.photo_url;
+            if (ip && ip !== user.lastIp) updates.lastIp = ip;
+            
+            // Late referral binding
+            if (referralCode && !user.referredById) {
+                try {
+                    const referrer = await findUserByReferralCode(referralCode);
+                    if (referrer && referrer._id.toString() !== user._id.toString()) {
+                        updates.referredById = referrer._id;
+                        updateUserStatsRecursively(referrer._id).catch(() => {});
                     }
-                }
+                } catch {}
+            }
 
-                await updateUser(user._id, updates);
-            } catch { /* non-fatal update */ }
+            // Always update session ID and timestamp
+            updates.currentSessionId = currentSessionId;
+            updates.updatedAt = new Date();
+
+            await updateUser(user._id, updates).catch(() => {});
         }
 
         const userResponse: User = {

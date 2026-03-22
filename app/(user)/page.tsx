@@ -11,12 +11,12 @@ export default function UserHomePage() {
     const { isAuthenticated, isLoading, isTelegramMissing } = useAuth();
 
     useEffect(() => {
-        // Once we are authenticated, move to dashboard
-        if (!isLoading && isAuthenticated) {
+        // Once we are authenticated, move to dashboard immediately
+        if (isAuthenticated) {
             remoteLog('Root page: Authenticated, redirecting to dashboard');
             router.replace('/dashboard');
         }
-    }, [isLoading, isAuthenticated, router]);
+    }, [isAuthenticated, router]);
 
     if (isTelegramMissing) {
         return (

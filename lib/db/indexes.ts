@@ -122,6 +122,12 @@ export async function createIndexes() {
         { name: 'createdAt_desc_index' }
     );
 
+    // PENDING_REFERRALS collection
+    await db.collection(Collections.PENDING_REFERRALS).createIndex(
+        { telegramId: 1 },
+        { name: 'telegramId_index' }
+    );
+
     console.log('✅ Indexes created successfully');
 }
 
