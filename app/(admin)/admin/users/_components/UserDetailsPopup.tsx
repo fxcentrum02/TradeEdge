@@ -271,14 +271,25 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                     <Stack direction="row" spacing={1} sx={{ mt: 1, justifyContent: isMobile ? 'center' : 'flex-start', flexWrap: 'wrap', gap: 1 }}>
                                         <Chip label={`Joined ${formatDateTime(data.profile.createdAt)}`} size="small" variant="outlined" sx={{ borderRadius: 1.5 }} />
                                         <Chip
-                                            label={data.profile.isActive ? 'Active' : 'Inactive'}
+                                            label={data.profile.isDeleted ? 'Deleted' : (data.profile.isActive ? 'Active' : 'Inactive')}
                                             size="small"
                                             sx={{
-                                                bgcolor: data.profile.isActive ? '#dcfce7' : '#fee2e2',
-                                                color: data.profile.isActive ? '#166534' : '#991b1b',
+                                                bgcolor: data.profile.isDeleted ? '#fee2e2' : (data.profile.isActive ? '#dcfce7' : '#fee2e2'),
+                                                color: data.profile.isDeleted ? '#991b1b' : (data.profile.isActive ? '#166534' : '#991b1b'),
                                                 fontWeight: 700, borderRadius: 1.5
                                             }}
                                         />
+                                        {!data.profile.isDeleted && !data.profile.isAdmin && (
+                                            <Button 
+                                                size="small" 
+                                                color="error" 
+                                                variant="outlined" 
+                                                onClick={() => setDeleteConfirmOpen(true)}
+                                                sx={{ borderRadius: 1.5, height: 24, fontSize: '0.75rem', textTransform: 'none' }}
+                                            >
+                                                Delete Customer
+                                            </Button>
+                                        )}
                                     </Stack>
                                 </Box>
                                 <Box sx={{ 
