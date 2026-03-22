@@ -299,6 +299,7 @@ export interface AppSettings {
 
     // Global Config
     minWithdrawalAmount: number;
+    minReferralWithdrawalAmount: number;
     withdrawalFeeType: 'PERCENTAGE' | 'FIXED';
     withdrawalFeeValue: number;
     withdrawalFeePercentage?: number; // Deprecated but kept for safety during migration

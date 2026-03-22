@@ -8,6 +8,7 @@ const defaultSettings: Omit<AppSettings, '_id' | 'updatedAt'> = {
     appName: 'Trade Edge',
     brandColor: '#84cc16',
     minWithdrawalAmount: 10,
+    minReferralWithdrawalAmount: 10,
     withdrawalFeeType: 'PERCENTAGE',
     withdrawalFeeValue: 2,
     defaultPlanDurationDays: 30,
@@ -47,6 +48,10 @@ export async function getSettings(): Promise<AppSettings> {
 
     if (settings.referralClaimMultiplier === undefined) {
         settings.referralClaimMultiplier = defaultSettings.referralClaimMultiplier;
+    }
+
+    if (settings.minReferralWithdrawalAmount === undefined) {
+        settings.minReferralWithdrawalAmount = defaultSettings.minReferralWithdrawalAmount;
     }
 
     return settings;

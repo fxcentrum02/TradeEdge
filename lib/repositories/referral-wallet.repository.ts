@@ -12,7 +12,6 @@ import { REFERRAL_COMMISSIONS } from '../constants';
 import { getSettings } from './settings.repository';
 import { getTotalActiveAmount } from './user-plan.repository';
 
-const MIN_TRANSFER_AMOUNT = REFERRAL_COMMISSIONS.MIN_CLAIM_AMOUNT;
 const TOLERANCE = 0.001; // For floating point precision
 
 export async function findReferralWalletByUserId(userId: string | ObjectId) {
@@ -116,6 +115,8 @@ export async function transferToMainWallet(
     if (!refWallet) {
         return { success: false, transferred: 0, error: 'Referral wallet not found' };
     }
+
+    const MIN_TRANSFER_AMOUNT = settings.minReferralWithdrawalAmount ?? REFERRAL_COMMISSIONS.MIN_CLAIM_AMOUNT;
 
     const currentBalance = refWallet.balance;
 

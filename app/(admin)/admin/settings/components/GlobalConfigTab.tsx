@@ -22,6 +22,7 @@ export default function GlobalConfigTab({
     const router = useRouter();
     const [formData, setFormData] = useState({
         minWithdrawalAmount: settings.minWithdrawalAmount,
+        minReferralWithdrawalAmount: settings.minReferralWithdrawalAmount || 10,
         withdrawalFeeType: settings.withdrawalFeeType || 'PERCENTAGE',
         withdrawalFeeValue: settings.withdrawalFeeValue ?? settings.withdrawalFeePercentage ?? 0,
         defaultPlanDurationDays: settings.defaultPlanDurationDays,
@@ -187,6 +188,18 @@ export default function GlobalConfigTab({
                         name="minWithdrawalAmount"
                         type="number"
                         value={formData.minWithdrawalAmount}
+                        onChange={handleChange}
+                        variant="outlined"
+                    />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            id={`${id}-minReferralWithdrawalAmount`}
+                            fullWidth
+                            label="Min Referral Claim Amount (USDT)"
+                        name="minReferralWithdrawalAmount"
+                        type="number"
+                        value={formData.minReferralWithdrawalAmount}
                         onChange={handleChange}
                         variant="outlined"
                     />
