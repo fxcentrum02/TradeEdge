@@ -63,6 +63,19 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
         console.log(`[ROI] Found ${eligiblePlans.length} plans eligible for ROI settlement`);
         if (eligiblePlans.length === 0) return result;
 
+        // 1a. Pre-fetch all user wallets to calculate balanceAfter in memory
+        const allUserIds = Array.from(new Set(eligiblePlans.map(up => up.userId.toString())));
+        const userWallets = await db.collection(Collections.WALLETS).find({ 
+            userId: { $in: allUserIds.map(id => new ObjectId(id)) } 
+        }).toArray();
+        const runningWalletMap = new Map(userWallets.map(w => [w.userId.toString(), w.balance]));
+
+        // 1b. Pre-fetch referral wallets for balanceAfter calculation
+        const refWallets = await db.collection(Collections.REFERRAL_WALLETS).find({
+            userId: { $in: allUserIds.map(id => new ObjectId(id)) }
+        }).toArray();
+        const runningRefWalletMap = new Map(refWallets.map(w => [w.userId.toString(), w.balance]));
+
         const payoutsToProcess: { fromUserId: ObjectId; roiAmount: number; sourceId: ObjectId }[] = [];
         const walletIncrements = new Map<string, number>(); 
         const planUpdates: any[] = [];
@@ -89,6 +102,10 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
                 });
 
                 const uid = up.userId.toString();
+                const currentBalance = runningWalletMap.get(uid) || 0;
+                const newBalance = currentBalance + totalCatchUpAmount;
+                runningWalletMap.set(uid, newBalance);
+
                 walletIncrements.set(uid, (walletIncrements.get(uid) || 0) + totalCatchUpAmount);
                 result.affectedUserIds.add(uid);
 
@@ -106,6 +123,7 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
                     userId: up.userId,
                     type: 'ROI_EARNING' as const,
                     amount: totalCatchUpAmount,
+                    balanceAfter: newBalance,
                     description: `ROI for ${daysToPay} day(s) from ${up.planData.name}`,
                     reference: up._id.toString(),
                     createdAt: now
@@ -132,6 +150,11 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
         const refWalletIncrements = new Map<string, number>();
 
         for (const dist of distributions) {
+            const uid = dist.userId;
+            const currentRefBalance = runningRefWalletMap.get(uid) || 0;
+            const newRefBalance = currentRefBalance + dist.amount;
+            runningRefWalletMap.set(uid, newRefBalance);
+
             earningLogs.push({
                 userId: new ObjectId(dist.userId),
                 fromUserId: dist.fromUserId,
@@ -140,6 +163,18 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
                 isFirstPurchaseBonus: false,
                 sourceType: 'roi_settlement',
                 sourceId: dist.sourceId,
+                createdAt: now
+            });
+
+            // Also log to main TRANSACTIONS collection for audit trail (consistent with creditReferralWallet)
+            transactionLogs.push({
+                userId: new ObjectId(dist.userId),
+                type: 'REFERRAL_EARNING' as const,
+                amount: dist.amount,
+                balanceAfter: newRefBalance,
+                description: `Referral commission from Tier ${dist.tier}`,
+                reference: dist.sourceId.toString(),
+                metadata: { wallet: 'referral' },
                 createdAt: now
             });
 

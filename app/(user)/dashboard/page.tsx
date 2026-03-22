@@ -92,23 +92,21 @@ export default function DashboardPage() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [userRes, plansRes, ticketsRes] = await Promise.all([
-                authFetch('/api/users/me'),
-                authFetch('/api/plans'),
-                authFetch('/api/tickets'),
-            ]);
-            const userData = await userRes.json();
-            const plansData = await plansRes.json();
-            const ticketsData = await ticketsRes.json();
-
-            if (userData.success) setDashboard(userData.data);
-            if (plansData.success) setPlans(plansData.data);
-            if (ticketsData.success) {
-                // Show only PENDING or PROCESSING tickets
-                const active = (ticketsData.data || []).filter(
-                    (t: any) => t.status === 'PENDING' || t.status === 'PROCESSING'
-                );
-                setPendingTickets(active);
+            // Consolidated fetch: get user data, plans, and tickets in one RTT
+            const res = await authFetch('/api/users/me?include=dashboard');
+            const data = await res.json();
+            
+            if (data.success) {
+                const userData = data.data;
+                setDashboard(userData);
+                
+                // Extract plans and tickets from the consolidated response
+                if (userData.availablePlans) {
+                    setPlans(userData.availablePlans);
+                }
+                if (userData.pendingTickets) {
+                    setPendingTickets(userData.pendingTickets);
+                }
             }
         } catch (error) {
             console.error('Dashboard error:', error);

@@ -58,8 +58,8 @@ export async function createIndexes() {
         { name: 'lastRoiDate_index' }
     );
     await db.collection(Collections.USER_PLANS).createIndex(
-        { userId: 1, isActive: 1 },
-        { name: 'userId_isActive_index' }
+        { userId: 1, isActive: 1, endDate: 1 },
+        { name: 'userId_isActive_endDate_index' }
     );
 
     // PAYMENT_TICKETS collection
@@ -104,8 +104,8 @@ export async function createIndexes() {
         { name: 'createdAt_desc_index' }
     );
     await db.collection(Collections.TRANSACTIONS).createIndex(
-        { userId: 1, createdAt: -1 },
-        { name: 'userId_createdAt_index' }
+        { userId: 1, type: 1, createdAt: -1 },
+        { name: 'userId_type_createdAt_index' }
     );
 
     // WITHDRAWALS collection
