@@ -42,6 +42,7 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
             {
                 $match: {
                     isActive: true,
+                    isDeleted: { $ne: true },
                     endDate: { $gt: now },
                     $or: [
                         { lastRoiDate: { $exists: false } },

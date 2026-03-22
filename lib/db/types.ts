@@ -26,6 +26,8 @@ export interface UserDocument {
     lastWithdrawalAt?: Date;
     isAdmin: boolean;
     isActive: boolean;
+    isDeleted?: boolean;
+    deletedAt?: Date;
     currentSessionId?: string;
     createdAt: Date;
     updatedAt: Date;
@@ -75,6 +77,8 @@ export interface UserPlanDocument {
     paymentAddress?: string;
     totalRoiPaid: number;
     lastRoiDate?: Date;
+    isDeleted?: boolean;
+    deletedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -107,9 +107,9 @@ export default function DateRangeFilterBar({ startDate, endDate, onChange }: Dat
             }}
         >
             <Stack
-                direction={{ xs: 'column', lg: 'row' }}
+                direction={{ xs: 'column', sm: 'row' }}
                 spacing={2}
-                alignItems={{ xs: 'stretch', lg: 'center' }}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
                 justifyContent="space-between"
             >
                 {/* Preset Chips */}

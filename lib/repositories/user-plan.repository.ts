@@ -33,6 +33,7 @@ export async function findActiveUserPlans(userId: string | ObjectId) {
         .find({
             userId: _userId,
             isActive: true,
+            isDeleted: { $ne: true },
             endDate: { $gt: now }
         })
         .toArray();
@@ -45,6 +46,7 @@ export async function findAllActivePlans() {
     return db.collection<UserPlanDocument>(Collections.USER_PLANS)
         .find({
             isActive: true,
+            isDeleted: { $ne: true },
             endDate: { $gt: now },
         })
         .toArray();
@@ -68,6 +70,7 @@ export async function findPlansEligibleForRoi() {
     return db.collection<UserPlanDocument>(Collections.USER_PLANS)
         .find({
             isActive: true,
+            isDeleted: { $ne: true },
             endDate: { $gt: now },
             $or: [
                 { lastRoiDate: { $exists: false } },

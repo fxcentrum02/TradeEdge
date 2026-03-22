@@ -10,7 +10,8 @@ import {
     IconButton, Avatar, Tabs, Tab, Grid, Divider,
     Table, TableBody, TableCell, TableContainer, TableHead,
     TableRow, Chip, CircularProgress, Stack, Button, Paper,
-    MenuItem, Select, InputLabel, FormControl, TextField
+    MenuItem, Select, InputLabel, FormControl, TextField,
+    useMediaQuery, useTheme, DialogActions, DialogContentText
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
@@ -32,6 +33,9 @@ import type { HierarchyTreeNode } from '@/types';
 // ===========================================
 
 const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: number; onToggle: (node: HierarchyTreeNode) => void }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     const [expanded, setExpanded] = useState(false);
     const [children, setChildren] = useState<HierarchyTreeNode[]>(node.children || []);
     const [loading, setLoading] = useState(false);
@@ -57,7 +61,7 @@ const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: n
     };
 
     return (
-        <Box sx={{ ml: level > 0 ? 3 : 0, mb: 0.5 }}>
+        <Box sx={{ ml: level > 0 ? (isMobile ? 1.5 : 3) : 0, mb: 0.5 }}>
             <Box
                 sx={{
                     p: 1,
@@ -85,19 +89,19 @@ const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: n
                     {getInitials(node.firstName || node.telegramUsername || '?')}
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="caption" fontWeight={600} noWrap display="block">
-                        {node.firstName || 'User'} {node.lastName || ''} (@{node.telegramUsername || node.telegramId})
+                    <Typography variant="caption" fontWeight={700} noWrap display="block" sx={{ fontSize: isMobile ? '0.7rem' : '0.8rem' }}>
+                        {node.firstName || 'User'} {node.lastName || ''}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                        Joined {formatDateTime(node.joinedAt)}
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', display: 'block' }}>
+                        @{node.telegramUsername || node.telegramId}
                     </Typography>
                 </Box>
                 <Chip
-                    icon={<PeopleIcon sx={{ fontSize: '0.7rem !important' }} />}
+                    icon={<PeopleIcon sx={{ fontSize: '0.6rem !important' }} />}
                     label={`${node.directReferralCount}/${node.totalReferralCount}`}
                     size="small"
                     variant="outlined"
-                    sx={{ height: 18, fontSize: '0.6rem' }}
+                    sx={{ height: 16, fontSize: '0.55rem', px: 0.5 }}
                 />
             </Box>
             {expanded && (
@@ -128,6 +132,12 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
 
     // Transaction Filters State
     const [txFilters, setTxFilters] = useState({
@@ -165,6 +175,29 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
         setTabValue(newValue);
     };
 
+    const handleDeleteUser = async () => {
+        if (!userId) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/soft-delete`, {
+                method: 'POST',
+            });
+            const json = await res.json();
+            if (json.success) {
+                setDeleteConfirmOpen(false);
+                onClose();
+                // Optionally trigger a refresh callback if passed from parent
+            } else {
+                alert('Failed to delete user: ' + json.error);
+            }
+        } catch (error) {
+            console.error('Error soft deleting user:', error);
+            alert('An error occurred while deleting the user.');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
     return (
@@ -173,8 +206,9 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
             onClose={onClose}
             maxWidth="md"
             fullWidth
+            fullScreen={isMobile}
             PaperProps={{
-                sx: { borderRadius: 3, maxHeight: '90vh' }
+                sx: { borderRadius: isMobile ? 0 : 3, maxHeight: isMobile ? '100%' : '90vh' }
             }}
         >
             <DialogTitle
@@ -199,30 +233,42 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                 ) : data ? (
                     <Box>
                         {/* Header Stats */}
-                        <Box sx={{ p: 3, bgcolor: 'white', borderBottom: '1px solid #f1f5f9' }}>
-                            <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+                        <Box sx={{ p: isMobile ? 2 : 3, bgcolor: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                gap: isMobile ? 2 : 3, 
+                                alignItems: isMobile ? 'center' : 'flex-start',
+                                flexDirection: isMobile ? 'column' : 'row',
+                                textAlign: isMobile ? 'center' : 'left'
+                            }}>
                                 <Avatar
                                     src={data.profile.photoUrl || undefined}
                                     sx={{
-                                        width: 80, height: 80, fontSize: 32, fontWeight: 700,
+                                        width: isMobile ? 64 : 80, height: isMobile ? 64 : 80, 
+                                        fontSize: isMobile ? 24 : 32, fontWeight: 700,
                                         bgcolor: COLORS[0], boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)'
                                     }}
                                 >
                                     {getInitials(data.profile.firstName || data.profile.telegramUsername || 'U')}
                                 </Avatar>
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography variant="h5" fontWeight={800} color="#1e293b">
+                                <Box sx={{ flex: 1, width: '100%' }}>
+                                    <Typography variant={isMobile ? "h6" : "h5"} fontWeight={800} color="#1e293b">
                                         {data.profile.firstName || 'User'} {data.profile.lastName || ''}
                                     </Typography>
                                     <Typography color="text.secondary" variant="body2" gutterBottom>
-                                        @{data.profile.telegramUsername || data.profile.telegramId} • ID: {data.profile.id}
+                                        @{data.profile.telegramUsername || data.profile.telegramId}
                                     </Typography>
-                                    {data.profile.referredBy && (
-                                        <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: 0.5, fontWeight: 500 }}>
-                                            Referred by: <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>{data.profile.referredBy.name}</Box> (@{data.profile.referredBy.telegramHandle})
+                                    {!isMobile && (
+                                        <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: -0.5 }}>
+                                            ID: {data.profile.id}
                                         </Typography>
                                     )}
-                                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                                    {data.profile.referredBy && (
+                                        <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: 0.5, fontWeight: 500 }}>
+                                            Referred by: <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>{data.profile.referredBy.name}</Box>
+                                        </Typography>
+                                    )}
+                                    <Stack direction="row" spacing={1} sx={{ mt: 1, justifyContent: isMobile ? 'center' : 'flex-start', flexWrap: 'wrap', gap: 1 }}>
                                         <Chip label={`Joined ${formatDateTime(data.profile.createdAt)}`} size="small" variant="outlined" sx={{ borderRadius: 1.5 }} />
                                         <Chip
                                             label={data.profile.isActive ? 'Active' : 'Inactive'}
@@ -235,9 +281,16 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                         />
                                     </Stack>
                                 </Box>
-                                <Box sx={{ textAlign: 'right' }}>
+                                <Box sx={{ 
+                                    textAlign: isMobile ? 'center' : 'right',
+                                    mt: isMobile ? 1 : 0,
+                                    bgcolor: isMobile ? '#f8fafc' : 'transparent',
+                                    p: isMobile ? 2 : 0,
+                                    borderRadius: isMobile ? 2 : 0,
+                                    width: isMobile ? '100%' : 'auto'
+                                }}>
                                     <Typography variant="overline" color="text.secondary" fontWeight={700}>Main Balance</Typography>
-                                    <Typography variant="h4" fontWeight={800} color="primary.main">
+                                    <Typography variant={isMobile ? "h5" : "h4"} fontWeight={800} color="primary.main">
                                         {formatCurrency(data.profile.walletBalance)}
                                     </Typography>
                                 </Box>
@@ -305,15 +358,15 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
 
                             {/* Plans Tab */}
                             {tabValue === 1 && (
-                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0' }}>
+                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
                                     <Table size="small">
                                         <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                             <TableRow>
-                                                <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>ROI Paid</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Plan</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>ROI Paid</TableCell>
+                                                {!isMobile && <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Status</TableCell>}
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -326,19 +379,21 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                                         <Typography variant="caption" color="text.secondary">{plan.dailyRoi}% daily</Typography>
                                                     </TableCell>
                                                     <TableCell sx={{ fontWeight: 700 }}>{formatCurrency(plan.amount)}</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>{formatCurrency(plan.totalRoiPaid)}</TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={plan.isActive ? 'Active' : 'Expired'}
-                                                            size="small"
-                                                            sx={{
-                                                                bgcolor: plan.isActive ? '#dcfce7' : '#f1f5f9',
-                                                                color: plan.isActive ? '#166534' : '#64748b',
-                                                                fontWeight: 700, height: 20, fontSize: '0.65rem'
-                                                            }}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell><Typography variant="caption">{formatDateTime(plan.createdAt)}</Typography></TableCell>
+                                                    <TableCell sx={{ fontWeight: 700, color: 'success.main', fontSize: isMobile ? '0.75rem' : '0.875rem' }}>{formatCurrency(plan.totalRoiPaid)}</TableCell>
+                                                    {!isMobile && (
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={plan.isActive ? 'Active' : 'Expired'}
+                                                                size="small"
+                                                                sx={{
+                                                                    bgcolor: plan.isActive ? '#dcfce7' : '#f1f5f9',
+                                                                    color: plan.isActive ? '#166534' : '#64748b',
+                                                                    fontWeight: 700, height: 20, fontSize: '0.65rem'
+                                                                }}
+                                                            />
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell><Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : '0.75rem' }}>{formatDateTime(plan.createdAt)}</Typography></TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -348,14 +403,14 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
 
                             {/* ROI History Tab */}
                             {tabValue === 2 && (
-                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0' }}>
+                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
                                     <Table size="small">
                                         <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                             <TableRow>
-                                                <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Balance After</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Description</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Balance After</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -376,14 +431,14 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
 
                             {/* Referrals (Earnings) Tab */}
                             {tabValue === 3 && (
-                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0' }}>
+                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
                                     <Table size="small">
                                         <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                             <TableRow>
-                                                <TableCell sx={{ fontWeight: 700 }}>From User</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Tier</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>From User</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Tier</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -436,6 +491,7 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                                                 <TextField
                                                     id={`${id}-minAmount`}
+                                                    label="Min Amount"
                                                     type="number"
                                                     fullWidth
                                                     size="small"
@@ -446,6 +502,7 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                                                 <TextField
                                                     id={`${id}-maxAmount`}
+                                                    label="Max Amount"
                                                     type="number"
                                                     fullWidth
                                                     size="small"
@@ -465,14 +522,14 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                         </Box>
                                     </Paper>
 
-                                    <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0' }}>
+                                    <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
                                         <Table size="small">
                                             <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                                 <TableRow>
-                                                    <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Type</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Description</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -524,26 +581,26 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                         <Grid size={{ xs: 12, md: 6 }}>
                                             <Paper
                                                 sx={{
-                                                    p: 4, borderRadius: 3, border: '1px solid #e2e8f0',
+                                                    p: isMobile ? 3 : 4, borderRadius: 3, border: '1px solid #e2e8f0',
                                                     textAlign: 'center', bgcolor: 'primary.main', color: 'white',
                                                     height: '100%', display: 'flex', flexDirection: 'column',
                                                     justifyContent: 'center'
                                                 }}
                                                 elevation={0}
                                             >
-                                                <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700 }}>Total All-time Invested</Typography>
-                                                <Typography variant="h3" fontWeight={800}>{formatCurrency(data.analytics.totalInvested)}</Typography>
+                                                <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700, fontSize: isMobile ? '0.65rem' : '0.75rem' }}>Total All-time Invested</Typography>
+                                                <Typography variant={isMobile ? "h4" : "h3"} fontWeight={800}>{formatCurrency(data.analytics.totalInvested)}</Typography>
                                             </Paper>
                                         </Grid>
                                         <Grid size={{ xs: 12, md: 6 }}>
                                             <Stack spacing={3} sx={{ height: '100%' }}>
-                                                <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f0fdf4', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} elevation={0}>
-                                                    <Typography variant="overline" color="text.secondary" fontWeight={700}>Total by Deposit</Typography>
-                                                    <Typography variant="h5" fontWeight={800} color="success.main">{formatCurrency(data.analytics.totalDeposit)}</Typography>
+                                                <Paper sx={{ p: isMobile ? 2 : 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f0fdf4', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} elevation={0}>
+                                                    <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ fontSize: isMobile ? '0.6rem' : '0.7rem' }}>Total by Deposit</Typography>
+                                                    <Typography variant={isMobile ? "h6" : "h5"} fontWeight={800} color="success.main">{formatCurrency(data.analytics.totalDeposit)}</Typography>
                                                 </Paper>
-                                                <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#eff6ff', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} elevation={0}>
-                                                    <Typography variant="overline" color="text.secondary" fontWeight={700}>Total by Compounding Power</Typography>
-                                                    <Typography variant="h5" fontWeight={800} color="primary.main">{formatCurrency(data.analytics.totalReinvest)}</Typography>
+                                                <Paper sx={{ p: isMobile ? 2 : 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#eff6ff', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} elevation={0}>
+                                                    <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ fontSize: isMobile ? '0.6rem' : '0.7rem' }}>Total by Compounding Power</Typography>
+                                                    <Typography variant={isMobile ? "h6" : "h5"} fontWeight={800} color="primary.main">{formatCurrency(data.analytics.totalReinvest)}</Typography>
                                                 </Paper>
                                             </Stack>
                                         </Grid>
@@ -597,6 +654,22 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                     </Box>
                 )}
             </DialogContent>
+            
+            {/* Soft Delete Confirmation Dialog */}
+            <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+                <DialogTitle>Confirm Delete Customer</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to soft-delete <strong>{data?.profile?.firstName}</strong>? This will deactivate the user and all their active plans, excluding them from future ROI settlements.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>Cancel</Button>
+                    <Button onClick={handleDeleteUser} color="error" variant="contained" disabled={isDeleting}>
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Dialog>
     );
 }

@@ -6,7 +6,8 @@ import {
     TableContainer, TableHead, TableRow, Card, CardContent,
     Button, IconButton, TextField, InputAdornment, Avatar,
     Breadcrumbs, Link, Chip, Skeleton, Collapse, List, ListItem,
-    ListItemAvatar, ListItemText, Divider, Stack
+    ListItemAvatar, ListItemText, Divider, Stack, useMediaQuery,
+    useTheme
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
@@ -27,6 +28,9 @@ interface TreeItemProps {
 }
 
 const TreeItem = ({ node, level }: TreeItemProps) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     const [expanded, setExpanded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [children, setChildren] = useState<HierarchyTreeNode[]>(node.children || []);
@@ -52,73 +56,96 @@ const TreeItem = ({ node, level }: TreeItemProps) => {
     };
 
     return (
-        <Box sx={{ ml: level > 0 ? 3 : 0, mb: 0.5 }}>
+        <Box sx={{ ml: level > 0 ? (isMobile ? 1.5 : 3) : 0, mb: 0.5 }}>
             <Paper
                 elevation={0}
                 sx={{
-                    p: 1.5,
+                    p: isMobile ? 1 : 1.5,
                     border: '1px solid #e2e8f0',
                     borderRadius: 2,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 2,
+                    gap: isMobile ? 1 : 2,
+                    flexDirection: isMobile ? 'column' : 'row',
                     '&:hover': { bgcolor: '#f1f5f9' },
                     cursor: hasChildren ? 'pointer' : 'default'
                 }}
                 onClick={handleToggle}
             >
-                {hasChildren ? (
-                    <IconButton size="small" sx={{ p: 0 }}>
-                        {expanded ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
-                    </IconButton>
-                ) : (
-                    <Box sx={{ width: 24 }} />
-                )}
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1 }}>
+                    {hasChildren ? (
+                        <IconButton size="small" sx={{ p: 0 }}>
+                            {expanded ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
+                        </IconButton>
+                    ) : (
+                        <Box sx={{ width: 24 }} />
+                    )}
 
-                <Avatar
-                    sx={{
-                        width: 32,
-                        height: 32,
-                        bgcolor: 'primary.main',
-                        fontSize: 14,
-                        fontWeight: 700
-                    }}
-                >
-                    {node.firstName?.charAt(0) || '?'}
-                </Avatar>
+                    <Avatar
+                        sx={{
+                            width: isMobile ? 28 : 32,
+                            height: isMobile ? 28 : 32,
+                            bgcolor: 'primary.main',
+                            fontSize: isMobile ? 12 : 14,
+                            fontWeight: 700
+                        }}
+                    >
+                        {node.firstName?.charAt(0) || '?'}
+                    </Avatar>
 
-                <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                        {node.firstName} {node.lastName}
-                        <Typography component="span" variant="caption" sx={{ color: '#64748b', ml: 1 }}>
-                            (@{node.telegramUsername || node.telegramId})
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant={isMobile ? "caption" : "body2"} fontWeight={700} noWrap display="block">
+                            {node.firstName} {node.lastName}
                         </Typography>
-                    </Typography>
-                </Box>
-
-                <Stack direction="row" spacing={2} alignItems="center">
-                    <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                            Mining Power
-                        </Typography>
-                        <Typography variant="body2" fontWeight={700} color="primary.main">
-                            {formatCurrency(node.tradePower)}
+                        <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontSize: '0.65rem' }}>
+                            @{node.telegramUsername || node.telegramId}
                         </Typography>
                     </Box>
-                    <Divider orientation="vertical" flexItem />
-                    <Box sx={{ textAlign: 'right', minWidth: 80 }}>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                            Referrals
-                        </Typography>
+
+                    {isMobile && (
                         <Chip
-                            icon={<PeopleIcon sx={{ fontSize: '0.8rem !important' }} />}
-                            label={`${node.directReferralCount} / ${node.totalReferralCount}`}
+                            label={`${node.directReferralCount}/${node.totalReferralCount}`}
                             size="small"
                             variant="outlined"
-                            sx={{ height: 20, fontSize: '0.65rem' }}
+                            sx={{ height: 16, fontSize: '0.55rem', px: 0.5 }}
                         />
+                    )}
+                </Box>
+
+                {!isMobile ? (
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                                Mining Power
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700} color="primary.main">
+                                {formatCurrency(node.tradePower)}
+                            </Typography>
+                        </Box>
+                        <Divider orientation="vertical" flexItem />
+                        <Box sx={{ textAlign: 'right', minWidth: 80 }}>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                                Referrals
+                            </Typography>
+                            <Chip
+                                icon={<PeopleIcon sx={{ fontSize: '0.8rem !important' }} />}
+                                label={`${node.directReferralCount} / ${node.totalReferralCount}`}
+                                size="small"
+                                variant="outlined"
+                                sx={{ height: 20, fontSize: '0.65rem' }}
+                            />
+                        </Box>
+                    </Stack>
+                ) : (
+                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 0.5, borderTop: '1px solid #f1f5f9' }}>
+                        <Typography variant="caption" color="primary.main" fontWeight={700}>
+                            Power: {formatCurrency(node.tradePower)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            ID: {node.telegramId}
+                        </Typography>
                     </Box>
-                </Stack>
+                )}
             </Paper>
 
             <Collapse in={expanded} timeout="auto">
@@ -149,6 +176,11 @@ export default function HierarchyPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
+
     useEffect(() => {
         fetch('/api/admin/reports/hierarchy')
             .then(res => res.json())
@@ -177,10 +209,10 @@ export default function HierarchyPage() {
     return (
         <Box>
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight={800} gutterBottom>
+                <Typography variant={isMobile ? "h5" : "h4"} fontWeight={800} gutterBottom>
                     User Hierarchy Report
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body2" color="text.secondary">
                     Overall platform network distribution and genealogy explorer (up to 20 tiers).
                 </Typography>
             </Box>
@@ -189,21 +221,21 @@ export default function HierarchyPage() {
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ borderRadius: 4, bgcolor: '#0f172a', color: 'white', overflow: 'hidden', position: 'relative' }}>
-                        <CardContent sx={{ p: 4 }}>
+                        <CardContent sx={{ p: isMobile ? 3 : 4 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <Box>
-                                    <Typography variant="overline" sx={{ color: '#94a3b8', fontWeight: 700, letterSpacing: 1 }}>
+                                    <Typography variant="overline" sx={{ color: '#94a3b8', fontWeight: 700, letterSpacing: 1, fontSize: isMobile ? '0.6rem' : '0.75rem' }}>
                                         Platform Reach
                                     </Typography>
-                                    <Typography variant="h3" fontWeight={800} sx={{ mt: 1 }}>
+                                    <Typography variant={isMobile ? "h4" : "h3"} fontWeight={800} sx={{ mt: 1 }}>
                                         {formatNumber(totalUsers)}
                                     </Typography>
-                                    <Typography variant="body2" sx={{ color: '#94a3b8', mt: 1 }}>
-                                        Total registered users across all 20 tiers
+                                    <Typography variant="caption" sx={{ color: '#94a3b8', mt: 1, display: 'block' }}>
+                                        Total registered users
                                     </Typography>
                                 </Box>
-                                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.1)', width: 56, height: 56 }}>
-                                    <PeopleIcon sx={{ color: 'primary.main', fontSize: 32 }} />
+                                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.1)', width: isMobile ? 48 : 56, height: isMobile ? 48 : 56 }}>
+                                    <PeopleIcon sx={{ color: 'primary.main', fontSize: isMobile ? 24 : 32 }} />
                                 </Avatar>
                             </Box>
                         </CardContent>
@@ -211,21 +243,21 @@ export default function HierarchyPage() {
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ borderRadius: 4, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-                        <CardContent sx={{ p: 4 }}>
+                        <CardContent sx={{ p: isMobile ? 3 : 4 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <Box>
-                                    <Typography variant="overline" sx={{ color: 'rgba(0,0,0,0.5)', fontWeight: 700, letterSpacing: 1 }}>
+                                    <Typography variant="overline" sx={{ color: 'rgba(0,0,0,0.5)', fontWeight: 700, letterSpacing: 1, fontSize: isMobile ? '0.6rem' : '0.75rem' }}>
                                         Network Power
                                     </Typography>
-                                    <Typography variant="h3" fontWeight={800} sx={{ mt: 1 }}>
+                                    <Typography variant={isMobile ? "h4" : "h3"} fontWeight={800} sx={{ mt: 1 }}>
                                         {formatCurrency(totalTP)}
                                     </Typography>
-                                    <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.5)', mt: 1 }}>
-                                        Aggregated mining power within the referral system
+                                    <Typography variant="caption" sx={{ color: 'rgba(0,0,0,0.5)', mt: 1, display: 'block' }}>
+                                        Aggregated mining power
                                     </Typography>
                                 </Box>
-                                <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.1)', width: 56, height: 56 }}>
-                                    <TrendingUpIcon sx={{ color: 'white', fontSize: 32 }} />
+                                <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.1)', width: isMobile ? 48 : 56, height: isMobile ? 48 : 56 }}>
+                                    <TrendingUpIcon sx={{ color: 'white', fontSize: isMobile ? 24 : 32 }} />
                                 </Avatar>
                             </Box>
                         </CardContent>
@@ -243,11 +275,11 @@ export default function HierarchyPage() {
                     <Table>
                         <TableHead sx={{ bgcolor: '#f8fafc' }}>
                             <TableRow>
-                                <TableCell sx={{ fontWeight: 700 }}>Tier Level</TableCell>
-                                <TableCell align="center" sx={{ fontWeight: 700 }}>User Count</TableCell>
-                                <TableCell align="center" sx={{ fontWeight: 700 }}>Market Share (Users)</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 700 }}>Total Mining Power</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 700 }}>Avg. MP / User</TableCell>
+                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Tier Level</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>User Count</TableCell>
+                                {!isMobile && <TableCell align="center" sx={{ fontWeight: 700 }}>Market Share (Users)</TableCell>}
+                                <TableCell align="right" sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Total Mining Power</TableCell>
+                                {!isMobile && <TableCell align="right" sx={{ fontWeight: 700 }}>Avg. MP / User</TableCell>}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -266,37 +298,41 @@ export default function HierarchyPage() {
                                     <TableRow key={tier.tier} hover>
                                         <TableCell>
                                             <Chip
-                                                label={`Tier ${tier.tier}`}
+                                                label={`T${tier.tier}`}
                                                 size="small"
-                                                sx={{ fontWeight: 700, bgcolor: tier.tier === 1 ? 'primary.main' : '#f1f5f9', color: tier.tier === 1 ? 'white' : 'inherit' }}
+                                                sx={{ fontWeight: 700, bgcolor: tier.tier === 1 ? 'primary.main' : '#f1f5f9', color: tier.tier === 1 ? 'white' : 'inherit', height: 20, fontSize: '0.65rem' }}
                                             />
                                         </TableCell>
-                                        <TableCell align="center" sx={{ fontWeight: 600 }}>
+                                        <TableCell align="center" sx={{ fontWeight: 600, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
                                             {formatNumber(tier.count)}
                                         </TableCell>
-                                        <TableCell align="center">
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                                <Box sx={{ flex: 1, height: 6, bgcolor: '#f1f5f9', borderRadius: 3, maxWidth: 100 }}>
-                                                    <Box
-                                                        sx={{
-                                                            height: '100%',
-                                                            width: `${(tier.count / (totalUsers || 1)) * 100}%`,
-                                                            bgcolor: 'primary.main',
-                                                            borderRadius: 3
-                                                        }}
-                                                    />
+                                        {!isMobile && (
+                                            <TableCell align="center">
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                                    <Box sx={{ flex: 1, height: 6, bgcolor: '#f1f5f9', borderRadius: 3, maxWidth: 100 }}>
+                                                        <Box
+                                                            sx={{
+                                                                height: '100%',
+                                                                width: `${(tier.count / (totalUsers || 1)) * 100}%`,
+                                                                bgcolor: 'primary.main',
+                                                                borderRadius: 3
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                    <Typography variant="caption" fontWeight={600}>
+                                                        {((tier.count / (totalUsers || 1)) * 100).toFixed(1)}%
+                                                    </Typography>
                                                 </Box>
-                                                <Typography variant="caption" fontWeight={600}>
-                                                    {((tier.count / (totalUsers || 1)) * 100).toFixed(1)}%
-                                                </Typography>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 700 }}>
+                                            </TableCell>
+                                        )}
+                                        <TableCell align="right" sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
                                             {formatCurrency(tier.totalTradePower)}
                                         </TableCell>
-                                        <TableCell align="right">
-                                            {tier.count > 0 ? formatCurrency(tier.totalTradePower / tier.count) : '$0.00'}
-                                        </TableCell>
+                                        {!isMobile && (
+                                            <TableCell align="right">
+                                                {tier.count > 0 ? formatCurrency(tier.totalTradePower / tier.count) : '$0.00'}
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 ))
                             )}
@@ -310,7 +346,7 @@ export default function HierarchyPage() {
                 <AccountTreeIcon color="primary" /> Genealogy Explorer
             </Typography>
 
-            <Paper sx={{ p: 3, borderRadius: 4, minHeight: 400, border: '1px solid #e2e8f0' }} elevation={0}>
+            <Paper sx={{ p: isMobile ? 2 : 3, borderRadius: 4, minHeight: 400, border: '1px solid #e2e8f0' }} elevation={0}>
                 {/* Search / Filter */}
                 <Box sx={{ mb: 3 }}>
                     <TextField
