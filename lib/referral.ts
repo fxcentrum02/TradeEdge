@@ -340,6 +340,7 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
         totalClaimed,
         referralClaimMultiplier,
         tradePower,
+        minReferralWithdrawalAmount: settings.minReferralWithdrawalAmount || 10,
     };
 }
 

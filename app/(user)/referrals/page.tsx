@@ -141,7 +141,7 @@ export default function ReferralsPage() {
     const handleClaim = async () => {
         const balance = stats?.referralWalletBalance || 0;
         const requestedAmount = parseFloat(claimAmount);
-        const MIN_CLAIM = 10;
+        const MIN_CLAIM = stats?.minReferralWithdrawalAmount || 10;
         const TOLERANCE = 0.001;
 
         if (isNaN(requestedAmount) || requestedAmount < (MIN_CLAIM - TOLERANCE)) {
@@ -315,7 +315,7 @@ export default function ReferralsPage() {
                                         variant="contained"
                                         size="small"
                                         onClick={handleClaimClick}
-                                        disabled={claiming || !stats?.referralWalletBalance || stats.referralWalletBalance < (10 - 0.001)}
+                                        disabled={claiming || !stats?.referralWalletBalance || stats.referralWalletBalance < ((stats?.minReferralWithdrawalAmount || 10) - 0.001)}
                                         sx={{
                                             bgcolor: claiming ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)',
                                             color: 'white',
@@ -332,9 +332,9 @@ export default function ReferralsPage() {
                                     >
                                         {claiming ? 'Processing...' : 'Claim'}
                                     </Button>
-                                    {(!stats?.referralWalletBalance || stats.referralWalletBalance < 10) && (
-                                        <Typography variant="caption" sx={{ display: 'block', mt: 0.5, fontSize: '0.6rem', opacity: 0.7 }}>
-                                            Min 10 USDT
+                                    {(!stats?.referralWalletBalance || stats.referralWalletBalance < (stats?.minReferralWithdrawalAmount || 10)) && (
+                                        <Typography variant="caption" sx={{ display: 'block', mt: 0.5, fontSize: '0.66rem', opacity: 0.8 }}>
+                                            Min {stats?.minReferralWithdrawalAmount || 10} USDT
                                         </Typography>
                                     )}
                                 </Box>

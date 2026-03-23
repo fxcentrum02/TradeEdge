@@ -86,6 +86,7 @@ export interface ReferralStats {
     totalClaimed: number;
     referralClaimMultiplier: number;
     tradePower: number;
+    minReferralWithdrawalAmount: number;
 }
 
 // ===========================================

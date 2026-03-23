@@ -39,7 +39,7 @@ export const PLAN_CONFIG = {
 
 // Withdrawal Configuration
 export const WITHDRAWAL_CONFIG = {
-    MIN_AMOUNT: 50,
+    MIN_AMOUNT: 10,
     MAX_AMOUNT: 10000,
     FEE_PERCENTAGE: 2,
     MIN_FEE: 1,
