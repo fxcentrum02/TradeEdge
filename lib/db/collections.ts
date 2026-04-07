@@ -15,6 +15,7 @@ export const Collections = {
     ADMINS: 'admins',
     SETTINGS: 'settings',
     PENDING_REFERRALS: 'pending_referrals',
+    MILESTONE_AWARDS: 'milestone_awards',
 } as const;
 
 export type CollectionName = typeof Collections[keyof typeof Collections];

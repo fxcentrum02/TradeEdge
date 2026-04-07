@@ -24,6 +24,9 @@ import { useAuth } from '@/context/AuthContext';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell
 } from 'recharts';
+import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import type { MilestoneStatus, MilestonePageData } from '@/app/api/referrals/milestones/route';
 
 export default function ReferralsPage() {
     const { authFetch } = useAuth();
@@ -48,6 +51,10 @@ export default function ReferralsPage() {
         return d.toISOString().split('T')[0];
     });
     const [endDate, setEndDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+
+    // Milestones state
+    const [milestoneData, setMilestoneData] = useState<MilestonePageData | null>(null);
+    const [milestonesLoading, setMilestonesLoading] = useState(false);
 
     // History state
     const [history, setHistory] = useState<any[]>([]);
@@ -94,6 +101,8 @@ export default function ReferralsPage() {
             fetchHistory(historyPage, historyFilter);
         } else if (activeTab === 2) {
             fetchInsights();
+        } else if (activeTab === 3) {
+            fetchMilestones();
         }
     }, [activeTab, historyPage, historyFilter, startDate, endDate]);
 
@@ -109,6 +118,19 @@ export default function ReferralsPage() {
             console.error('Insights error:', error);
         } finally {
             setInsightsLoading(false);
+        }
+    };
+
+    const fetchMilestones = async () => {
+        try {
+            setMilestonesLoading(true);
+            const res = await authFetch('/api/referrals/milestones');
+            const data = await res.json();
+            if (data.success) setMilestoneData(data.data);
+        } catch (error) {
+            console.error('Milestones error:', error);
+        } finally {
+            setMilestonesLoading(false);
         }
     };
 
@@ -252,6 +274,7 @@ export default function ReferralsPage() {
                     <Tab icon={<TrendingUpIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Tiered Earnings" />
                     <Tab icon={<HistoryIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="History" />
                     <Tab icon={<FilterListIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Insights" />
+                    <Tab icon={<EmojiEventsIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Milestones" />
                 </Tabs>
             </Paper>
 
@@ -713,6 +736,157 @@ export default function ReferralsPage() {
                                     </Card>
                                 );
                             })}
+                        </Box>
+                    )}
+                </>
+            )}
+
+            {activeTab === 3 && (
+                <>
+                    {/* Milestones Header */}
+                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: '#fffbf0', border: '1px solid #fde68a' }}>
+                        <Typography variant="subtitle2" fontWeight={800} color="#b45309" gutterBottom>
+                            🏆 Milestone Bonus Program
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, lineHeight: 1.6 }}>
+                            Build a balanced network and unlock massive one-time USDT rewards! Each milestone uses the <strong>40/30/30 rule</strong> across your downline legs.
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Chip label="Leg A: 40% of target" size="small" sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
+                            <Chip label="Leg B: 30% of target" size="small" sx={{ bgcolor: '#ecfdf5', color: '#065f46', fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
+                            <Chip label="Leg C (rest): 30%" size="small" sx={{ bgcolor: '#eff6ff', color: '#1e3a8a', fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
+                        </Box>
+                    </Paper>
+
+                    {/* Summary Stats */}
+                    {milestoneData && (
+                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 3 }}>
+                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}>
+                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                    <Typography variant="caption" sx={{ opacity: 0.9, display: 'block' }}>Milestones Achieved</Typography>
+                                    <Typography variant="h5" fontWeight={800}>{milestoneData.totalAwarded} / 11</Typography>
+                                </CardContent>
+                            </Card>
+                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                    <Typography variant="caption" sx={{ opacity: 0.9, display: 'block' }}>Total Bonus Earned</Typography>
+                                    <Typography variant="h5" fontWeight={800}>{formatCurrency(milestoneData.totalUSDT)}</Typography>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                    )}
+
+                    {/* Milestone Cards */}
+                    {milestonesLoading ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {[...Array(5)].map((_, i) => (
+                                <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: 3 }} />
+                            ))}
+                        </Box>
+                    ) : !milestoneData ? (
+                        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: '#f8fafc' }}>
+                            <EmojiEventsOutlinedIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1 }} />
+                            <Typography variant="body1" fontWeight={600} color="text.secondary">No data yet</Typography>
+                        </Paper>
+                    ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {milestoneData.milestones.map((m) => (
+                                <Card
+                                    key={m.threshold}
+                                    sx={{
+                                        borderRadius: 3,
+                                        border: m.isAchieved
+                                            ? '1.5px solid #10b981'
+                                            : milestoneData.nextMilestone?.threshold === m.threshold
+                                            ? '1.5px solid #f59e0b'
+                                            : '1px solid #f1f5f9',
+                                        boxShadow: m.isAchieved ? '0 4px 16px rgba(16,185,129,0.12)' : '0 2px 8px rgba(0,0,0,0.04)',
+                                        opacity: !m.isAchieved && milestoneData.nextMilestone && milestoneData.nextMilestone.threshold < m.threshold ? 0.55 : 1,
+                                    }}
+                                >
+                                    <CardContent sx={{ p: 2 }}>
+                                        {/* Header */}
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {m.isAchieved
+                                                    ? <CheckCircleIcon sx={{ color: '#10b981', fontSize: 22 }} />
+                                                    : <EmojiEventsOutlinedIcon sx={{ color: milestoneData.nextMilestone?.threshold === m.threshold ? '#f59e0b' : '#94a3b8', fontSize: 22 }} />
+                                                }
+                                                <Box>
+                                                    <Typography variant="body2" fontWeight={800} color={m.isAchieved ? '#065f46' : '#1e293b'}>
+                                                        {m.threshold >= 1_000_000
+                                                            ? `${(m.threshold / 1_000_000).toFixed(m.threshold % 1_000_000 === 0 ? 0 : 1)}M`
+                                                            : `${(m.threshold / 1000).toFixed(0)}K`} USDT
+                                                    </Typography>
+                                                    {m.isAchieved && m.achievedAt && (
+                                                        <Typography variant="caption" color="#10b981" fontWeight={600}>
+                                                            ✅ Achieved {new Date(m.achievedAt).toLocaleDateString()}
+                                                        </Typography>
+                                                    )}
+                                                    {!m.isAchieved && milestoneData.nextMilestone?.threshold === m.threshold && (
+                                                        <Typography variant="caption" color="#b45309" fontWeight={700}>
+                                                            🎯 Next Target
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Box>
+                                            <Chip
+                                                label={`+${m.reward >= 1000 ? `$${(m.reward / 1000).toFixed(m.reward % 1000 === 0 ? 0 : 1)}K` : `$${m.reward}`}`}
+                                                size="small"
+                                                sx={{
+                                                    bgcolor: m.isAchieved ? '#dcfce7' : '#fef3c7',
+                                                    color: m.isAchieved ? '#15803d' : '#92400e',
+                                                    fontWeight: 800,
+                                                    fontSize: '0.75rem',
+                                                    height: 22,
+                                                }}
+                                            />
+                                        </Box>
+
+                                        {/* Progress Bars — show for unachieved milestones */}
+                                        {!m.isAchieved && (
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                {[
+                                                    { label: 'Leg A (40%)', pct: m.legAPct, current: m.legA, required: m.legARequired, color: '#f59e0b' },
+                                                    { label: 'Leg B (30%)', pct: m.legBPct, current: m.legB, required: m.legBRequired, color: '#10b981' },
+                                                    { label: 'Leg C (30%)', pct: m.legCPct, current: m.legC, required: m.legCRequired, color: '#3b82f6' },
+                                                ].map(leg => (
+                                                    <Box key={leg.label}>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.4 }}>
+                                                            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ fontSize: '0.62rem' }}>
+                                                                {leg.label}
+                                                            </Typography>
+                                                            <Typography variant="caption" fontWeight={700} sx={{ fontSize: '0.62rem', color: leg.pct >= 100 ? '#10b981' : '#64748b' }}>
+                                                                {formatCurrency(leg.current)} / {formatCurrency(leg.required)}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{ height: 6, bgcolor: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                                                            <Box
+                                                                sx={{
+                                                                    height: '100%',
+                                                                    width: `${leg.pct}%`,
+                                                                    bgcolor: leg.pct >= 100 ? '#10b981' : leg.color,
+                                                                    borderRadius: 3,
+                                                                    transition: 'width 0.6s ease',
+                                                                }}
+                                                            />
+                                                        </Box>
+                                                    </Box>
+                                                ))}
+                                            </Box>
+                                        )}
+
+                                        {/* Achieved snapshot */}
+                                        {m.isAchieved && (
+                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                                                <Chip label={`Leg A: ${formatCurrency(m.legA)}`} size="small" sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 600, fontSize: '0.6rem', height: 18 }} />
+                                                <Chip label={`Leg B: ${formatCurrency(m.legB)}`} size="small" sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 600, fontSize: '0.6rem', height: 18 }} />
+                                                <Chip label={`Leg C: ${formatCurrency(m.legC)}`} size="small" sx={{ bgcolor: '#dbeafe', color: '#1e3a8a', fontWeight: 600, fontSize: '0.6rem', height: 18 }} />
+                                            </Box>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </Box>
                     )}
                 </>

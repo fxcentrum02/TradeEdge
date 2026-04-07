@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/backup",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/milestone-bonus",
+      "schedule": "30 18 * * *"
     }
   ]
 }

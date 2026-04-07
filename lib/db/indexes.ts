@@ -128,6 +128,21 @@ export async function createIndexes() {
         { name: 'telegramId_index' }
     );
 
+    // MILESTONE_AWARDS collection
+    // Critical: unique compound index prevents double-awarding the same milestone
+    await db.collection(Collections.MILESTONE_AWARDS).createIndex(
+        { userId: 1, milestoneThreshold: 1 },
+        { unique: true, name: 'userId_milestoneThreshold_unique' }
+    );
+    await db.collection(Collections.MILESTONE_AWARDS).createIndex(
+        { userId: 1 },
+        { name: 'userId_index' }
+    );
+    await db.collection(Collections.MILESTONE_AWARDS).createIndex(
+        { awardedAt: -1 },
+        { name: 'awardedAt_desc_index' }
+    );
+
     console.log('✅ Indexes created successfully');
 }
 

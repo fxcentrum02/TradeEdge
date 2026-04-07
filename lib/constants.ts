@@ -64,6 +64,35 @@ export const PAYMENT_CONFIG = {
     BEP20_ADDRESS: process.env.PAYMENT_BEP20_ADDRESS || '',
 } as const;
 
+// ===========================================
+// REFERRAL MILESTONE BONUS STRUCTURE
+// ===========================================
+// Each milestone is checked independently using the 40/30/30 rule:
+//   Leg A (top direct referral)   >= 40% of threshold
+//   Leg B (2nd direct referral)   >= 30% of threshold
+//   Leg C (all remaining combined)>= 30% of threshold
+// "Leg volume" = direct referral's own tradePower + all their downline tradePower
+
+export const MILESTONE_BONUSES = [
+    { threshold: 5_000,      reward: 150     },
+    { threshold: 10_000,     reward: 250     },
+    { threshold: 20_000,     reward: 500     },
+    { threshold: 50_000,     reward: 1_250   },
+    { threshold: 100_000,    reward: 2_500   },
+    { threshold: 200_000,    reward: 5_000   },
+    { threshold: 300_000,    reward: 12_500  },
+    { threshold: 1_000_000,  reward: 25_000  },
+    { threshold: 2_000_000,  reward: 50_000  },
+    { threshold: 5_000_000,  reward: 125_000 },
+    { threshold: 10_000_000, reward: 250_000 },
+] as const;
+
+export const MILESTONE_SPLIT = {
+    LEG_A_PCT: 0.40,
+    LEG_B_PCT: 0.30,
+    LEG_C_PCT: 0.30,
+} as const;
+
 // Generate Telegram start link
 export function getTelegramStartLink(referralCode: string): string {
     const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'your_bot';

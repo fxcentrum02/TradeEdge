@@ -132,7 +132,8 @@ export type TransactionType =
     | 'WITHDRAWAL'
     | 'WITHDRAWAL_FEE'
     | 'ADMIN_CREDIT'
-    | 'ADMIN_DEBIT';
+    | 'ADMIN_DEBIT'
+    | 'MILESTONE_BONUS'; // referral milestone reward
 
 export interface TransactionDocument {
     _id: ObjectId;
@@ -177,4 +178,18 @@ export interface ReferralWalletDocument {
     balance: number;
     createdAt: Date;
     updatedAt: Date;
+}
+
+// ===========================================
+// MILESTONE AWARD DOCUMENT
+// ===========================================
+export interface MilestoneAwardDocument {
+    _id: ObjectId;
+    userId: ObjectId;
+    milestoneThreshold: number;  // e.g. 5000
+    rewardAmount: number;        // e.g. 150
+    awardedAt: Date;
+    snapshotLegA: number;        // top leg volume at time of award
+    snapshotLegB: number;        // 2nd leg volume at time of award
+    snapshotLegC: number;        // remaining legs combined volume at time of award
 }
