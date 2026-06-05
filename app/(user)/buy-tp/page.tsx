@@ -56,7 +56,7 @@ export default function BuyMiningPowerPage() {
     // Look up matching plan tier as user types amount
     useEffect(() => {
         const numAmount = parseFloat(amount);
-        if (isNaN(numAmount) || numAmount < 50) {
+        if (isNaN(numAmount) || numAmount < 10) {
             setMatchedPlan(null);
             return;
         }
@@ -85,7 +85,7 @@ export default function BuyMiningPowerPage() {
     }, [amount]);
 
     const numAmount = parseFloat(amount);
-    const isValidAmount = !isNaN(numAmount) && numAmount >= 50;
+    const isValidAmount = !isNaN(numAmount) && numAmount >= 10;
     const dailyEarning = matchedPlan ? (numAmount * matchedPlan.dailyRoi) / 100 : 0;
     const totalEarning = matchedPlan ? dailyEarning * matchedPlan.duration : 0;
 
@@ -98,7 +98,7 @@ export default function BuyMiningPowerPage() {
     const handleProceedToPayment = () => {
         setError('');
         if (!isValidAmount) {
-            setError('Please enter a valid amount (minimum 50 USDT)');
+            setError('Please enter a valid amount (minimum 10 USDT)');
             return;
         }
         if (!matchedPlan) {
@@ -161,7 +161,7 @@ export default function BuyMiningPowerPage() {
                                 Enter Investment Amount (USDT)
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                Minimum: 50 USDT. Payment via BEP20 network.
+                                Minimum: 10 USDT. Payment via BEP20 network.
                             </Typography>
 
                             <TextField
@@ -170,7 +170,7 @@ export default function BuyMiningPowerPage() {
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 type="number"
-                                inputProps={{ min: 50, step: 1 }}
+                                inputProps={{ min: 10, step: 1 }}
                                 placeholder="e.g. 100"
                                 sx={{ mb: 2 }}
                                 InputProps={{
@@ -236,7 +236,7 @@ export default function BuyMiningPowerPage() {
                             )}
 
                             {!isValidAmount && amount && (
-                                <Alert severity="error" sx={{ mt: 1 }}>Minimum investment is 50 USDT</Alert>
+                                <Alert severity="error" sx={{ mt: 1 }}>Minimum investment is 10 USDT</Alert>
                             )}
                         </CardContent>
                     </Card>

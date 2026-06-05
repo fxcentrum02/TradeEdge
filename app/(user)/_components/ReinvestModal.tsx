@@ -31,7 +31,7 @@ export default function ReinvestModal({ open, onClose, onSuccess, balance, plans
 
     useEffect(() => {
         const numAmount = parseFloat(amount);
-        if (isNaN(numAmount) || numAmount < 50) {
+        if (isNaN(numAmount) || numAmount < 10) {
             setMatchedPlan(null);
             return;
         }
@@ -48,8 +48,8 @@ export default function ReinvestModal({ open, onClose, onSuccess, balance, plans
         setError('');
         const numAmount = parseFloat(amount);
 
-        if (!numAmount || numAmount < 50) {
-            setError('Minimum reinvestment is 50 USDT');
+        if (!numAmount || numAmount < 10) {
+            setError('Minimum reinvestment is 10 USDT');
             return;
         }
 
@@ -120,7 +120,7 @@ export default function ReinvestModal({ open, onClose, onSuccess, balance, plans
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Min 50 USDT"
+                    placeholder="Min 10 USDT"
                     autoFocus
                     InputProps={{
                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
