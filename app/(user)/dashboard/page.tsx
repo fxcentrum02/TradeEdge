@@ -16,6 +16,7 @@ import ShowChartIcon from '@mui/icons-material/ShowChart';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
 import ReinvestModal from '../_components/ReinvestModal';
+import PromoModal from '../_components/PromoModal';
 import { useAuth } from '@/context/AuthContext';
 import { pusherClient } from '@/lib/pusher-client';
 import { formatCurrency } from '@/lib/utils';
@@ -81,7 +82,21 @@ export default function DashboardPage() {
     const [tabValue, setTabValue] = useState(0);
     const [countdown, setCountdown] = useState(getTimeUntilSettlement());
     const [reinvestModalOpen, setReinvestModalOpen] = useState(false);
+    const [promoOpen, setPromoOpen] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
+    // Check localStorage on mount to show the promo dialog only once
+    useEffect(() => {
+        const hasSeen = localStorage.getItem('hasSeenMin10Promo');
+        if (!hasSeen) {
+            setPromoOpen(true);
+        }
+    }, []);
+
+    const handleClosePromo = () => {
+        localStorage.setItem('hasSeenMin10Promo', 'true');
+        setPromoOpen(false);
+    };
 
     // Live countdown
     useEffect(() => {
@@ -570,6 +585,11 @@ export default function DashboardPage() {
                 onSuccess={handleReinvestSuccess}
                 balance={dashboard?.walletBalance || 0}
                 plans={plans}
+            />
+
+            <PromoModal
+                open={promoOpen}
+                onClose={handleClosePromo}
             />
 
             <Snackbar
