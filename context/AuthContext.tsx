@@ -79,6 +79,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [tgContextReady, isTelegramWebApp, hasInitData, initData, user, startParam, login]);
 
+    // State diagnostics log
+    useEffect(() => {
+        remoteLog('Auth state changed', {
+            tgContextReady,
+            isTelegramWebApp,
+            hasInitData,
+            hasUser: !!user,
+            isLoading,
+            isTelegramMissing,
+            initialDetectionTimeout,
+            isLoggingIn,
+            loginAttempted: loginAttempted.current
+        });
+    }, [tgContextReady, isTelegramWebApp, hasInitData, user, isLoading, isTelegramMissing, initialDetectionTimeout, isLoggingIn]);
+
     const logout = async () => {
         setUser(null);
         loginAttempted.current = true;

@@ -81,7 +81,14 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
                 remoteLog('WebApp detected in client', {
                     hasInitData: !!tg.initData,
                     user: tg.initDataUnsafe?.user,
-                    startParam: tg.initDataUnsafe?.start_param
+                    startParam: tg.initDataUnsafe?.start_param,
+                    href: typeof window !== 'undefined' ? window.location.href : '',
+                    hash: typeof window !== 'undefined' ? window.location.hash : '',
+                    search: typeof window !== 'undefined' ? window.location.search : '',
+                    platform: tg.platform,
+                    version: tg.version,
+                    initDataLength: tg.initData ? tg.initData.length : 0,
+                    initDataPreview: tg.initData ? tg.initData.substring(0, 30) + '...' : ''
                 });
             }
 
@@ -89,7 +96,9 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
                 console.log('[TelegramContext] initData populated');
                 setInitData(tg.initData);
                 remoteLog('initData populated', {
-                    username: tg.initDataUnsafe?.user?.username
+                    username: tg.initDataUnsafe?.user?.username,
+                    initDataLength: tg.initData.length,
+                    initDataPreview: tg.initData.substring(0, 30) + '...'
                 });
                 return true; // Stop polling if we have data
             }
