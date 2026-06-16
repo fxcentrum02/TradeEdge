@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { AuthProvider, TelegramProvider, ThemeProvider } from '@/context';
 import { getSettings } from '@/lib/repositories/settings.repository';
@@ -35,10 +36,8 @@ export default async function RootLayout({
       '--brand-main': brandColor,
       '--brand-dark': `color-mix(in srgb, ${brandColor} 80%, black)`
     } as React.CSSProperties}>
-      <head>
-        <script src="https://telegram.org/js/telegram-web-app.js" async />
-      </head>
       <body className={inter.variable}>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <AppRouterCacheProvider>
           <TelegramProvider>
             <ThemeProvider>
