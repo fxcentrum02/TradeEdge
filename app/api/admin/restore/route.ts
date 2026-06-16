@@ -15,7 +15,6 @@ const TARGET_DATABASE_URL = 'mongodb+srv://tradeedge321_db_user:5Lih1i7NGI1ycG5n
 
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
     let targetClient: MongoClient | null = null;
-    let sourceClient: MongoClient | null = null;
     try {
         // Authenticate request using cron secret query parameter or a hardcoded fallback
         const { searchParams } = new URL(request.url);
@@ -34,24 +33,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         const startTime = Date.now();
 
         // 1. Connect to both databases
-        // Source DB is the backup database (connected directly to catch detailed errors)
-        let sourceDb: any = null;
-        let sourceError = '';
-        try {
-            const sourceUri = process.env.BACKUP_DATABASE_URL;
-            if (!sourceUri) {
-                sourceError = 'BACKUP_DATABASE_URL environment variable is missing';
-            } else {
-                console.log('[Restore] Connecting directly to source (backup) database...');
-                sourceClient = await MongoClient.connect(sourceUri, {
-                    serverSelectionTimeoutMS: 10000,
-                    connectTimeoutMS: 10000,
-                });
-                sourceDb = sourceClient.db(process.env.BACKUP_MONGODB_DB_NAME || 'TradeEdge');
-            }
-        } catch (err: any) {
-            sourceError = err.message || String(err);
-        }
+        // Source DB is the backup database
+        const sourceDb = await getBackupDB();
         
         // Target DB is the new main database (hardcoded to avoid affecting live Vercel config)
         console.log('[Restore] Connecting directly to target database...');
@@ -62,13 +45,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         const targetDb = targetClient.db('TradeEdge');
 
         if (!sourceDb) {
-            console.error('[Restore] Backup database connection failed:', sourceError);
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Backup (Source) database connection failed',
-                details: sourceError,
-                envExists: !!process.env.BACKUP_DATABASE_URL
-            }, { status: 500 });
+            console.error('[Restore] Backup database connection failed');
+            return NextResponse.json({ success: false, error: 'Backup (Source) database connection failed' }, { status: 500 });
         }
         if (!targetDb) {
             console.error('[Restore] Main database connection failed');
@@ -172,9 +150,6 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     } finally {
         if (targetClient) {
             await targetClient.close();
-        }
-        if (sourceClient) {
-            await sourceClient.close();
         }
     }
 }
