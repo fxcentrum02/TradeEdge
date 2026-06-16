@@ -4,17 +4,13 @@
 // ===========================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getBackupDB } from '@/lib/db';
+import { getDB, getBackupDB } from '@/lib/db';
 import { createIndexes } from '@/lib/db/indexes';
 import { remoteLog } from '@/lib/logger';
 import { pusherServer } from '@/lib/pusher';
 import type { ApiResponse } from '@/types';
-import { MongoClient } from 'mongodb';
-
-const TARGET_DATABASE_URL = 'mongodb+srv://tradeedge321_db_user:5Lih1i7NGI1ycG5n@cluster0.2izsdza.mongodb.net/TradeEdge';
 
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
-    let targetClient: MongoClient | null = null;
     try {
         // Authenticate request using cron secret query parameter
         const { searchParams } = new URL(request.url);
@@ -32,14 +28,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         // 1. Connect to both databases
         // Source DB is the backup database
         const sourceDb = await getBackupDB();
-        
-        // Target DB is the new main database (hardcoded to avoid affecting live Vercel config)
-        console.log('[Restore] Connecting directly to target database...');
-        targetClient = await MongoClient.connect(TARGET_DATABASE_URL, {
-            serverSelectionTimeoutMS: 10000,
-            connectTimeoutMS: 10000,
-        });
-        const targetDb = targetClient.db('TradeEdge');
+        // Target DB is the new main database (DATABASE_URL)
+        const targetDb = await getDB();
 
         if (!sourceDb) {
             console.error('[Restore] Backup database connection failed');
@@ -98,16 +88,12 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
         // 3. Set up indexes on the target database
         console.log('[Restore] Creating indexes on target database...');
-        const originalUrl = process.env.DATABASE_URL;
         try {
-            process.env.DATABASE_URL = TARGET_DATABASE_URL;
             await createIndexes();
             console.log('[Restore] Indexes set up successfully');
         } catch (indexErr: any) {
             console.error('[Restore] Failed to set up indexes:', indexErr);
             results['_indexes'] = { error: String(indexErr), status: 'failed' };
-        } finally {
-            process.env.DATABASE_URL = originalUrl;
         }
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -144,9 +130,5 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         console.error('[Restore] Unhandled error during restore:', error);
         remoteLog('Database restore failed', { error: String(error) }, 'ERROR');
         return NextResponse.json({ success: false, error: 'Database restore failed: ' + String(error) }, { status: 500 });
-    } finally {
-        if (targetClient) {
-            await targetClient.close();
-        }
     }
 }
