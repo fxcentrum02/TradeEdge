@@ -16,15 +16,12 @@ const TARGET_DATABASE_URL = 'mongodb+srv://tradeedge321_db_user:5Lih1i7NGI1ycG5n
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
     let targetClient: MongoClient | null = null;
     try {
-        // Authenticate request using cron secret query parameter or a hardcoded fallback
+        // Authenticate request using cron secret query parameter
         const { searchParams } = new URL(request.url);
         const secret = searchParams.get('secret');
         const cronSecret = process.env.CRON_SECRET;
-        const fallbackSecret = 'f7a0c8b2d4e6f8a0c2e4f6a8b0c2d4e6f8a0c2e4f6a8b0c2d4e6f8a0c2e4f6a8';
 
-        const isAuthorized = (cronSecret && secret === cronSecret) || (secret === fallbackSecret);
-
-        if (!isAuthorized) {
+        if (!cronSecret || secret !== cronSecret) {
             console.error('[Restore] Unauthorized attempt');
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
