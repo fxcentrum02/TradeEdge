@@ -5,14 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     Box, Drawer, AppBar, Toolbar, Typography, List, ListItem, ListItemButton,
     ListItemIcon, ListItemText, IconButton, useMediaQuery, useTheme, Avatar,
-    Chip, Divider, Collapse, Snackbar, Alert
+    Chip, Divider
 } from '@mui/material';
 import { pusherClient } from '@/lib/pusher-client';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import LayersIcon from '@mui/icons-material/Layers';
-import PaymentIcon from '@mui/icons-material/Payment';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
@@ -191,15 +190,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         // Subscribing to Pusher for real-time notifications
         const channel = pusherClient.subscribe('admin-notifications');
 
-        channel.bind('new-ticket', (data: any) => {
+        channel.bind('new-ticket', () => {
             fetchStats(); // Update sidebar badges
         });
 
-        channel.bind('new-withdrawal', (data: any) => {
+        channel.bind('new-withdrawal', () => {
             fetchStats(); // Update sidebar badges
         });
 
-        channel.bind('ticket-processed', (data: any) => {
+        channel.bind('ticket-processed', () => {
             fetchStats(); // Update sidebar badges
         });
 
@@ -221,6 +220,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const brandInitials = appName.substring(0, 2).toUpperCase();
 
     const navItems = getNavItems(sidebarStats.pendingTickets, sidebarStats.pendingWithdrawals);
+    const mainItems = navItems.filter((item) => !item.isLocked);
+    const lockedItems = navItems.filter((item) => item.isLocked);
 
     const drawer = (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#0f172a' }}>
@@ -253,55 +254,177 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 1 }} />
 
-            {/* Nav Items */}
-            <List sx={{ flex: 1, px: 1.5, py: 1 }}>
-                {navItems.map((item) => {
-                    const isActive = pathname === item.path || (item.path !== '/admin' && pathname.startsWith(item.path));
-                    return (
-                        <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-                            <ListItemButton
-                                selected={isActive}
-                                onClick={() => {
-                                    router.push(item.path);
-                                    if (isMobile) setMobileOpen(false);
-                                }}
-                                sx={{
-                                    borderRadius: 2,
-                                    py: 1.3,
-                                    color: isActive ? 'white' : '#94a3b8',
-                                    bgcolor: isActive ? `${brandColor}22 !important` : 'transparent',
-                                    '&:hover': {
-                                        bgcolor: 'rgba(255,255,255,0.06)',
-                                        color: 'white',
-                                    },
-                                    transition: 'all 0.15s ease',
-                                }}
-                            >
-                                <ListItemIcon sx={{ color: isActive ? brandColor : '#64748b', minWidth: 38 }}>
-                                    {item.icon}
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary={item.text}
-                                    primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: isActive ? 600 : 400 }}
-                                />
-                                {item.badge && (
-                                    <Chip
-                                        label={item.badge}
-                                        size="small"
-                                        sx={{ height: 18, fontSize: '0.6rem', bgcolor: brandColor, color: '#1a1a1a', fontWeight: 700 }}
+            {/* Nav Items Scroll Container */}
+            <Box 
+                sx={{ 
+                    flex: 1, 
+                    overflowY: 'auto', 
+                    px: 1.5, 
+                    py: 1,
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(255,255,255,0.12) transparent',
+                    '@supports not (scrollbar-color: auto)': {
+                        '&::-webkit-scrollbar': {
+                            width: '6px',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            backgroundColor: 'rgba(255,255,255,0.12)',
+                            borderRadius: '4px',
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            backgroundColor: 'transparent',
+                        }
+                    }
+                }}
+            >
+                {/* Main Panel */}
+                <List sx={{ p: 0 }}>
+                    {mainItems.map((item) => {
+                        const isActive = pathname === item.path || (item.path !== '/admin' && pathname.startsWith(item.path));
+                        return (
+                            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                                <ListItemButton
+                                    selected={isActive}
+                                    onClick={() => {
+                                        router.push(item.path);
+                                        if (isMobile) setMobileOpen(false);
+                                    }}
+                                    sx={{
+                                        borderRadius: 2,
+                                        py: 1.1,
+                                        color: isActive ? 'white' : '#94a3b8',
+                                        bgcolor: isActive ? `${brandColor}22 !important` : 'transparent',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(255,255,255,0.06)',
+                                            color: 'white',
+                                        },
+                                        transition: 'all 0.15s ease',
+                                    }}
+                                >
+                                    <ListItemIcon sx={{ color: isActive ? brandColor : '#64748b', minWidth: 34 }}>
+                                        {item.icon}
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={item.text}
+                                        primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: isActive ? 600 : 400 }}
                                     />
-                                )}
-                                {(item as any).isLocked && (
-                                    <LockIcon sx={{ fontSize: 14, color: '#f59e0b', ml: 1, opacity: 0.8 }} />
-                                )}
-                                {isActive && (
-                                    <Box sx={{ width: 3, height: 20, bgcolor: brandColor, borderRadius: 4, ml: 0.5 }} />
-                                )}
-                            </ListItemButton>
-                        </ListItem>
-                    );
-                })}
-            </List>
+                                    {item.badge && (
+                                        <Chip
+                                            label={item.badge}
+                                            size="small"
+                                            sx={{ height: 18, fontSize: '0.6rem', bgcolor: brandColor, color: '#1a1a1a', fontWeight: 700 }}
+                                        />
+                                    )}
+                                    {isActive && (
+                                        <Box sx={{ width: 3, height: 20, bgcolor: brandColor, borderRadius: 4, ml: 0.5 }} />
+                                    )}
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+
+                {/* Enterprise Add-ons Section Header */}
+                <Box sx={{ mt: 2.5, mb: 1, px: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: '#fbbf24',
+                            fontWeight: 700,
+                            letterSpacing: '0.1em',
+                            fontSize: '0.65rem',
+                            textTransform: 'uppercase',
+                            opacity: 0.85
+                        }}
+                    >
+                        Enterprise Add-ons
+                    </Typography>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'rgba(245, 158, 11, 0.15)' }} />
+                </Box>
+
+                {/* Premium / Locked Items */}
+                <List sx={{ p: 0 }}>
+                    {lockedItems.map((item) => {
+                        const isActive = pathname === item.path || (item.path !== '/admin' && pathname.startsWith(item.path));
+                        return (
+                            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                                <ListItemButton
+                                    selected={isActive}
+                                    onClick={() => {
+                                        router.push(item.path);
+                                        if (isMobile) setMobileOpen(false);
+                                    }}
+                                    sx={{
+                                        borderRadius: 2,
+                                        py: 1.1,
+                                        color: isActive ? '#fef08a' : '#94a3b8',
+                                        bgcolor: isActive 
+                                            ? 'rgba(245, 158, 11, 0.15) !important' 
+                                            : 'rgba(245, 158, 11, 0.02)',
+                                        border: isActive 
+                                            ? '1px solid rgba(245, 158, 11, 0.3)' 
+                                            : '1px solid rgba(255, 255, 255, 0.03)',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(245, 158, 11, 0.08)',
+                                            border: '1px solid rgba(245, 158, 11, 0.25)',
+                                            color: '#fef08a',
+                                            '& .MuiListItemIcon-root': {
+                                                color: '#fbbf24',
+                                            }
+                                        },
+                                        transition: 'all 0.2s ease',
+                                    }}
+                                >
+                                    <ListItemIcon 
+                                        sx={{ 
+                                            color: isActive ? '#fbbf24' : 'rgba(245, 158, 11, 0.5)', 
+                                            minWidth: 34,
+                                            transition: 'color 0.2s ease'
+                                        }}
+                                    >
+                                        {item.icon}
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={item.text}
+                                        primaryTypographyProps={{ 
+                                            fontSize: '0.85rem', 
+                                            fontWeight: isActive ? 600 : 400,
+                                            sx: {
+                                                color: isActive ? '#fef08a' : '#cbd5e1',
+                                            }
+                                        }}
+                                    />
+                                    
+                                    {/* Stylized Premium Badges */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <Box 
+                                            sx={{
+                                                fontSize: '0.55rem',
+                                                fontWeight: 800,
+                                                px: 0.8,
+                                                py: 0.2,
+                                                borderRadius: 1,
+                                                bgcolor: 'rgba(245, 158, 11, 0.12)',
+                                                color: '#fbbf24',
+                                                border: '1px solid rgba(245, 158, 11, 0.25)',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.05em'
+                                            }}
+                                        >
+                                            PRO
+                                        </Box>
+                                        <LockIcon sx={{ fontSize: 13, color: '#fbbf24' }} />
+                                    </Box>
+                                    
+                                    {isActive && (
+                                        <Box sx={{ width: 3, height: 20, bgcolor: '#fbbf24', borderRadius: 4, ml: 0.5 }} />
+                                    )}
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+            </Box>
 
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
 

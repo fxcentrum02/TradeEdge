@@ -4,13 +4,12 @@ import React, { useState } from 'react';
 import {
     Box, Typography, Button, Paper, Stack, Dialog, DialogTitle,
     DialogContent, DialogActions, TextField, CircularProgress, IconButton,
-    Grid
+    Grid, Alert
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import SecurityIcon from '@mui/icons-material/Security';
 import CloseIcon from '@mui/icons-material/Close';
-import CloudDoneIcon from '@mui/icons-material/CloudDone';
 
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
@@ -33,16 +32,54 @@ export default function LockedFeatureView({
 }: LockedFeatureViewProps) {
     const [open, setOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [fullName, setFullName] = useState('Admin');
+    const [email, setEmail] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
+    const [success, setSuccess] = useState(false);
 
-    const handleUpgradeClick = () => setOpen(true);
-    const handleClose = () => {
-        setOpen(false);
-        setSubmitting(false); // Reset loader on close
+    const handleUpgradeClick = () => {
+        setOpen(true);
+        setSuccess(false);
+        setErrorMsg('');
     };
 
-    const handleSubmit = () => {
+    const handleClose = () => {
+        setOpen(false);
+        setSubmitting(false);
+        setSuccess(false);
+        setErrorMsg('');
+        setEmail('');
+    };
+
+    const handleSubmit = async () => {
+        if (!fullName.trim() || !email.trim()) {
+            setErrorMsg('Please enter both your name and business email.');
+            return;
+        }
+        setErrorMsg('');
         setSubmitting(true);
-        // User requested just to have a loader on submit
+        try {
+            const res = await fetch('/api/admin/feature-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    featureTitle: title.replace(' Locked', ''),
+                    fullName,
+                    email,
+                    price
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccess(true);
+            } else {
+                setErrorMsg(data.error || 'Failed to submit activation request.');
+            }
+        } catch {
+            setErrorMsg('Network error. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -223,76 +260,169 @@ export default function LockedFeatureView({
                 onClose={handleClose}
                 PaperProps={{
                     sx: {
-                        borderRadius: 5,
-                        maxWidth: 450,
+                        borderRadius: 6,
+                        maxWidth: 460,
                         width: '100%',
-                        p: 1
+                        p: 1.5,
+                        bgcolor: '#ffffff',
+                        boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
                     }
                 }}
             >
-                <DialogTitle sx={{ fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Unlock AWS Cloud Security
-                    <IconButton onClick={handleClose} size="small" sx={{ color: '#94a3b8' }}>
+                <DialogTitle sx={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a', pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {success ? 'Activation Initiated' : `Unlock ${title.replace(' Locked', '')}`}
+                    <IconButton onClick={handleClose} size="small" sx={{ color: '#94a3b8', '&:hover': { color: '#0f172a' } }}>
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ textAlign: 'center', py: 2 }}>
-                        <Box sx={{
-                            display: 'inline-flex',
-                            p: 2,
-                            borderRadius: '50%',
-                            bgcolor: '#f0fdf4',
-                            color: '#16a34a',
-                            mb: 2
-                        }}>
-                            <CloudDoneIcon />
+                
+                <DialogContent sx={{ pb: 1 }}>
+                    {success ? (
+                        <Box sx={{ textAlign: 'center', py: 3, px: 1 }}>
+                            <Box sx={{
+                                display: 'inline-flex',
+                                p: 2,
+                                borderRadius: '50%',
+                                bgcolor: '#f0fdf4',
+                                color: '#16a34a',
+                                mb: 3,
+                                boxShadow: '0 8px 24px rgba(22, 163, 74, 0.15)',
+                                animation: 'pulse 2s infinite'
+                            }}>
+                                <CheckCircleIcon sx={{ fontSize: 48 }} />
+                            </Box>
+                            <Typography variant="h5" fontWeight={900} sx={{ color: '#1e293b', mb: 1.5, letterSpacing: '-0.02em' }}>
+                                Request Submitted!
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#64748b', lineHeight: 1.6, mb: 3 }}>
+                                Your activation ticket for <strong>{title.replace(' Locked', '')}</strong> has been successfully registered. The dev team is provisioning a dedicated container for this feature node.
+                            </Typography>
+                            <Box sx={{ bgcolor: '#f8fafc', p: 2, borderRadius: 3, border: '1px solid #e2e8f0', textAlign: 'left', mb: 3 }}>
+                                <Stack direction="row" spacing={2} sx={{ mb: 1.5 }}>
+                                    <Box sx={{ width: 18, height: 18, borderRadius: '50%', bgcolor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyAll: 'center', fontSize: '0.65rem', fontWeight: 800, pl: 0.6 }}>1</Box>
+                                    <Typography variant="caption" sx={{ color: '#475569', fontWeight: 700 }}>Ticket registered in core cluster</Typography>
+                                </Stack>
+                                <Stack direction="row" spacing={2} sx={{ mb: 1.5 }}>
+                                    <Box sx={{ width: 18, height: 18, borderRadius: '50%', bgcolor: '#fef3c7', display: 'flex', alignItems: 'center', justifyAll: 'center', fontSize: '0.65rem', fontWeight: 800, pl: 0.6, color: '#b45309' }}>2</Box>
+                                    <Typography variant="caption" sx={{ color: '#b45309', fontWeight: 700 }}>Awaiting license authorization (1-2 hrs)</Typography>
+                                </Stack>
+                                <Stack direction="row" spacing={2}>
+                                    <Box sx={{ width: 18, height: 18, borderRadius: '50%', bgcolor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyAll: 'center', fontSize: '0.65rem', fontWeight: 800, pl: 0.6 }}>3</Box>
+                                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>Dynamic gateway activation</Typography>
+                                </Stack>
+                            </Box>
                         </Box>
-                        <Typography variant="h5" fontWeight={900} color="primary" gutterBottom>
-                            {price}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                            Get lifetime access to advanced security tools, including global broadcasts and automated fraud detection.
-                        </Typography>
+                    ) : (
+                        <Box sx={{ py: 1 }}>
+                            <Box sx={{ textAlign: 'center', mb: 3 }}>
+                                <Typography variant="h4" fontWeight={900} sx={{ color: '#fbbf24', mb: 0.5 }}>
+                                    {price}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                                    ONE-TIME ENTERPRISE LICENSE FEE
+                                </Typography>
+                            </Box>
 
-                        <Stack spacing={2} sx={{ textAlign: 'left' }}>
-                            <TextField
-                                label="Full Name"
-                                fullWidth
-                                variant="outlined"
-                                defaultValue="Admin"
-                                size="small"
-                                disabled={submitting}
-                            />
-                            <TextField
-                                label="Business Email"
-                                fullWidth
-                                variant="outlined"
-                                placeholder="admin@example.com"
-                                size="small"
-                                disabled={submitting}
-                            />
-                        </Stack>
-                    </Box>
+                            <Typography variant="body2" sx={{ color: '#475569', lineHeight: 1.5, mb: 3, textAlign: 'center' }}>
+                                Requesting activation deploys a dedicated sandboxed VPS container, links encrypted API tunnels, and boots the feature gateway.
+                            </Typography>
+
+                            {errorMsg && (
+                                <Alert severity="error" variant="filled" sx={{ mb: 2.5, borderRadius: 2, fontSize: '0.8rem' }}>
+                                    {errorMsg}
+                                </Alert>
+                            )}
+
+                            <Stack spacing={2} sx={{ mb: 3 }}>
+                                <TextField
+                                    label="License Holder Name"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    size="small"
+                                    disabled={submitting}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                                />
+                                <TextField
+                                    label="Verification Business Email"
+                                    fullWidth
+                                    variant="outlined"
+                                    placeholder="admin@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    size="small"
+                                    disabled={submitting}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                                />
+                            </Stack>
+
+                            {/* Trust badges */}
+                            <Box sx={{ borderTop: '1px dashed #e2e8f0', pt: 2, pb: 1 }}>
+                                <Grid container spacing={1}>
+                                    <Grid size={6}>
+                                        <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#64748b', fontWeight: 500 }}>
+                                            🛡️ AWS Encrypted container
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={6}>
+                                        <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#64748b', fontWeight: 500 }}>
+                                            ⚡ Real-time API tunnel
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={6}>
+                                        <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#64748b', fontWeight: 500 }}>
+                                            🔑 256-bit Key Escrow
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={6}>
+                                        <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#64748b', fontWeight: 500 }}>
+                                            📄 SOC2 compliant gateway
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Box>
+                    )}
                 </DialogContent>
-                <DialogActions sx={{ p: 3, pt: 0 }}>
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        disabled={submitting}
-                        onClick={handleSubmit}
-                        sx={{
-                            borderRadius: 3,
-                            py: 1.5,
-                            fontWeight: 700,
-                            textTransform: 'none',
-                            bgcolor: '#1e293b',
-                            '&:hover': { bgcolor: '#0f172a' }
-                        }}
-                    >
-                        {submitting ? <CircularProgress size={24} color="inherit" /> : 'Activate Now'}
-                    </Button>
+                
+                <DialogActions sx={{ px: 3, pb: 2, pt: 0 }}>
+                    {success ? (
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            size="large"
+                            onClick={handleClose}
+                            sx={{
+                                borderRadius: 3,
+                                py: 1.3,
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                bgcolor: '#0f172a',
+                                '&:hover': { bgcolor: '#1e293b' }
+                            }}
+                        >
+                            Understood, Close
+                        </Button>
+                    ) : (
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            size="large"
+                            disabled={submitting}
+                            onClick={handleSubmit}
+                            sx={{
+                                borderRadius: 3,
+                                py: 1.3,
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                bgcolor: '#1e293b',
+                                '&:hover': { bgcolor: '#0f172a' }
+                            }}
+                        >
+                            {submitting ? <CircularProgress size={24} color="inherit" /> : 'Confirm & Request Activation'}
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
         </Box>
