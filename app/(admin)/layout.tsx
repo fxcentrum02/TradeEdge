@@ -24,6 +24,10 @@ import SecurityIcon from '@mui/icons-material/Security';
 import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 import LockIcon from '@mui/icons-material/Lock';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import RedeemIcon from '@mui/icons-material/Redeem';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import ForumIcon from '@mui/icons-material/Forum';
+import PsychologyIcon from '@mui/icons-material/Psychology';
  
 const drawerWidth = 268;
 
@@ -108,6 +112,34 @@ const getNavItems = (pendingTickets: number, pendingWithdrawals: number) => [
         text: 'WhatsApp Alerts',
         icon: <WhatsAppIcon />,
         path: '/admin/whatsapp',
+        badge: null,
+        isLocked: true,
+    },
+    {
+        text: 'Achievement Shop',
+        icon: <RedeemIcon />,
+        path: '/admin/rewards',
+        badge: null,
+        isLocked: true,
+    },
+    {
+        text: 'Promo Campaigns',
+        icon: <LocalOfferIcon />,
+        path: '/admin/campaigns',
+        badge: null,
+        isLocked: true,
+    },
+    {
+        text: 'Live CRM Support',
+        icon: <ForumIcon />,
+        path: '/admin/crm',
+        badge: null,
+        isLocked: true,
+    },
+    {
+        text: 'AI Analytics',
+        icon: <PsychologyIcon />,
+        path: '/admin/ai-analytics',
         badge: null,
         isLocked: true,
     },
