@@ -8,6 +8,9 @@ import { getDB } from '@/lib/db';
 import { Collections } from '@/lib/db/collections';
 import type { ApiResponse, PaginatedResponse, AdminUserView } from '@/types';
 
+// Helper to determine wallet field name (userId in schema)
+const userIdField = 'userId';
+
 /**
  * GET /api/admin/users - Get all users with pagination
  */
@@ -249,6 +252,3 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         return NextResponse.json({ success: false, error: 'Failed to get users' }, { status: 500 });
     }
 }
-
-// Helper to determine wallet field name (userId in schema)
-const userIdField = 'userId';

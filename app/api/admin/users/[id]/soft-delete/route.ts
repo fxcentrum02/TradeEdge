@@ -3,6 +3,7 @@ import { getDB } from '@/lib/db';
 import { Collections } from '@/lib/db/collections';
 import { ObjectId } from 'mongodb';
 import { getAdminSessionFromRequest } from '@/lib/auth';
+import { updateUserStatsRecursively } from '@/lib/referral';
 
 export async function POST(
     req: NextRequest,
@@ -70,6 +71,12 @@ export async function POST(
                 }
             }
         );
+        // 3. Update upline stats recursively to sync tradePower and downline counts
+        try {
+            await updateUserStatsRecursively(userId);
+        } catch (err) {
+            console.error('Failed to recursively update stats on soft-delete:', err);
+        }
 
         return NextResponse.json({
             success: true,

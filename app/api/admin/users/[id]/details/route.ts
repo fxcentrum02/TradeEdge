@@ -38,108 +38,124 @@ export async function GET(
             return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
         }
 
-        // 1.1 Get Referrer Profile
-        let referredBy = null;
-        if (user.referredById) {
-            const referrer = await db.collection(Collections.USERS).findOne(
-                { _id: user.referredById },
-                { projection: { firstName: 1, lastName: 1, telegramUsername: 1, telegramId: 1 } }
-            );
-            if (referrer) {
-                referredBy = {
-                    name: `${referrer.firstName || 'User'} ${referrer.lastName || ''}`.trim(),
-                    telegramHandle: referrer.telegramUsername || referrer.telegramId
-                };
-            }
-        }
+        // Run all independent queries in parallel
+        const [
+            referredBy,
+            wallet,
+            referralWallet,
+            userPlans,
+            referralEarnings,
+            transactionsResponse,
+            roiHistory,
+            directReferrals,
+            userPlansSummary,
+            referralSummary,
+            withdrawalSummary,
+        ] = await Promise.all([
+            // 1.1 Referrer Profile
+            user.referredById
+                ? db.collection(Collections.USERS).findOne(
+                    { _id: user.referredById },
+                    { projection: { firstName: 1, lastName: 1, telegramUsername: 1, telegramId: 1 } }
+                ).then(referrer => {
+                    if (!referrer) return null;
+                    return {
+                        name: `${referrer.firstName || 'User'} ${referrer.lastName || ''}`.trim(),
+                        telegramHandle: referrer.telegramUsername || referrer.telegramId
+                    };
+                })
+                : Promise.resolve(null),
 
-        // 2. Get Wallets
-        const wallet = await findWalletByUserId(_userId);
-        const referralWallet = await findReferralWalletByUserId(_userId);
+            // 2. Wallets
+            findWalletByUserId(_userId),
+            findReferralWalletByUserId(_userId),
 
-        // 3. Get Purchased Plans
-        const userPlans = await db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: _userId } },
-            {
-                $lookup: {
-                    from: Collections.PLANS,
-                    localField: 'planId',
-                    foreignField: '_id',
-                    as: 'planInfo'
+            // 3. Purchased Plans
+            db.collection(Collections.USER_PLANS).aggregate([
+                { $match: { userId: _userId } },
+                {
+                    $lookup: {
+                        from: Collections.PLANS,
+                        localField: 'planId',
+                        foreignField: '_id',
+                        as: 'planInfo'
+                    }
+                },
+                { $unwind: { path: '$planInfo', preserveNullAndEmptyArrays: true } },
+                { $sort: { createdAt: -1 } }
+            ]).toArray(),
+
+            // 4. Referral Earnings
+            db.collection(Collections.REFERRAL_EARNINGS).aggregate([
+                { $match: { userId: _userId } },
+                {
+                    $lookup: {
+                        from: Collections.USERS,
+                        localField: 'fromUserId',
+                        foreignField: '_id',
+                        as: 'fromUser'
+                    }
+                },
+                { $unwind: { path: '$fromUser', preserveNullAndEmptyArrays: true } },
+                { $sort: { createdAt: -1 } },
+                { $limit: 50 }
+            ]).toArray(),
+
+            // 5. Transaction History
+            getTransactionHistory(_userId, 1, 50),
+
+            // 6. ROI Details
+            db.collection(Collections.TRANSACTIONS)
+                .find({ userId: _userId, type: 'ROI_EARNING' })
+                .sort({ createdAt: -1 })
+                .limit(50)
+                .toArray(),
+
+            // 7. Direct Referrals
+            db.collection(Collections.USERS)
+                .find({ referredById: _userId })
+                .sort({ createdAt: -1 })
+                .toArray(),
+
+            // 8. Analytics (Plans Summary)
+            db.collection(Collections.USER_PLANS).aggregate([
+                { $match: { userId: _userId } },
+                {
+                    $group: {
+                        _id: null,
+                        totalInvested: { $sum: '$amount' },
+                        totalDeposit: {
+                            $sum: {
+                                $cond: [{ $eq: ['$isReinvest', false] }, '$amount', 0]
+                            }
+                        },
+                        totalReinvest: {
+                            $sum: {
+                                $cond: [{ $eq: ['$isReinvest', true] }, '$amount', 0]
+                            }
+                        },
+                        totalRoiPaid: { $sum: '$totalRoiPaid' }
+                    }
                 }
-            },
-            { $unwind: { path: '$planInfo', preserveNullAndEmptyArrays: true } },
-            { $sort: { createdAt: -1 } }
-        ]).toArray();
+            ]).toArray().then(arr => arr[0] || null),
 
-        // 4. Get Referral Earnings
-        const referralEarnings = await db.collection(Collections.REFERRAL_EARNINGS).aggregate([
-            { $match: { userId: _userId } },
-            {
-                $lookup: {
-                    from: Collections.USERS,
-                    localField: 'fromUserId',
-                    foreignField: '_id',
-                    as: 'fromUser'
+            // 8. Analytics (Referral Summary)
+            db.collection(Collections.REFERRAL_EARNINGS).aggregate([
+                { $match: { userId: _userId } },
+                { $group: { _id: null, totalEarned: { $sum: '$amount' } } }
+            ]).toArray().then(arr => arr[0] || null),
+
+            // 8. Analytics (Withdrawal Summary)
+            db.collection(Collections.WITHDRAWALS).aggregate([
+                { $match: { userId: _userId } },
+                {
+                    $group: {
+                        _id: '$status',
+                        totalAmount: { $sum: '$amount' }
+                    }
                 }
-            },
-            { $unwind: { path: '$fromUser', preserveNullAndEmptyArrays: true } },
-            { $sort: { createdAt: -1 } },
-            { $limit: 50 } // Limit for details view
-        ]).toArray();
-
-        // 5. Get Transaction History
-        const transactionsResponse = await getTransactionHistory(_userId, 1, 50);
-
-        // 6. Get ROI Details (from transactions of type ROI_EARNING)
-        const roiHistory = await db.collection(Collections.TRANSACTIONS)
-            .find({ userId: _userId, type: 'ROI_EARNING' })
-            .sort({ createdAt: -1 })
-            .limit(50)
-            .toArray();
-
-        // 7. Get Direct Referrals (for initial tree)
-        const directReferrals = await db.collection(Collections.USERS)
-            .find({ referredById: _userId })
-            .sort({ createdAt: -1 })
-            .toArray();
-
-        // 8. Calculate Analytics
-        const [userPlansSummary] = await db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: _userId } },
-            {
-                $group: {
-                    _id: null,
-                    totalInvested: { $sum: '$amount' },
-                    totalDeposit: {
-                        $sum: {
-                            $cond: [{ $eq: ['$isReinvest', false] }, '$amount', 0]
-                        }
-                    },
-                    totalReinvest: {
-                        $sum: {
-                            $cond: [{ $eq: ['$isReinvest', true] }, '$amount', 0]
-                        }
-                    },
-                    totalRoiPaid: { $sum: '$totalRoiPaid' }
-                }
-            }
-        ]).toArray();
-
-        const [referralSummary] = await db.collection(Collections.REFERRAL_EARNINGS).aggregate([
-            { $match: { userId: _userId } },
-            { $group: { _id: null, totalEarned: { $sum: '$amount' } } }
-        ]).toArray();
-
-        const withdrawalSummary = await db.collection(Collections.WITHDRAWALS).aggregate([
-            { $match: { userId: _userId } },
-            {
-                $group: {
-                    _id: '$status',
-                    totalAmount: { $sum: '$amount' }
-                }
-            }
-        ]).toArray();
+            ]).toArray(),
+        ]);
 
         const analytics = {
             totalInvested: userPlansSummary?.totalInvested || 0,

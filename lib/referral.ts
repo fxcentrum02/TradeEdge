@@ -293,20 +293,44 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
         throw new Error('User not found');
     }
 
-    // 1. Get user counts at each tier
-    const tierTree = await getReferralTreeByTier(_userId, REFERRAL_COMMISSIONS.MAX_TIER);
-    const allUserIdsIn2Tiers = tierTree.flatMap(t => t.userIds);
+    // 1. Run Block 1: Fetch all independent data simultaneously
+    const [
+        tierTree,
+        tierEarnings,
+        unlockInvestment,
+        directReferralUsers,
+        totalEarnings,
+        wallet,
+        tradePower,
+        settings,
+        totalClaimed
+    ] = await Promise.all([
+        getReferralTreeByTier(_userId, REFERRAL_COMMISSIONS.MAX_TIER),
+        getReferralEarningsByTier(_userId),
+        getTierUnlockInvestment(_userId),
+        findDirectReferrals(_userId),
+        getTotalReferralEarnings(_userId),
+        findReferralWalletByUserId(_userId),
+        getTotalActiveAmount(_userId),
+        getSettings(),
+        getTotalReferralClaimed(_userId)
+    ]);
 
-    // 2. Get earnings grouped by tier
-    const tierEarnings = await getReferralEarningsByTier(_userId);
-
-    // 3. Bulk fetch all tier data (investment and active counts) in one go
+    const allUserIdsIn20Tiers = tierTree.flatMap(t => t.userIds);
+    const directIds = directReferralUsers.map(r => r._id);
     const db = await getDB();
     const now = new Date();
-    
-    const [tierDataResults, unlockInvestment] = await Promise.all([
-        allUserIdsIn2Tiers.length > 0 ? db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: { $in: allUserIdsIn2Tiers } } },
+
+    // 2. Run Block 2: Fetch all dependent aggregations simultaneously
+    const [
+        tierDataResults,
+        activePlanCounts,
+        earningsFromUsers,
+        lifetimeInvestments,
+        tpResult
+    ] = await Promise.all([
+        allUserIdsIn20Tiers.length > 0 ? db.collection(Collections.USER_PLANS).aggregate([
+            { $match: { userId: { $in: allUserIdsIn20Tiers } } },
             {
                 $facet: {
                     investmentByUser: [
@@ -319,7 +343,22 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
                 }
             }
         ]).toArray() : Promise.resolve([{ investmentByUser: [], activeByUser: [] }]),
-        getTierUnlockInvestment(_userId)
+        db.collection(Collections.USER_PLANS).aggregate([
+            { $match: { userId: { $in: directIds }, isActive: true, endDate: { $gt: now } } },
+            { $group: { _id: '$userId', count: { $sum: 1 } } }
+        ]).toArray(),
+        db.collection(Collections.REFERRAL_EARNINGS).aggregate([
+            { $match: { userId: _userId, fromUserId: { $in: directIds } } },
+            { $group: { _id: '$fromUserId', total: { $sum: '$amount' } } }
+        ]).toArray(),
+        db.collection(Collections.USER_PLANS).aggregate([
+            { $match: { userId: { $in: directIds } } },
+            { $group: { _id: '$userId', total: { $sum: '$amount' } } }
+        ]).toArray(),
+        allUserIdsIn20Tiers.length > 0 ? db.collection(Collections.USERS).aggregate([
+            { $match: { _id: { $in: allUserIdsIn20Tiers } } },
+            { $group: { _id: null, total: { $sum: '$tradePower' } } }
+        ]).toArray() : Promise.resolve([])
     ]);
 
     const facet = tierDataResults[0];
@@ -353,25 +392,6 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
         });
     }
 
-    // 4. Build direct referrals list (Tier 1) - Optimized with bulk fetching
-    const directReferralUsers = await findDirectReferrals(_userId);
-    const directIds = directReferralUsers.map(r => r._id);
-
-    const [activePlanCounts, earningsFromUsers, lifetimeInvestments] = await Promise.all([
-        db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: { $in: directIds }, isActive: true, endDate: { $gt: now } } },
-            { $group: { _id: '$userId', count: { $sum: 1 } } }
-        ]).toArray(),
-        db.collection(Collections.REFERRAL_EARNINGS).aggregate([
-            { $match: { userId: _userId, fromUserId: { $in: directIds } } },
-            { $group: { _id: '$fromUserId', total: { $sum: '$amount' } } }
-        ]).toArray(),
-        db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: { $in: directIds } } },
-            { $group: { _id: '$userId', total: { $sum: '$amount' } } }
-        ]).toArray()
-    ]);
-
     const activeCountsMap = new Map(activePlanCounts.map((r: any) => [r._id.toString(), r.count]));
     const earningsMap = new Map(earningsFromUsers.map((r: any) => [r._id.toString(), r.total]));
     const lifetimeMap = new Map(lifetimeInvestments.map((r: any) => [r._id.toString(), r.total]));
@@ -393,32 +413,13 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
         };
     });
 
-    // 5. Build referral link
+    // Build referral link
     const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'infinityy_global_bot';
-    const miniAppName = process.env.NEXT_PUBLIC_TELEGRAM_MINI_APP_NAME || 'infinity_global';
-
-    const [totalEarnings, wallet, tradePower, settings, totalClaimed] = await Promise.all([
-        getTotalReferralEarnings(_userId),
-        findReferralWalletByUserId(_userId),
-        getTotalActiveAmount(_userId),
-        getSettings(),
-        getTotalReferralClaimed(_userId)
-    ]);
     const referralWalletBalance = wallet?.balance || 0;
     const referralClaimMultiplier = settings.referralClaimMultiplier || 1;
 
     const tier20TotalCount = tiers.reduce((sum, tier) => sum + tier.userCount, 0);
-
-    // Calculate total downline mining power (sum of tradePower of all users in 20 tiers)
-    let totalDownlineTradePower = 0;
-    const allUserIdsIn20Tiers = tierTree.flatMap(t => t.userIds);
-    if (allUserIdsIn20Tiers.length > 0) {
-        const tpResult = await db.collection(Collections.USERS).aggregate([
-            { $match: { _id: { $in: allUserIdsIn20Tiers } } },
-            { $group: { _id: null, total: { $sum: '$tradePower' } } }
-        ]).toArray();
-        totalDownlineTradePower = tpResult.length > 0 ? tpResult[0].total : 0;
-    }
+    const totalDownlineTradePower = tpResult.length > 0 ? tpResult[0].total : 0;
 
     return {
         referralCode: user.referralCode,

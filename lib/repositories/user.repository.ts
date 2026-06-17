@@ -110,24 +110,44 @@ export async function getReferralTreeByTier(
 ): Promise<{ tier: number; userIds: ObjectId[] }[]> {
     const db = await getDB();
     const usersCol = db.collection<UserDocument>(Collections.USERS);
+    const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
+
+    // Initialize result with empty arrays for all tiers up to maxTier
     const result: { tier: number; userIds: ObjectId[] }[] = [];
-
-    // Start with the root user's direct referrals
-    let currentParentIds: ObjectId[] = [typeof userId === 'string' ? new ObjectId(userId) : userId];
-
     for (let tier = 1; tier <= maxTier; tier++) {
-        if (currentParentIds.length === 0) break;
+        result.push({ tier, userIds: [] });
+    }
 
-        const usersAtTier = await usersCol
-            .find({ referredById: { $in: currentParentIds } })
-            .project({ _id: 1 })
-            .toArray();
+    const aggResult = await usersCol.aggregate([
+        { $match: { _id: _userId } },
+        {
+            $graphLookup: {
+                from: Collections.USERS,
+                startWith: '$_id',
+                connectFromField: '_id',
+                connectToField: 'referredById',
+                maxDepth: maxTier - 1,
+                depthField: 'depth',
+                as: 'descendants'
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                'descendants._id': 1,
+                'descendants.depth': 1
+            }
+        }
+    ]).toArray();
 
-        const userIds = usersAtTier.map(u => u._id);
-        result.push({ tier, userIds });
-
-        // Next tier's parents are this tier's users
-        currentParentIds = userIds;
+    if (aggResult.length > 0 && aggResult[0].descendants) {
+        const descendants = aggResult[0].descendants as { _id: ObjectId; depth: number }[];
+        for (const desc of descendants) {
+            const tier = desc.depth + 1;
+            if (tier >= 1 && tier <= maxTier) {
+                result[tier - 1].userIds.push(desc._id);
+            }
+        }
     }
 
     return result;
