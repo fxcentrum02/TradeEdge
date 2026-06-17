@@ -391,7 +391,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     ModalProps={{ keepMounted: true }}
                     sx={{
                         display: { xs: 'block', md: 'none' },
-                        '& .MuiDrawer-paper': { width: drawerWidth, border: 'none' },
+                        '& .MuiDrawer-paper': { width: drawerWidth, border: 'none', bgcolor: '#0f172a' },
                     }}
                 >
                     {drawer}
@@ -400,7 +400,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     variant="permanent"
                     sx={{
                         display: { xs: 'none', md: 'block' },
-                        '& .MuiDrawer-paper': { width: drawerWidth, border: 'none', boxShadow: '4px 0 20px rgba(0,0,0,0.08)' },
+                        '& .MuiDrawer-paper': { width: drawerWidth, border: 'none', boxShadow: '4px 0 20px rgba(0,0,0,0.08)', bgcolor: '#0f172a' },
                     }}
                     open
                 >

@@ -260,7 +260,7 @@ export default function RewardsLockedPage() {
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            Upgrade Plan
+                            Activate Feature
                         </Button>
                         <Button
                             variant="outlined"

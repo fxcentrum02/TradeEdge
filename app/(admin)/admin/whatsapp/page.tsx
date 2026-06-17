@@ -71,7 +71,7 @@ const NOTIFICATION_TEMPLATES = [
     },
     {
         key: 'owner_alerts',
-        label: 'Owner Alerts',
+        label: 'Owner',
         title: '👑 Owner / Admin Alert',
         body: 'Owner Alert: A new transaction activity has occurred on Trade Edge. Action may be required.',
         details: [
@@ -168,7 +168,7 @@ export default function WhatsAppAlertsPage() {
                     </Typography>
                 </Stack>
 
-                <Grid container spacing={{ xs: 4, md: 6 }} alignItems="stretch" sx={{ position: 'relative', zIndex: 1, mb: 4 }}>
+                <Grid container spacing={3} alignItems="stretch" sx={{ position: 'relative', zIndex: 1, mb: 4 }}>
                     {/* Interactive Phone Preview Column */}
                     <Grid size={{ xs: 12, md: 5 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
@@ -311,7 +311,13 @@ export default function WhatsAppAlertsPage() {
                                     scrollButtons="auto"
                                     sx={{
                                         borderBottom: '1px solid #e2e8f0',
-                                        '& .MuiTab-root': { textTransform: 'none', fontWeight: 700, fontSize: '0.85rem' },
+                                        '& .MuiTab-root': { 
+                                            textTransform: 'none', 
+                                            fontWeight: 700, 
+                                            fontSize: '0.85rem',
+                                            minWidth: 'auto',
+                                            px: 1.5
+                                        },
                                         '& .Mui-selected': { color: '#25d366 !important' },
                                         '& .MuiTabs-indicator': { bgcolor: '#25d366' },
                                     }}
@@ -387,7 +393,7 @@ export default function WhatsAppAlertsPage() {
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            Upgrade Plan
+                            Activate Feature
                         </Button>
                         <Button
                             variant="outlined"
