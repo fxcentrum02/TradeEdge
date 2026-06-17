@@ -23,6 +23,7 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import SecurityIcon from '@mui/icons-material/Security';
 import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 import LockIcon from '@mui/icons-material/Lock';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
  
 const drawerWidth = 268;
 
@@ -100,6 +101,13 @@ const getNavItems = (pendingTickets: number, pendingWithdrawals: number) => [
         text: 'Maintenance Mode',
         icon: <SettingsSuggestIcon />,
         path: '/admin/maintenance',
+        badge: null,
+        isLocked: true,
+    },
+    {
+        text: 'WhatsApp Alerts',
+        icon: <WhatsAppIcon />,
+        path: '/admin/whatsapp',
         badge: null,
         isLocked: true,
     },

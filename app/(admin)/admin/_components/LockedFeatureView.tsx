@@ -187,7 +187,7 @@ export default function LockedFeatureView({
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            Upgrade Plan - {price}
+                            Upgrade Plan
                         </Button>
                         <Button
                             variant="outlined"

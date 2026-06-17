@@ -21,7 +21,7 @@ export default function AutoPayoutsPage() {
             <LockedFeatureView
                 title="Automated Payout Engine Locked"
                 description="Eliminate manual processing and speed up user payouts. Purchase the AWS Payout Gateway integration to enable 1-click automated USDT transfers directly through your Binance Pay or Metamask API."
-                price="$499.00 USD"
+                price="$1,499.00 USD"
                 features={[
                     "1-Click automated withdrawals",
                     "Binance Pay API integration",
