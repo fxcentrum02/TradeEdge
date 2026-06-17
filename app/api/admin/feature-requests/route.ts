@@ -37,28 +37,7 @@ export async function POST(request: NextRequest) {
 
             await db.collection(Collections.FEATURE_REQUESTS).insertOne(clickDoc);
 
-            // Dispatch "clicked main page" WhatsApp Alert
-            const waPhone = process.env.WHATSAPP_PHONE;
-            const waApiKey = process.env.WHATSAPP_API_KEY;
-            if (waPhone && waApiKey) {
-                const message = `🖱️ *Admin clicked Activate on Main Page!* \n\n` + 
-                                `🔹 *Feature*: ${featureTitle}\n` +
-                                `💰 *License Price*: ${price || 'N/A'}\n` +
-                                `👤 *Admin Session*: ${session.email}\n` +
-                                `🌐 *IP Address*: ${ip}\n` +
-                                `📱 *Device*: ${userAgent}\n` +
-                                `🕒 *Clicked At*: ${new Date().toLocaleString()}`;
-                
-                const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(waPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(waApiKey)}`;
-                
-                fetch(url).catch(err => {
-                    console.error('[Notification] Failed to dispatch CallMeBot WhatsApp click alert:', err);
-                });
-            } else {
-                console.log('[Notification] CallMeBot not configured for click alert.');
-            }
-
-            return NextResponse.json({ success: true, message: 'Click alert dispatched' });
+            return NextResponse.json({ success: true, message: 'Click alert logged' });
         }
 
         // 2. Otherwise, this is a normal ticket creation/request submission
@@ -80,28 +59,6 @@ export async function POST(request: NextRequest) {
         };
 
         const result = await db.collection(Collections.FEATURE_REQUESTS).insertOne(requestDoc);
-
-        // FREE WHATSAPP ALERTS USING CALLMEBOT FOR TICKET SUBMISSION
-        const waPhone = process.env.WHATSAPP_PHONE;
-        const waApiKey = process.env.WHATSAPP_API_KEY;
-        if (waPhone && waApiKey) {
-            const message = `🚨 *New TradeEdge Activation Requested!* \n\n` + 
-                            `🔹 *Feature*: ${featureTitle}\n` +
-                            `👤 *Admin Name*: ${fullName}\n` +
-                            `✉️ *Email*: ${email}\n` +
-                            `💰 *License Price*: ${price}\n` +
-                            `🌐 *IP Address*: ${ip}\n` +
-                            `📱 *Device*: ${userAgent}\n` +
-                            `🕒 *Requested At*: ${new Date().toLocaleString()}`;
-            
-            const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(waPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(waApiKey)}`;
-            
-            fetch(url).catch(err => {
-                console.error('[Notification] Failed to dispatch CallMeBot WhatsApp activation alert:', err);
-            });
-        } else {
-            console.log('[Notification] CallMeBot not configured. Set WHATSAPP_PHONE and WHATSAPP_API_KEY in .env.');
-        }
 
         return NextResponse.json({ success: true, id: result.insertedId });
     } catch (error: unknown) {

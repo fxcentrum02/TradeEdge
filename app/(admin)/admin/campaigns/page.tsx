@@ -5,7 +5,7 @@ import {
     Box, Typography, Button, Paper, Stack, Grid, Card, CardContent,
     TextField, MenuItem, Select, FormControl, InputLabel,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip,
-    Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, IconButton
+    Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, IconButton, Alert
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -46,6 +46,10 @@ const PREVIEW_CAMPAIGNS = [
 export default function CampaignsLockedPage() {
     const [open, setOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [fullName, setFullName] = useState('Admin');
+    const [email, setEmail] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
+    const [success, setSuccess] = useState(false);
 
     // Mock Form State for interactivity
     const [formCode, setFormCode] = useState('GOLDEN_HOUR');
@@ -55,14 +59,60 @@ export default function CampaignsLockedPage() {
 
     const price = '$299.00 USD';
 
-    const handleUpgradeClick = () => setOpen(true);
+    const handleUpgradeClick = () => {
+        setOpen(true);
+        setSuccess(false);
+        setErrorMsg('');
+
+        // Log the main page click alert immediately
+        fetch('/api/admin/feature-requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                featureTitle: 'Growth & Promo Campaigns',
+                price,
+                action: 'click'
+            })
+        }).catch(() => {});
+    };
+
     const handleClose = () => {
         setOpen(false);
         setSubmitting(false);
+        setSuccess(false);
+        setErrorMsg('');
+        setEmail('');
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        if (!fullName.trim() || !email.trim()) {
+            setErrorMsg('Please enter both your name and business email.');
+            return;
+        }
+        setErrorMsg('');
         setSubmitting(true);
+        try {
+            const res = await fetch('/api/admin/feature-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    featureTitle: 'Growth & Promo Campaigns',
+                    fullName,
+                    email,
+                    price
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccess(true);
+            } else {
+                setErrorMsg(data.error || 'Failed to submit activation request.');
+            }
+        } catch {
+            setErrorMsg('Network error. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -229,7 +279,7 @@ export default function CampaignsLockedPage() {
                                 <Stack direction="row" spacing={2} alignItems="flex-start">
                                     <InfoIcon sx={{ color: '#db2777', mt: 0.2 }} />
                                     <Typography variant="body2" color="#9d174d" sx={{ lineHeight: 1.6 }}>
-                                        <b>Conversion Tracking:</b> This module includes UTM attribution tracking. If users register through an influencer's custom code link, the analytics board tracks downline transaction conversions.
+                                        <b>Conversion Tracking:</b> This module includes UTM attribution tracking. If users register through an influencer&apos;s custom code link, the analytics board tracks downline transaction conversions.
                                     </Typography>
                                 </Stack>
                             </Paper>
@@ -308,68 +358,118 @@ export default function CampaignsLockedPage() {
                 }}
             >
                 <DialogTitle sx={{ fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Unlock Campaign Engine
+                    {success ? 'Activation Initiated' : 'Unlock Campaign Engine'}
                     <IconButton onClick={handleClose} size="small" sx={{ color: '#94a3b8' }}>
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
                 <DialogContent>
-                    <Box sx={{ textAlign: 'center', py: 2 }}>
-                        <Box sx={{
-                            display: 'inline-flex',
-                            p: 2,
-                            borderRadius: '50%',
-                            bgcolor: '#fdf2f8',
-                            color: '#db2777',
-                            mb: 2
-                        }}>
-                            <CloudDoneIcon sx={{ fontSize: 32 }} />
+                    {success ? (
+                        <Box sx={{ textAlign: 'center', py: 3, px: 1 }}>
+                            <Box sx={{
+                                display: 'inline-flex',
+                                p: 2,
+                                borderRadius: '50%',
+                                bgcolor: '#f0fdf4',
+                                color: '#16a34a',
+                                mb: 3,
+                                boxShadow: '0 8px 24px rgba(22, 163, 74, 0.15)',
+                            }}>
+                                <CheckCircleIcon sx={{ fontSize: 48 }} />
+                            </Box>
+                            <Typography variant="h5" fontWeight={900} sx={{ color: '#1e293b', mb: 1.5, letterSpacing: '-0.02em' }}>
+                                Request Submitted!
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#64748b', lineHeight: 1.6 }}>
+                                Your activation ticket for <strong>Growth & Promo Campaigns</strong> has been successfully registered. The dev team is provisioning a dedicated container for this feature node.
+                            </Typography>
                         </Box>
-                        <Typography variant="h5" fontWeight={900} color="primary" gutterBottom>
-                            {price}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                            Get lifetime access to the Promo & Campaign Builder, including code verification logs and click-to-purchase ratios.
-                        </Typography>
+                    ) : (
+                        <Box sx={{ textAlign: 'center', py: 2 }}>
+                            <Box sx={{
+                                display: 'inline-flex',
+                                p: 2,
+                                borderRadius: '50%',
+                                bgcolor: '#fdf2f8',
+                                color: '#db2777',
+                                mb: 2
+                            }}>
+                                <CloudDoneIcon sx={{ fontSize: 32 }} />
+                            </Box>
+                            <Typography variant="h5" fontWeight={900} color="primary" gutterBottom>
+                                {price}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                Get lifetime access to the Promo & Campaign Builder, including code verification logs and click-to-purchase ratios.
+                            </Typography>
 
-                        <Stack spacing={2} sx={{ textAlign: 'left' }}>
-                            <TextField
-                                label="Full Name"
-                                fullWidth
-                                variant="outlined"
-                                defaultValue="Admin"
-                                size="small"
-                                disabled={submitting}
-                            />
-                            <TextField
-                                label="Business Email"
-                                fullWidth
-                                variant="outlined"
-                                placeholder="admin@example.com"
-                                size="small"
-                                disabled={submitting}
-                            />
-                        </Stack>
-                    </Box>
+                            {errorMsg && (
+                                <Alert severity="error" variant="filled" sx={{ mb: 2.5, borderRadius: 2, fontSize: '0.8rem' }}>
+                                    {errorMsg}
+                                </Alert>
+                            )}
+
+                            <Stack spacing={2} sx={{ textAlign: 'left' }}>
+                                <TextField
+                                    label="Full Name"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    size="small"
+                                    disabled={submitting}
+                                />
+                                <TextField
+                                    label="Business Email"
+                                    fullWidth
+                                    variant="outlined"
+                                    placeholder="admin@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    size="small"
+                                    disabled={submitting}
+                                />
+                            </Stack>
+                        </Box>
+                    )}
                 </DialogContent>
                 <DialogActions sx={{ p: 3, pt: 0 }}>
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        disabled={submitting}
-                        onClick={handleSubmit}
-                        sx={{
-                            borderRadius: 3.5,
-                            py: 1.8,
-                            fontWeight: 800,
-                            textTransform: 'none',
-                            bgcolor: '#1e293b',
-                            '&:hover': { bgcolor: '#0f172a' }
-                        }}
-                    >
-                        {submitting ? <CircularProgress size={24} color="inherit" /> : 'Activate Now'}
-                    </Button>
+                    {success ? (
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            size="large"
+                            onClick={handleClose}
+                            sx={{
+                                borderRadius: 3.5,
+                                py: 1.8,
+                                fontWeight: 800,
+                                textTransform: 'none',
+                                bgcolor: '#0f172a',
+                                '&:hover': { bgcolor: '#1e293b' }
+                            }}
+                        >
+                            Understood, Close
+                        </Button>
+                    ) : (
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            size="large"
+                            disabled={submitting}
+                            onClick={handleSubmit}
+                            sx={{
+                                borderRadius: 3.5,
+                                py: 1.8,
+                                fontWeight: 800,
+                                textTransform: 'none',
+                                bgcolor: '#1e293b',
+                                '&:hover': { bgcolor: '#0f172a' }
+                            }}
+                        >
+                            {submitting ? <CircularProgress size={24} color="inherit" /> : 'Activate Now'}
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
         </Box>
