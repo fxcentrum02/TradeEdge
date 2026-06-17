@@ -24,6 +24,8 @@ interface FeatureRequest {
     status: string;
     createdAt: string;
     requestedBy?: string;
+    ipAddress?: string;
+    deviceInfo?: string;
 }
 
 export default function DeveloperRequestsPage() {
@@ -395,6 +397,16 @@ export default function DeveloperRequestsPage() {
                                                         User ID: {req.requestedBy}
                                                     </Typography>
                                                 )}
+                                                {req.ipAddress && (
+                                                    <Typography variant="caption" sx={{ color: '#fbbf24', display: 'block', mt: 0.5, fontWeight: 600 }}>
+                                                        IP: {req.ipAddress}
+                                                    </Typography>
+                                                )}
+                                                {req.deviceInfo && (
+                                                    <Typography variant="caption" sx={{ color: '#475569', display: 'block', fontSize: '0.65rem', mt: 0.2 }}>
+                                                        {req.deviceInfo.substring(0, 50)}...
+                                                    </Typography>
+                                                )}
                                             </TableCell>
                                             <TableCell sx={{ color: 'white', fontWeight: 750 }}>
                                                 {req.price}
@@ -407,9 +419,21 @@ export default function DeveloperRequestsPage() {
                                                         fontWeight: 700,
                                                         fontSize: '0.65rem',
                                                         textTransform: 'uppercase',
-                                                        bgcolor: req.status === 'activation requested' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(22, 163, 74, 0.12)',
-                                                        color: req.status === 'activation requested' ? '#fbbf24' : '#22c55e',
-                                                        border: req.status === 'activation requested' ? '1px solid rgba(245, 158, 11, 0.25)' : '1px solid rgba(22, 163, 74, 0.25)'
+                                                        bgcolor: req.status === 'activation requested' 
+                                                            ? 'rgba(245, 158, 11, 0.12)' 
+                                                            : req.status === 'clicked'
+                                                                ? 'rgba(59, 130, 246, 0.12)'
+                                                                : 'rgba(22, 163, 74, 0.12)',
+                                                        color: req.status === 'activation requested' 
+                                                            ? '#fbbf24' 
+                                                            : req.status === 'clicked'
+                                                                ? '#60a5fa'
+                                                                : '#22c55e',
+                                                        border: req.status === 'activation requested' 
+                                                            ? '1px solid rgba(245, 158, 11, 0.25)' 
+                                                            : req.status === 'clicked'
+                                                                ? '1px solid rgba(59, 130, 246, 0.25)'
+                                                                : '1px solid rgba(22, 163, 74, 0.25)'
                                                     }}
                                                 />
                                             </TableCell>

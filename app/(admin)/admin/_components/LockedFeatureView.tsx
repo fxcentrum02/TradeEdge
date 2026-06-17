@@ -41,6 +41,17 @@ export default function LockedFeatureView({
         setOpen(true);
         setSuccess(false);
         setErrorMsg('');
+
+        // Notify server immediately that the user clicked on the main page
+        fetch('/api/admin/feature-requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                featureTitle: title.replace(' Locked', ''),
+                price,
+                action: 'click'
+            })
+        }).catch(() => {});
     };
 
     const handleClose = () => {
