@@ -17,6 +17,7 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
 import ReinvestModal from '../_components/ReinvestModal';
 import PromoModal from '../_components/PromoModal';
+import TelegramVpnModal from '../_components/TelegramVpnModal';
 import { useAuth } from '@/context/AuthContext';
 import { pusherClient } from '@/lib/pusher-client';
 import { formatCurrency } from '@/lib/utils';
@@ -83,15 +84,31 @@ export default function DashboardPage() {
     const [countdown, setCountdown] = useState(getTimeUntilSettlement());
     const [reinvestModalOpen, setReinvestModalOpen] = useState(false);
     const [promoOpen, setPromoOpen] = useState(false);
+    const [vpnNoticeOpen, setVpnNoticeOpen] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-    // Check localStorage on mount to show the promo dialog only once
+    // Check localStorage on mount to show the modals sequentially
     useEffect(() => {
-        const hasSeen = localStorage.getItem('hasSeenMin10Promo');
-        if (!hasSeen) {
+        const hasSeenVpn = localStorage.getItem('hasSeenTelegramVpnNotice');
+        const hasSeenPromo = localStorage.getItem('hasSeenMin10Promo');
+        
+        if (!hasSeenVpn) {
+            setVpnNoticeOpen(true);
+        } else if (!hasSeenPromo) {
             setPromoOpen(true);
         }
     }, []);
+
+    const handleCloseVpnNotice = () => {
+        localStorage.setItem('hasSeenTelegramVpnNotice', 'true');
+        setVpnNoticeOpen(false);
+        
+        // Show promo after VPN notice if user hasn't seen it yet
+        const hasSeenPromo = localStorage.getItem('hasSeenMin10Promo');
+        if (!hasSeenPromo) {
+            setPromoOpen(true);
+        }
+    };
 
     const handleClosePromo = () => {
         localStorage.setItem('hasSeenMin10Promo', 'true');
@@ -590,6 +607,11 @@ export default function DashboardPage() {
             <PromoModal
                 open={promoOpen}
                 onClose={handleClosePromo}
+            />
+
+            <TelegramVpnModal
+                open={vpnNoticeOpen}
+                onClose={handleCloseVpnNotice}
             />
 
             <Snackbar
