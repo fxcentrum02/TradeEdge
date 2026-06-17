@@ -175,6 +175,101 @@ export async function getEstimatedTomorrowReferralEarnings(userId: string | Obje
 }
 
 /**
+ * Predict total global referral earnings for the entire system for tomorrow's settlement cycle.
+ * Optimized to run in exactly 2 database queries: 1 for active plans join, 1 for users projection.
+ */
+export async function getGlobalEstimatedTomorrowReferralEarnings(): Promise<number> {
+    const db = await getDB();
+    const now = new Date();
+
+    // 1. Fetch all active plans with their daily ROI
+    const activePlans = await db.collection(Collections.USER_PLANS).aggregate([
+        { $match: { isActive: true, endDate: { $gt: now } } },
+        {
+            $lookup: {
+                from: Collections.PLANS,
+                localField: 'planId',
+                foreignField: '_id',
+                as: 'planData'
+            }
+        },
+        { $unwind: '$planData' },
+        {
+            $project: {
+                userId: 1,
+                amount: 1,
+                dailyRoi: '$planData.dailyRoi'
+            }
+        }
+    ]).toArray();
+
+    if (activePlans.length === 0) return 0;
+
+    // 2. Fetch all users minimal projection to build memory map
+    const users = await db.collection(Collections.USERS).find(
+        { isDeleted: { $ne: true } },
+        { projection: { _id: 1, referredById: 1 } }
+    ).toArray();
+
+    // Map of userId (string) -> personal active investment (number)
+    const userActiveInvestment = new Map<string, number>();
+    for (const plan of activePlans) {
+        const uid = plan.userId.toString();
+        userActiveInvestment.set(uid, (userActiveInvestment.get(uid) || 0) + plan.amount);
+    }
+
+    // Map of userId (string) -> parentId (string)
+    const parentMap = new Map<string, string>();
+    // Map of userId (string) -> sum of direct referrals' active investments (number)
+    const directReferralsInvestment = new Map<string, number>();
+
+    for (const u of users) {
+        const uid = u._id.toString();
+        if (u.referredById) {
+            const pid = u.referredById.toString();
+            parentMap.set(uid, pid);
+            
+            const personalActive = userActiveInvestment.get(uid) || 0;
+            directReferralsInvestment.set(pid, (directReferralsInvestment.get(pid) || 0) + personalActive);
+        }
+    }
+
+    // Helper to check if a tier is unlocked for a user in memory
+    const isTierUnlockedForUser = (uid: string, tier: number): boolean => {
+        if (tier === 1) return true;
+        const personal = userActiveInvestment.get(uid) || 0;
+        const direct = directReferralsInvestment.get(uid) || 0;
+        const totalInvestment = personal + direct;
+        const required = (tier - 1) * REFERRAL_COMMISSIONS.INVESTMENT_TO_UNLOCK_PER_TIER;
+        return totalInvestment >= required;
+    };
+
+    let totalPredictedReferral = 0;
+
+    for (const plan of activePlans) {
+        const dailyRoiAmount = (plan.amount * plan.dailyRoi) / 100;
+        let currentUserId = plan.userId.toString();
+        let tier = 1;
+
+        while (tier <= REFERRAL_COMMISSIONS.MAX_TIER) {
+            const referrerId = parentMap.get(currentUserId);
+            if (!referrerId) break;
+
+            if (isTierUnlockedForUser(referrerId, tier)) {
+                const percentage = getTierCommissionPercentage(tier);
+                const commission = (dailyRoiAmount * percentage) / 100;
+                totalPredictedReferral += commission;
+            }
+
+            currentUserId = referrerId;
+            tier++;
+        }
+    }
+
+    return totalPredictedReferral;
+}
+
+/**
  * Distribute referral commissions when a user's MP purchase is approved.
  * [DEPRECATED] Now handled via ROI settlement.
  */

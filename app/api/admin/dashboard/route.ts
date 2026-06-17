@@ -32,7 +32,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             pendingTickets,
         ] = await Promise.all([
             db.collection(Collections.USERS).countDocuments({}),
-            db.collection(Collections.USER_PLANS).distinct('userId', { isActive: true }).then(ids => ids.length),
+            db.collection(Collections.USER_PLANS).aggregate([
+                { $match: { isActive: true } },
+                { $group: { _id: '$userId' } },
+                { $count: 'count' }
+            ]).toArray().then(res => res[0]?.count || 0),
             db.collection(Collections.USERS).countDocuments({ createdAt: { $gte: today } }),
             db.collection(Collections.USER_PLANS).countDocuments({ createdAt: { $gte: today } }),
             db.collection(Collections.PAYMENT_TICKETS).countDocuments({ status: 'PENDING' }),

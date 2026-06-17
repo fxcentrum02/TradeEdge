@@ -136,61 +136,68 @@ export async function getReferralTreeByTier(
 /**
  * Get global hierarchy statistics for the platform (Counts and TP at each level).
  * Walks up to 20 tiers deep from all root users (those without a referrer).
+ * Optimized to run in a single find projection query and execute level calculations in-memory.
  */
 export async function getGlobalHierarchyStats(maxTier: number = 20) {
     const db = await getDB();
     const usersCol = db.collection<UserDocument>(Collections.USERS);
-    const stats: { tier: number; count: number; totalTradePower: number }[] = [];
 
-    // Level 0: Root users (not counted as a tier usually, but they are the parents)
-    // The request mentions "from admin to all levels", so Tier 1 are direct referrals of someone.
-    // We want to know how many users are at Tier 1, Tier 2... Tier 10 across the Whole system.
+    // 1. Fetch all non-deleted users with just their referredById and tradePower
+    const users = await usersCol.find(
+        { isDeleted: { $ne: true } },
+        { projection: { _id: 1, referredById: 1, tradePower: 1 } }
+    ).toArray();
 
-    // Tier 1 users are those who have referredById = SOMEONE
-    // Tier 2 users are those who have referredById = SOMEONE_WHO_HAS_REFERRED_BY_ID = SOMEONE
+    // 2. Build map of user ID -> user details
+    const userMap = new Map<string, { referredById?: ObjectId | null; tradePower: number; tier?: number }>();
+    for (const u of users) {
+        userMap.set(u._id.toString(), { referredById: u.referredById, tradePower: u.tradePower || 0 });
+    }
 
-    let currentParentIds: ObjectId[] = [];
-    // Get all root users (those with no referrer)
-    const roots = await usersCol.find({
-        $or: [
-            { referredById: { $exists: false } },
-            { referredById: null }
-        ]
-    }).project({ _id: 1 }).toArray();
-    currentParentIds = roots.map(u => u._id);
+    // 3. Recursive tier calculation helper
+    const getTier = (uid: string): number => {
+        const u = userMap.get(uid);
+        if (!u) return -1;
+        if (u.tier !== undefined) return u.tier;
 
-    for (let tier = 1; tier <= maxTier; tier++) {
-        if (currentParentIds.length === 0) break;
+        if (!u.referredById) {
+            u.tier = 0; // Root user
+            return 0;
+        }
 
-        const usersAtTier = await usersCol
-            .aggregate([
-                { $match: { referredById: { $in: currentParentIds } } },
-                {
-                    $group: {
-                        _id: null,
-                        count: { $sum: 1 },
-                        totalTradePower: { $sum: '$tradePower' },
-                        userIds: { $push: '$_id' }
-                    }
-                }
-            ])
-            .toArray();
-
-        if (usersAtTier.length === 0) {
-            stats.push({ tier, count: 0, totalTradePower: 0 });
-            currentParentIds = [];
+        const parentTier = getTier(u.referredById.toString());
+        if (parentTier === -1) {
+            u.tier = 0; // Treat as root
         } else {
-            const data = usersAtTier[0];
-            stats.push({
-                tier,
-                count: data.count,
-                totalTradePower: data.totalTradePower || 0
-            });
-            currentParentIds = data.userIds;
+            u.tier = parentTier + 1;
+        }
+        return u.tier;
+    };
+
+    // Calculate tier for every user
+    for (const uid of userMap.keys()) {
+        getTier(uid);
+    }
+
+    // 4. Group by tier in memory
+    const tierStatsMap = new Map<number, { count: number; totalTradePower: number }>();
+    for (let i = 1; i <= maxTier; i++) {
+        tierStatsMap.set(i, { count: 0, totalTradePower: 0 });
+    }
+
+    for (const u of userMap.values()) {
+        if (u.tier !== undefined && u.tier >= 1 && u.tier <= maxTier) {
+            const stats = tierStatsMap.get(u.tier)!;
+            stats.count++;
+            stats.totalTradePower += u.tradePower;
         }
     }
 
-    return stats;
+    return Array.from(tierStatsMap.entries()).map(([tier, data]) => ({
+        tier,
+        count: data.count,
+        totalTradePower: data.totalTradePower
+    }));
 }
 
 /**
@@ -221,9 +228,6 @@ export async function countAllDescendants(userId: ObjectId): Promise<number> {
     return result.length > 0 ? result[0].count : 0;
 }
 
-/**
- * Builds a nested tree of descendants for a specific user.
- */
 export async function getDescendantsTree(
     userId: string | ObjectId,
     maxDepth: number = 3
@@ -234,28 +238,59 @@ export async function getDescendantsTree(
 
     if (maxDepth <= 0) return [];
 
-    const descendants = await usersCol
-        .find({ referredById: _userId })
-        .sort({ tradePower: -1 })
-        .toArray();
+    // 1. Fetch all descendants up to maxDepth - 1 using graphLookup
+    const aggregateResult = await usersCol.aggregate([
+        { $match: { _id: _userId } },
+        {
+            $graphLookup: {
+                from: Collections.USERS,
+                startWith: '$_id',
+                connectFromField: '_id',
+                connectToField: 'referredById',
+                as: 'descendants',
+                maxDepth: maxDepth - 1,
+                depthField: 'depth'
+            }
+        }
+    ]).toArray();
 
-    const tree = await Promise.all(
-        descendants.map(async (user) => {
-            return {
-                id: user._id.toString(),
-                telegramId: user.telegramId,
-                telegramUsername: user.telegramUsername,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                photoUrl: user.photoUrl || null,
-                tradePower: user.tradePower || 0,
-                directReferralCount: user.directReferralCount || 0,
-                totalReferralCount: user.totalReferralCount || 0,
-                joinedAt: user.createdAt.toISOString(),
-                children: await getDescendantsTree(user._id, maxDepth - 1)
-            };
-        })
-    );
+    if (aggregateResult.length === 0) return [];
 
-    return tree;
+    const descendants: any[] = aggregateResult[0].descendants || [];
+    
+    // 2. Build a map of parentId -> children array
+    const parentToChildrenMap = new Map<string, any[]>();
+    for (const d of descendants) {
+        const pid = d.referredById ? d.referredById.toString() : '';
+        if (!parentToChildrenMap.has(pid)) {
+            parentToChildrenMap.set(pid, []);
+        }
+        parentToChildrenMap.get(pid)!.push(d);
+    }
+
+    // Sort each children list by tradePower descending to keep consistent UI
+    for (const [pid, list] of parentToChildrenMap.entries()) {
+        list.sort((a, b) => (b.tradePower || 0) - (a.tradePower || 0));
+    }
+
+    // 3. Helper function to build the tree recursively from the memory map
+    const buildNodeTree = (parentId: string, currentDepth: number): any[] => {
+        if (currentDepth >= maxDepth) return [];
+        const children = parentToChildrenMap.get(parentId) || [];
+        return children.map(user => ({
+            id: user._id.toString(),
+            telegramId: user.telegramId,
+            telegramUsername: user.telegramUsername || null,
+            firstName: user.firstName || null,
+            lastName: user.lastName || null,
+            photoUrl: user.photoUrl || null,
+            tradePower: user.tradePower || 0,
+            directReferralCount: user.directReferralCount || 0,
+            totalReferralCount: user.totalReferralCount || 0,
+            joinedAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : new Date(user.createdAt).toISOString(),
+            children: buildNodeTree(user._id.toString(), currentDepth + 1)
+        }));
+    };
+
+    return buildNodeTree(_userId.toString(), 0);
 }

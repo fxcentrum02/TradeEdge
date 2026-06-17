@@ -27,6 +27,10 @@ export async function createIndexes() {
         { isAdmin: 1 },
         { name: 'isAdmin_index' }
     );
+    await db.collection(Collections.USERS).createIndex(
+        { createdAt: -1 },
+        { name: 'createdAt_desc_index' }
+    );
 
     // WALLETS collection
     await db.collection(Collections.WALLETS).createIndex(
