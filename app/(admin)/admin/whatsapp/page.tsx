@@ -68,6 +68,20 @@ const NOTIFICATION_TEMPLATES = [
         ],
         buttonText: '📈 Track Growth',
         footer: 'Trade Edge Compounding'
+    },
+    {
+        key: 'owner_alerts',
+        label: 'Owner Alerts',
+        title: '👑 Owner / Admin Alert',
+        body: 'Owner Alert: A new transaction activity has occurred on Trade Edge. Action may be required.',
+        details: [
+            { label: 'Event', value: 'New Deposit Ticket Submitted' },
+            { label: 'User', value: '@trader_pro (ID: 8872)' },
+            { label: 'Amount', value: '1,200.00 USDT' },
+            { label: 'Action Required', value: 'Approve / Reject Ticket' },
+        ],
+        buttonText: '🔑 Open Admin Panel',
+        footer: 'Trade Edge Admin Core Engine'
     }
 ];
 
@@ -319,6 +333,7 @@ export default function WhatsAppAlertsPage() {
                                         "Level 1-20 downline welcome notifications",
                                         "Compounding & reinvest updates",
                                         "Interactive quick-action buttons",
+                                        "Owner/Admin transaction tracking alerts",
                                         "Custom marketing campaign integration"
                                     ].map((feat, idx) => (
                                         <Grid size={{ xs: 12, sm: 6 }} key={idx}>
