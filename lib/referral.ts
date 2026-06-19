@@ -79,39 +79,70 @@ export async function distributeRoiCommissionsBatch(
 }> {
     const allDistributions: { tier: number; userId: string; amount: number; sourceId: ObjectId; fromUserId: ObjectId }[] = [];
     const affectedReferrers = new Set<string>();
-    
-    const userCache = new Map<string, UserDocument | null>();
-    const unlockCache = new Map<string, boolean>();
 
-    const getUser = async (id: ObjectId) => {
-        const sid = id.toString();
-        if (userCache.has(sid)) return userCache.get(sid)!;
-        const user = await findUserById(id);
-        userCache.set(sid, user);
-        return user;
+    const db = await getDB();
+    const now = new Date();
+
+    // 1. Fetch all active users minimal projection
+    const users = await db.collection(Collections.USERS).find(
+        { isDeleted: { $ne: true } },
+        { projection: { _id: 1, referredById: 1 } }
+    ).toArray();
+
+    // 2. Fetch all active plans
+    const activePlans = await db.collection(Collections.USER_PLANS).find(
+        { isActive: true, endDate: { $gt: now } },
+        { projection: { userId: 1, amount: 1 } }
+    ).toArray();
+
+    // Build user mapping
+    const userMap = new Map<string, { _id: ObjectId; referredById?: ObjectId | null }>();
+    for (const u of users) {
+        userMap.set(u._id.toString(), u);
+    }
+
+    // Build active investments map
+    const userActiveInvestment = new Map<string, number>();
+    for (const plan of activePlans) {
+        const uid = plan.userId.toString();
+        userActiveInvestment.set(uid, (userActiveInvestment.get(uid) || 0) + plan.amount);
+    }
+
+    // Build direct referrals investments map
+    const directReferralsInvestment = new Map<string, number>();
+    for (const u of users) {
+        if (u.referredById) {
+            const pid = u.referredById.toString();
+            const childActive = userActiveInvestment.get(u._id.toString()) || 0;
+            directReferralsInvestment.set(pid, (directReferralsInvestment.get(pid) || 0) + childActive);
+        }
+    }
+
+    // In-memory tier unlock evaluator
+    const isTierUnlockedInMemory = (userId: ObjectId, tier: number): boolean => {
+        if (tier === 1) return true; // Tier 1 is always unlocked
+        const uidStr = userId.toString();
+        const personal = userActiveInvestment.get(uidStr) || 0;
+        const direct = directReferralsInvestment.get(uidStr) || 0;
+        const totalInvestment = personal + direct;
+        const required = (tier - 1) * REFERRAL_COMMISSIONS.INVESTMENT_TO_UNLOCK_PER_TIER;
+        return totalInvestment >= required;
     };
 
-    const getCachedTierUnlock = async (userId: ObjectId, tier: number) => {
-        const key = `${userId.toString()}_${tier}`;
-        if (unlockCache.has(key)) return unlockCache.get(key)!;
-        const unlocked = await isTierUnlocked(userId, tier);
-        unlockCache.set(key, unlocked);
-        return unlocked;
-    };
-
+    // Process payouts entirely in memory
     for (const payout of payouts) {
         const { fromUserId, roiAmount, sourceId } = payout;
-        const subscriber = await getUser(fromUserId);
+        const subscriber = userMap.get(fromUserId.toString());
         if (!subscriber?.referredById) continue;
 
         let currentReferrerId: ObjectId | undefined = subscriber.referredById;
         let tier = 1;
 
         while (currentReferrerId && tier <= REFERRAL_COMMISSIONS.MAX_TIER) {
-            const referrer = await getUser(currentReferrerId);
+            const referrer = userMap.get(currentReferrerId.toString());
             if (!referrer) break;
 
-            const unlocked = await getCachedTierUnlock(referrer._id, tier);
+            const unlocked = isTierUnlockedInMemory(referrer._id, tier);
 
             if (unlocked) {
                 const percentage = getTierCommissionPercentage(tier);
@@ -297,7 +328,6 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
     const [
         tierTree,
         tierEarnings,
-        unlockInvestment,
         directReferralUsers,
         totalEarnings,
         wallet,
@@ -307,7 +337,6 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
     ] = await Promise.all([
         getReferralTreeByTier(_userId, REFERRAL_COMMISSIONS.MAX_TIER),
         getReferralEarningsByTier(_userId),
-        getTierUnlockInvestment(_userId),
         findDirectReferrals(_userId),
         getTotalReferralEarnings(_userId),
         findReferralWalletByUserId(_userId),
@@ -324,9 +353,8 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
     // 2. Run Block 2: Fetch all dependent aggregations simultaneously
     const [
         tierDataResults,
-        activePlanCounts,
+        directStats,
         earningsFromUsers,
-        lifetimeInvestments,
         tpResult
     ] = await Promise.all([
         allUserIdsIn20Tiers.length > 0 ? db.collection(Collections.USER_PLANS).aggregate([
@@ -343,17 +371,36 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
                 }
             }
         ]).toArray() : Promise.resolve([{ investmentByUser: [], activeByUser: [] }]),
-        db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: { $in: directIds }, isActive: true, endDate: { $gt: now } } },
-            { $group: { _id: '$userId', count: { $sum: 1 } } }
-        ]).toArray(),
+        directIds.length > 0 ? db.collection(Collections.USER_PLANS).aggregate([
+            { $match: { userId: { $in: directIds } } },
+            {
+                $group: {
+                    _id: '$userId',
+                    totalInvested: { $sum: '$amount' },
+                    activeInvestment: {
+                        $sum: {
+                            $cond: [
+                                { $and: [ { $eq: ['$isActive', true] }, { $gt: ['$endDate', now] } ] },
+                                '$amount',
+                                0
+                            ]
+                        }
+                    },
+                    activeCount: {
+                        $sum: {
+                            $cond: [
+                                { $and: [ { $eq: ['$isActive', true] }, { $gt: ['$endDate', now] } ] },
+                                1,
+                                0
+                            ]
+                        }
+                    }
+                }
+            }
+        ]).toArray() : Promise.resolve([]),
         db.collection(Collections.REFERRAL_EARNINGS).aggregate([
             { $match: { userId: _userId, fromUserId: { $in: directIds } } },
             { $group: { _id: '$fromUserId', total: { $sum: '$amount' } } }
-        ]).toArray(),
-        db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: { $in: directIds } } },
-            { $group: { _id: '$userId', total: { $sum: '$amount' } } }
         ]).toArray(),
         allUserIdsIn20Tiers.length > 0 ? db.collection(Collections.USERS).aggregate([
             { $match: { _id: { $in: allUserIdsIn20Tiers } } },
@@ -364,6 +411,19 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
     const facet = tierDataResults[0];
     const userInvestmentMap = new Map<string, number>(facet.investmentByUser.map((r: any) => [r._id.toString(), r.total]));
     const userActiveMap = new Set(facet.activeByUser.map((r: any) => r._id.toString()));
+
+    const activeCountsMap = new Map<string, number>();
+    const lifetimeMap = new Map<string, number>();
+    let directActiveInvestment = 0;
+
+    for (const row of directStats) {
+        const sid = row._id.toString();
+        activeCountsMap.set(sid, row.activeCount);
+        lifetimeMap.set(sid, row.totalInvested);
+        directActiveInvestment += row.activeInvestment;
+    }
+
+    const unlockInvestment = tradePower + directActiveInvestment;
 
     const tiers: ReferralTier[] = [];
     for (let i = 1; i <= REFERRAL_COMMISSIONS.MAX_TIER; i++) {
@@ -392,9 +452,7 @@ export async function getReferralStats(userId: string | ObjectId): Promise<Refer
         });
     }
 
-    const activeCountsMap = new Map(activePlanCounts.map((r: any) => [r._id.toString(), r.count]));
     const earningsMap = new Map(earningsFromUsers.map((r: any) => [r._id.toString(), r.total]));
-    const lifetimeMap = new Map(lifetimeInvestments.map((r: any) => [r._id.toString(), r.total]));
 
     const directReferrals: DirectReferral[] = directReferralUsers.map((refUser) => {
         const sid = refUser._id.toString();
