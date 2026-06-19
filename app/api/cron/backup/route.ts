@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDB, getBackupDB } from '@/lib/db';
-import { Collections } from '@/lib/db/collections';
 import { pusherServer } from '@/lib/pusher';
 import { remoteLog } from '@/lib/logger';
 import type { ApiResponse } from '@/types';
@@ -34,7 +33,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             return NextResponse.json({ success: false, error: 'Backup DB not configured' }, { status: 500 });
         }
 
-        const collectionsToBackup = Object.values(Collections);
+        const collections = await sourceDb.listCollections().toArray();
+        const collectionsToBackup = collections
+            .map(c => c.name)
+            .filter(name => !name.startsWith('system.'));
         const results: any = {};
         const startTime = Date.now();
 
@@ -45,9 +47,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                 // Get data from source
                 const data = await sourceDb.collection(collectionName).find({}).toArray();
                 
+                // Clear existing data in target (Full sync)
+                await targetDb.collection(collectionName).deleteMany({});
+                
                 if (data.length > 0) {
-                    // Clear existing data in target (Full sync)
-                    await targetDb.collection(collectionName).deleteMany({});
                     // Insert new data
                     await targetDb.collection(collectionName).insertMany(data);
                 }

@@ -14,6 +14,7 @@ const defaultSettings: Omit<AppSettings, '_id' | 'updatedAt'> = {
     defaultPlanDurationDays: 30,
     tier1ReferralPercentage: 10,
     maintenanceMode: false,
+    maintenanceEstimatedDuration: '',
     receivingAddress: '',
     qrCodeUrl: '',
     referralClaimMultiplier: 1,
@@ -40,6 +41,10 @@ export async function getSettings(): Promise<AppSettings> {
 
     if (settings.maintenanceMode === undefined) {
         settings.maintenanceMode = false;
+    }
+
+    if (settings.maintenanceEstimatedDuration === undefined) {
+        settings.maintenanceEstimatedDuration = '';
     }
 
     if (!settings.receivingAddress) {

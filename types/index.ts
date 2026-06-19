@@ -307,6 +307,7 @@ export interface AppSettings {
     defaultPlanDurationDays: number;
     tier1ReferralPercentage: number;
     maintenanceMode: boolean;
+    maintenanceEstimatedDuration?: string;
 
     // Payment Settings
     receivingAddress?: string;

@@ -5,7 +5,7 @@ import {
     Box, Card, CardContent, Typography, TextField, Button,
     Table, TableBody, TableCell, TableContainer, TableHead,
     TableRow, Paper, Chip, Stack, IconButton, InputAdornment,
-    Alert, CircularProgress, Container
+    Alert, CircularProgress, Container, Switch, FormControlLabel
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
@@ -37,6 +37,52 @@ export default function DeveloperRequestsPage() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const [estDuration, setEstDuration] = useState('');
+    const [saveLoading, setSaveLoading] = useState(false);
+
+    // Fetch maintenance settings when authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetch('/api/settings/maintenance')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        setMaintenanceMode(data.data.maintenanceMode || false);
+                        setEstDuration(data.data.maintenanceEstimatedDuration || '');
+                    }
+                })
+                .catch(err => console.error('Failed to load maintenance settings:', err));
+        }
+    }, [isAuthenticated]);
+
+    const handleSaveMaintenance = async () => {
+        setSaveLoading(true);
+        setErrorMsg('');
+        setSuccessMsg('');
+        try {
+            const res = await fetch('/api/developer/maintenance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    password,
+                    maintenanceMode,
+                    maintenanceEstimatedDuration: estDuration
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccessMsg('Maintenance settings successfully updated.');
+            } else {
+                setErrorMsg(data.error || 'Failed to update maintenance settings.');
+            }
+        } catch {
+            setErrorMsg('Network error. Failed to update maintenance settings.');
+        } finally {
+            setSaveLoading(false);
+        }
+    };
 
     // Try to auto-login if password was saved in session storage
     useEffect(() => {
@@ -332,6 +378,89 @@ export default function DeveloperRequestsPage() {
                         {successMsg}
                     </Alert>
                 )}
+
+                {/* Platform Maintenance Control */}
+                <Card
+                    elevation={0}
+                    sx={{
+                        borderRadius: 5,
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        background: 'rgba(15, 23, 42, 0.4)',
+                        backdropFilter: 'blur(12px)',
+                        p: 3,
+                        mb: 4
+                    }}
+                >
+                    <CardContent sx={{ p: 0 }}>
+                        <Typography variant="h6" fontWeight={800} sx={{ color: 'white', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            🔧 Platform Maintenance Control
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#94a3b8', mb: 3 }}>
+                            Toggle global maintenance mode to display an update overlay to all active user sessions.
+                        </Typography>
+
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={maintenanceMode}
+                                        onChange={(e) => setMaintenanceMode(e.target.checked)}
+                                        color="warning"
+                                        disabled={saveLoading}
+                                    />
+                                }
+                                label={
+                                    <Typography variant="body2" fontWeight={700} sx={{ color: 'white' }}>
+                                        {maintenanceMode ? 'Active (Block User Pages)' : 'Inactive (Normal Access)'}
+                                    </Typography>
+                                }
+                            />
+
+                            <TextField
+                                label="Estimated Down Time"
+                                size="small"
+                                variant="outlined"
+                                value={estDuration}
+                                onChange={(e) => setEstDuration(e.target.value)}
+                                placeholder="e.g. 2 hours, 45 minutes, etc."
+                                disabled={saveLoading}
+                                sx={{
+                                    width: { xs: '100%', md: 300 },
+                                    '& .MuiOutlinedInput-root': {
+                                        color: 'white',
+                                        bgcolor: 'rgba(255, 255, 255, 0.03)',
+                                        borderRadius: 2.5,
+                                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.12)' },
+                                        '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.25)' },
+                                        '&.Mui-focused fieldset': { borderColor: '#fbbf24' },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: '#64748b',
+                                        '&.Mui-focused': { color: '#fbbf24' }
+                                    }
+                                }}
+                            />
+
+                            <Button
+                                variant="contained"
+                                size="medium"
+                                onClick={handleSaveMaintenance}
+                                disabled={saveLoading}
+                                sx={{
+                                    borderRadius: 2.5,
+                                    textTransform: 'none',
+                                    fontWeight: 700,
+                                    bgcolor: '#fbbf24',
+                                    color: '#0f172a',
+                                    px: 4,
+                                    '&:hover': { bgcolor: '#f59e0b' }
+                                }}
+                            >
+                                {saveLoading ? <CircularProgress size={20} color="inherit" /> : 'Save Settings'}
+                            </Button>
+                        </Stack>
+                    </CardContent>
+                </Card>
 
                 {/* Requests List */}
                 <Card

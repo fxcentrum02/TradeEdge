@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     Box, Drawer, AppBar, Toolbar, Typography, List, ListItem, ListItemButton,
     ListItemIcon, ListItemText, IconButton, useMediaQuery, useTheme, Avatar,
-    Chip, Divider
+    Chip, Divider, CircularProgress, Button
 } from '@mui/material';
 import { pusherClient } from '@/lib/pusher-client';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -150,6 +150,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [mobileOpen, setMobileOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
+
+    const [maintenance, setMaintenance] = useState<{ active: boolean; duration: string }>({ active: false, duration: '' });
+    const [checkingMaintenance, setCheckingMaintenance] = useState(true);
+
+    const checkMaintenanceMode = async () => {
+        try {
+            const res = await fetch('/api/settings/maintenance');
+            const data = await res.json();
+            if (data.success && data.data) {
+                setMaintenance({
+                    active: data.data.maintenanceMode || false,
+                    duration: data.data.maintenanceEstimatedDuration || ''
+                });
+            }
+        } catch (err) {
+            console.error('Failed to check maintenance mode:', err);
+        } finally {
+            setCheckingMaintenance(false);
+        }
+    };
+
+    useEffect(() => {
+        checkMaintenanceMode();
+    }, []);
 
     const [appSettings, setAppSettings] = useState<{ appName: string, brandColor: string }>({
         appName: 'Trade Edge',
@@ -462,6 +486,171 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Box>
         </Box>
     );
+
+    if (checkingMaintenance) {
+        return (
+            <Box
+                sx={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
+                    color: 'white'
+                }}
+            >
+                <CircularProgress color="warning" />
+            </Box>
+        );
+    }
+
+    if (maintenance.active) {
+        return (
+            <Box
+                sx={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 3,
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
+                    color: 'white',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}
+            >
+                {/* Decorative background glows */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '15%',
+                        left: '10%',
+                        width: 250,
+                        height: 250,
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)',
+                        zIndex: 0,
+                        filter: 'blur(30px)'
+                    }}
+                />
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: '15%',
+                        right: '10%',
+                        width: 300,
+                        height: 300,
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)',
+                        zIndex: 0,
+                        filter: 'blur(40px)'
+                    }}
+                />
+
+                <Box
+                    sx={{
+                        position: 'relative',
+                        zIndex: 1,
+                        maxWidth: 420,
+                        width: '100%',
+                        p: 4,
+                        borderRadius: 6,
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        background: 'rgba(15, 23, 42, 0.5)',
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0 24px 60px rgba(0, 0, 0, 0.4)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 3
+                    }}
+                >
+                    <Box
+                        sx={{
+                            width: 72,
+                            height: 72,
+                            borderRadius: '50%',
+                            bgcolor: 'rgba(245, 158, 11, 0.1)',
+                            border: '1px solid rgba(245, 158, 11, 0.25)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            animation: 'pulse 2s infinite ease-in-out',
+                            boxShadow: '0 8px 24px rgba(245, 158, 11, 0.15)',
+                            '@keyframes pulse': {
+                                '0%, 100%': { transform: 'scale(1)', opacity: 1, boxShadow: '0 8px 24px rgba(245, 158, 11, 0.15)' },
+                                '50%': { transform: 'scale(1.05)', opacity: 0.8, boxShadow: '0 12px 32px rgba(245, 158, 11, 0.25)' }
+                            }
+                        }}
+                    >
+                        <Typography sx={{ fontSize: 36 }}>🔧</Typography>
+                    </Box>
+
+                    <Box>
+                        <Typography variant="h5" fontWeight={900} sx={{ mb: 1, letterSpacing: '-0.02em', background: 'linear-gradient(to right, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                            System Maintenance
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#94a3b8', lineHeight: 1.6, px: 1 }}>
+                            We are performing scheduled core upgrades to enhance transaction execution speed and security. Normal services will resume shortly.
+                        </Typography>
+                    </Box>
+
+                    {maintenance.duration && (
+                        <Box
+                            sx={{
+                                width: '100%',
+                                py: 1.5,
+                                px: 2,
+                                borderRadius: 3,
+                                bgcolor: 'rgba(245, 158, 11, 0.06)',
+                                border: '1px solid rgba(245, 158, 11, 0.15)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 0.5
+                            }}
+                        >
+                            <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Estimated Duration
+                            </Typography>
+                            <Typography variant="body1" fontWeight={750} sx={{ color: 'white' }}>
+                                {maintenance.duration}
+                            </Typography>
+                        </Box>
+                    )}
+
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={() => {
+                            setCheckingMaintenance(true);
+                            checkMaintenanceMode();
+                        }}
+                        disabled={checkingMaintenance}
+                        sx={{
+                            mt: 1,
+                            bgcolor: '#fbbf24',
+                            color: '#0f172a',
+                            fontWeight: 800,
+                            borderRadius: 3,
+                            py: 1.5,
+                            textTransform: 'none',
+                            boxShadow: '0 8px 24px rgba(245, 158, 11, 0.2)',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                                bgcolor: '#f59e0b',
+                                transform: 'translateY(-1px)',
+                                boxShadow: '0 12px 28px rgba(245, 158, 11, 0.3)'
+                            }
+                        }}
+                    >
+                        {checkingMaintenance ? <CircularProgress size={22} color="inherit" /> : 'Check Status Again'}
+                    </Button>
+                </Box>
+            </Box>
+        );
+    }
 
     if (pathname === '/admin/login') {
         return <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>{children}</Box>;
