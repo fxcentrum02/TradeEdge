@@ -35,6 +35,7 @@ export async function POST(
     dailyRoi: number;
     endDate: Date;
 }>>> {
+    const { id } = await params;
     try {
         const session = await getAdminSessionFromRequest(request);
 
@@ -42,7 +43,6 @@ export async function POST(
             return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 403 });
         }
 
-        const { id } = await params;
         const body = await request.json().catch(() => ({}));
         const { adminNote, backdateRoi } = body;
 
@@ -206,6 +206,18 @@ export async function POST(
     } catch (error) {
         console.error('[approve ticket] Error:', error);
         remoteLog('Approve ticket error', { error: String(error) }, 'ERROR');
-        return NextResponse.json({ success: false, error: 'Failed to approve ticket' }, { status: 500 });
+
+        // Rollback ticket status to PENDING on error so it can be retried
+        try {
+            const db = await getDB();
+            await db.collection(Collections.PAYMENT_TICKETS).updateOne(
+                { _id: typeof id === 'string' ? new ObjectId(id) : id, status: 'PROCESSING' },
+                { $set: { status: 'PENDING', updatedAt: new Date() } }
+            );
+        } catch (rollbackError) {
+            console.error('[approve ticket] Rollback failed:', rollbackError);
+        }
+
+        return NextResponse.json({ success: false, error: 'Failed to approve ticket: ' + String(error) }, { status: 500 });
     }
 }

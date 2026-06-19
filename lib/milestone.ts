@@ -63,11 +63,18 @@ export interface MilestoneProcessResult {
 // using $graphLookup to traverse unlimited depth
 // ---------------------------------------------------------------------------
 
-async function getLegVolume(referralUserId: ObjectId): Promise<number> {
+// ---------------------------------------------------------------------------
+// Get sorted leg volumes for all direct referrals of a user
+// - Uses a single $graphLookup to fetch the entire descendants tree
+//   and computes sub-tree volumes in-memory.
+// ---------------------------------------------------------------------------
+
+export async function getDirectLegVolumes(userId: string | ObjectId): Promise<LegVolume[]> {
+    const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
     const db = await getDB();
 
-    const result = await db.collection(Collections.USERS).aggregate([
-        { $match: { _id: referralUserId } },
+    const aggregateResult = await db.collection(Collections.USERS).aggregate([
+        { $match: { _id: _userId } },
         {
             $graphLookup: {
                 from: Collections.USERS,
@@ -75,57 +82,77 @@ async function getLegVolume(referralUserId: ObjectId): Promise<number> {
                 connectFromField: '_id',
                 connectToField: 'referredById',
                 as: 'descendants',
-                maxDepth: 50,       // safety cap — unlimited practical depth
-                depthField: 'depth',
+                maxDepth: 50,
             }
         },
         {
             $project: {
-                _id: 1,
-                tradePower: 1,
-                downlinePower: {
-                    $reduce: {
-                        input: '$descendants',
-                        initialValue: 0,
-                        in: { $add: ['$$value', { $ifNull: ['$$this.tradePower', 0] }] }
-                    }
-                }
+                'descendants._id': 1,
+                'descendants.referredById': 1,
+                'descendants.tradePower': 1,
+                'descendants.firstName': 1,
+                'descendants.telegramUsername': 1,
             }
         }
     ]).toArray();
 
-    if (!result.length) return 0;
+    if (aggregateResult.length === 0 || !aggregateResult[0].descendants || aggregateResult[0].descendants.length === 0) {
+        return [];
+    }
 
-    const personal = result[0].tradePower || 0;
-    const downline = result[0].downlinePower || 0;
-    return personal + downline;
-}
+    const descendants = aggregateResult[0].descendants as {
+        _id: ObjectId;
+        referredById?: ObjectId | null;
+        tradePower?: number;
+        firstName?: string;
+        telegramUsername?: string;
+    }[];
 
-// ---------------------------------------------------------------------------
-// Get sorted leg volumes for all direct referrals of a user
-// ---------------------------------------------------------------------------
+    const nodeMap = new Map<string, typeof descendants[0]>();
+    const childrenMap = new Map<string, string[]>();
 
-export async function getDirectLegVolumes(userId: string | ObjectId): Promise<LegVolume[]> {
-    const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
+    for (const d of descendants) {
+        const sid = d._id.toString();
+        nodeMap.set(sid, d);
+        
+        if (d.referredById) {
+            const pid = d.referredById.toString();
+            if (!childrenMap.has(pid)) {
+                childrenMap.set(pid, []);
+            }
+            childrenMap.get(pid)!.push(sid);
+        }
+    }
 
-    const directReferrals = await findDirectReferrals(_userId);
-    if (directReferrals.length === 0) return [];
+    const memo = new Map<string, number>();
+    const getSubTreeSum = (uidStr: string): number => {
+        if (memo.has(uidStr)) return memo.get(uidStr)!;
+        const node = nodeMap.get(uidStr);
+        if (!node) return 0;
 
-    const legVolumes: LegVolume[] = await Promise.all(
-        directReferrals.map(async (ref) => {
-            const totalLegVolume = await getLegVolume(ref._id);
-            return {
-                userId: ref._id.toString(),
-                firstName: ref.firstName || null,
-                telegramUsername: ref.telegramUsername || null,
-                personalTradePower: ref.tradePower || 0,
-                downlineTradePower: Math.max(0, totalLegVolume - (ref.tradePower || 0)),
-                totalLegVolume,
-            };
-        })
-    );
+        let sum = node.tradePower || 0;
+        const children = childrenMap.get(uidStr) || [];
+        for (const cid of children) {
+            sum += getSubTreeSum(cid);
+        }
+        memo.set(uidStr, sum);
+        return sum;
+    };
 
-    // Sort descending by total leg volume
+    const directReferralIds = childrenMap.get(_userId.toString()) || [];
+    const legVolumes: LegVolume[] = directReferralIds.map(rid => {
+        const ref = nodeMap.get(rid)!;
+        const totalLegVolume = getSubTreeSum(rid);
+        return {
+            userId: rid,
+            firstName: ref.firstName || null,
+            telegramUsername: ref.telegramUsername || null,
+            personalTradePower: ref.tradePower || 0,
+            downlineTradePower: Math.max(0, totalLegVolume - (ref.tradePower || 0)),
+            totalLegVolume,
+        };
+    });
+
     return legVolumes.sort((a, b) => b.totalLegVolume - a.totalLegVolume);
 }
 
@@ -264,6 +291,8 @@ export async function checkAndAwardMilestones(
 
 // ---------------------------------------------------------------------------
 // Batch processor: Check all active users (called by the cron)
+// - Highly optimized: Runs exactly 2 read queries for the entire database tree
+//   and executes downstream volume math in O(N) memory calculations.
 // ---------------------------------------------------------------------------
 
 export async function processMilestoneBonusBatch(): Promise<{
@@ -274,47 +303,161 @@ export async function processMilestoneBonusBatch(): Promise<{
 }> {
     const db = await getDB();
 
-    // Fetch all non-deleted active users who have at least one direct referral
-    // We filter by directReferralCount > 0 to skip users who can never pass the 40/30/30
-    const users = await db.collection(Collections.USERS)
-        .find({
-            isDeleted: { $ne: true },
-            directReferralCount: { $gt: 1 },  // need at least 2 legs for a valid 40/30/30 (A + B minimum)
-        })
-        .project({ _id: 1 })
-        .toArray();
+    // 1. Fetch all active users with minimal fields
+    const users = await db.collection(Collections.USERS).find(
+        { isDeleted: { $ne: true } },
+        {
+            projection: {
+                _id: 1,
+                referredById: 1,
+                tradePower: 1,
+                firstName: 1,
+                telegramUsername: 1,
+                directReferralCount: 1,
+            }
+        }
+    ).toArray();
 
-    console.log(`[milestone-cron] Found ${users.length} eligible users to check`);
+    console.log(`[milestone-cron] Found ${users.length} total active users to parse`);
+
+    // 2. Fetch all milestone awards to check alreadyAwarded
+    const allAwards = await db.collection(Collections.MILESTONE_AWARDS).find({}).toArray();
+    // Build set of userId_threshold strings
+    const awardedSet = new Set<string>(
+        allAwards.map(a => `${a.userId.toString()}_${a.milestoneThreshold}`)
+    );
+
+    // 3. Build maps for in-memory graph traversal
+    const nodeMap = new Map<string, typeof users[0]>();
+    const childrenMap = new Map<string, string[]>();
+
+    for (const u of users) {
+        const sid = u._id.toString();
+        nodeMap.set(sid, u);
+        if (u.referredById) {
+            const pid = u.referredById.toString();
+            if (!childrenMap.has(pid)) {
+                childrenMap.set(pid, []);
+            }
+            childrenMap.get(pid)!.push(sid);
+        }
+    }
+
+    // 4. Memoized sub-tree sum calculation
+    const memoSubTreeSum = new Map<string, number>();
+    const getSubTreeSum = (uidStr: string): number => {
+        if (memoSubTreeSum.has(uidStr)) return memoSubTreeSum.get(uidStr)!;
+        const node = nodeMap.get(uidStr);
+        if (!node) return 0;
+
+        let sum = node.tradePower || 0;
+        const children = childrenMap.get(uidStr) || [];
+        for (const cid of children) {
+            sum += getSubTreeSum(cid);
+        }
+        memoSubTreeSum.set(uidStr, sum);
+        return sum;
+    };
+
+    // Calculate sub-tree sum for everyone
+    for (const u of users) {
+        getSubTreeSum(u._id.toString());
+    }
 
     let totalNewAwards = 0;
     let totalUSDT = 0;
     const errors: { userId: string; error: string }[] = [];
 
-    // Process in chunks of 20 to avoid overwhelming DB connections
-    const CHUNK_SIZE = 20;
-    for (let i = 0; i < users.length; i += CHUNK_SIZE) {
-        const chunk = users.slice(i, i + CHUNK_SIZE);
+    // Filter users eligible for milestone checks (directReferralCount > 1)
+    const eligibleUsers = users.filter(u => u.directReferralCount > 1);
+    console.log(`[milestone-cron] Checking ${eligibleUsers.length} users with at least 2 legs`);
 
-        const results = await Promise.allSettled(
-            chunk.map(user => checkAndAwardMilestones(user._id))
-        );
+    // 5. Check and award milestones
+    for (const u of eligibleUsers) {
+        const userIdStr = u._id.toString();
+        const directIds = childrenMap.get(userIdStr) || [];
+        
+        // Calculate sorted legs for this user
+        const legVolumes: LegVolume[] = directIds.map(rid => {
+            const ref = nodeMap.get(rid)!;
+            const totalLegVolume = memoSubTreeSum.get(rid) || 0;
+            return {
+                userId: rid,
+                firstName: ref.firstName || null,
+                telegramUsername: ref.telegramUsername || null,
+                personalTradePower: ref.tradePower || 0,
+                downlineTradePower: Math.max(0, totalLegVolume - (ref.tradePower || 0)),
+                totalLegVolume,
+            };
+        }).sort((a, b) => b.totalLegVolume - a.totalLegVolume);
 
-        results.forEach((result, idx) => {
-            const userId = chunk[idx]._id.toString();
-            if (result.status === 'fulfilled') {
-                totalNewAwards += result.value.newlyAwardedCount;
-                totalUSDT += result.value.totalRewarded;
-            } else {
-                console.error(`[milestone-cron] Error for user ${userId}:`, result.reason);
-                errors.push({ userId, error: String(result.reason) });
+        for (const milestone of MILESTONE_BONUSES) {
+            const alreadyAwarded = awardedSet.has(`${userIdStr}_${milestone.threshold}`);
+            if (alreadyAwarded) continue;
+
+            const { legA, legB, legC, passed } = check403030(milestone.threshold, legVolumes);
+
+            if (passed) {
+                try {
+                    const now = new Date();
+                    const awarded = await createMilestoneAward({
+                        userId: u._id,
+                        milestoneThreshold: milestone.threshold,
+                        rewardAmount: milestone.reward,
+                        awardedAt: now,
+                        snapshotLegA: legA,
+                        snapshotLegB: legB,
+                        snapshotLegC: legC,
+                    });
+
+                    if (awarded) {
+                        // Credit the referral wallet
+                        await creditReferralWallet(
+                            u._id,
+                            milestone.reward,
+                            `Milestone Bonus: ${milestone.threshold.toLocaleString()} USDT threshold reached`
+                        );
+
+                        // Log dedicated MILESTONE_BONUS transaction for audit trail
+                        const wallet = await db.collection(Collections.REFERRAL_WALLETS).findOne({ userId: u._id });
+                        const balanceAfter = wallet?.balance ?? milestone.reward;
+
+                        const tx: Omit<TransactionDocument, '_id'> = {
+                            userId: u._id,
+                            type: 'MILESTONE_BONUS',
+                            amount: milestone.reward,
+                            balanceAfter,
+                            description: `Milestone Reward: ${milestone.threshold.toLocaleString()} USDT threshold`,
+                            reference: awarded._id.toString(),
+                            metadata: {
+                                milestoneThreshold: milestone.threshold,
+                                legA: legA.toFixed(2),
+                                legB: legB.toFixed(2),
+                                legC: legC.toFixed(2),
+                            },
+                            createdAt: now,
+                        };
+
+                        await db.collection(Collections.TRANSACTIONS).insertOne(tx as TransactionDocument);
+
+                        totalNewAwards++;
+                        totalUSDT += milestone.reward;
+                        
+                        // Mark in-memory as awarded to prevent double checks
+                        awardedSet.add(`${userIdStr}_${milestone.threshold}`);
+
+                        console.log(`[milestone-cron] ✅ User ${userIdStr} awarded ${milestone.reward} USDT for ${milestone.threshold} milestone`);
+                    }
+                } catch (err) {
+                    console.error(`[milestone-cron] Error awarding user ${userIdStr}:`, err);
+                    errors.push({ userId: userIdStr, error: String(err) });
+                }
             }
-        });
-
-        console.log(`[milestone-cron] Processed chunk ${Math.floor(i / CHUNK_SIZE) + 1}/${Math.ceil(users.length / CHUNK_SIZE)}`);
+        }
     }
 
     return {
-        totalUsers: users.length,
+        totalUsers: eligibleUsers.length,
         totalNewAwards,
         totalUSDT,
         errors,

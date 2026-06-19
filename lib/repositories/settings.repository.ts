@@ -20,46 +20,60 @@ const defaultSettings: Omit<AppSettings, '_id' | 'updatedAt'> = {
     referralClaimMultiplier: 1,
 };
 
+let cachedSettings: AppSettings | null = null;
+let lastSettingsFetch = 0;
+const CACHE_TTL_MS = 10000; // 10 seconds cache
+
 export async function getSettings(): Promise<AppSettings> {
+    const now = Date.now();
+    if (cachedSettings && (now - lastSettingsFetch < CACHE_TTL_MS)) {
+        return cachedSettings;
+    }
+
     const db = await getDB();
     const settings = await db.collection<AppSettings>(Collections.SETTINGS).findOne({ _id: SETTINGS_DOC_ID as any });
 
+    let result: AppSettings;
     if (!settings) {
         // Return defaults if not set in DB
-        return {
+        result = {
             _id: SETTINGS_DOC_ID,
             ...defaultSettings,
             updatedAt: new Date(),
         };
+    } else {
+        // Migration/Normalization: If new fields are missing but old ones exist, populate them
+        if (!settings.withdrawalFeeType) {
+            settings.withdrawalFeeType = 'PERCENTAGE';
+            settings.withdrawalFeeValue = settings.withdrawalFeePercentage ?? defaultSettings.withdrawalFeeValue;
+        }
+
+        if (settings.maintenanceMode === undefined) {
+            settings.maintenanceMode = false;
+        }
+
+        if (settings.maintenanceEstimatedDuration === undefined) {
+            settings.maintenanceEstimatedDuration = '';
+        }
+
+        if (!settings.receivingAddress) {
+            settings.receivingAddress = process.env.PAYMENT_BEP20_ADDRESS || '';
+        }
+
+        if (settings.referralClaimMultiplier === undefined) {
+            settings.referralClaimMultiplier = defaultSettings.referralClaimMultiplier;
+        }
+
+        if (settings.minReferralWithdrawalAmount === undefined) {
+            settings.minReferralWithdrawalAmount = defaultSettings.minReferralWithdrawalAmount;
+        }
+
+        result = settings;
     }
 
-    // Migration/Normalization: If new fields are missing but old ones exist, populate them
-    if (!settings.withdrawalFeeType) {
-        settings.withdrawalFeeType = 'PERCENTAGE';
-        settings.withdrawalFeeValue = settings.withdrawalFeePercentage ?? defaultSettings.withdrawalFeeValue;
-    }
-
-    if (settings.maintenanceMode === undefined) {
-        settings.maintenanceMode = false;
-    }
-
-    if (settings.maintenanceEstimatedDuration === undefined) {
-        settings.maintenanceEstimatedDuration = '';
-    }
-
-    if (!settings.receivingAddress) {
-        settings.receivingAddress = process.env.PAYMENT_BEP20_ADDRESS || '';
-    }
-
-    if (settings.referralClaimMultiplier === undefined) {
-        settings.referralClaimMultiplier = defaultSettings.referralClaimMultiplier;
-    }
-
-    if (settings.minReferralWithdrawalAmount === undefined) {
-        settings.minReferralWithdrawalAmount = defaultSettings.minReferralWithdrawalAmount;
-    }
-
-    return settings;
+    cachedSettings = result;
+    lastSettingsFetch = now;
+    return result;
 }
 
 export async function updateSettings(updates: Partial<Omit<AppSettings, '_id' | 'updatedAt'>>): Promise<AppSettings> {
@@ -79,6 +93,10 @@ export async function updateSettings(updates: Partial<Omit<AppSettings, '_id' | 
         { $set: newSettings },
         { upsert: true }
     );
+
+    // Invalidate cache immediately
+    cachedSettings = null;
+    lastSettingsFetch = 0;
 
     return newSettings;
 }

@@ -100,6 +100,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
  * POST /api/admin/withdrawals - Approve or reject withdrawal
  */
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<Withdrawal>>> {
+    let withdrawalId: string | undefined;
     try {
         const session = await getAdminSessionFromRequest(request);
 
@@ -108,10 +109,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         }
 
         const body = await request.json();
-        const { withdrawalId, action, txHash, adminNote } = body;
+        const { action, txHash, adminNote } = body;
+        withdrawalId = body.withdrawalId;
 
         if (!withdrawalId || !['approve', 'reject'].includes(action)) {
             return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
+        }
+
+        if (action === 'approve' && !txHash) {
+            return NextResponse.json({ success: false, error: 'Transaction hash required for approval' }, { status: 400 });
         }
 
         // 1. Atomic Lock: Transition from PENDING to PROCESSING
@@ -136,40 +142,78 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         }
 
         if (action === 'reject') {
-            // Refund user
-            await creditWallet(
-                withdrawal.userId,
-                withdrawal.amount,
-                'ADMIN_CREDIT',
-                'Withdrawal rejected - refund',
-                withdrawalId
-            );
+            let updated;
+            try {
+                updated = await rejectWithdrawal(
+                    withdrawalId,
+                    new ObjectId(session.adminId),
+                    adminNote || 'Rejected by admin'
+                );
+            } catch (err) {
+                // Rollback status to PENDING on failure
+                await db.collection(Collections.WITHDRAWALS).updateOne(
+                    { _id: new ObjectId(withdrawalId) },
+                    { $set: { status: 'PENDING', updatedAt: new Date() } }
+                );
+                throw err;
+            }
 
-            const updated = await rejectWithdrawal(
-                withdrawalId,
-                new ObjectId(session.adminId),
-                adminNote || 'Rejected by admin'
-            );
+            try {
+                // Refund user
+                await creditWallet(
+                    withdrawal.userId,
+                    withdrawal.amount,
+                    'ADMIN_CREDIT',
+                    'Withdrawal rejected - refund',
+                    withdrawalId
+                );
+            } catch (err) {
+                // If crediting fails, we MUST roll back the withdrawal status to PENDING so the refund is not lost!
+                await db.collection(Collections.WITHDRAWALS).updateOne(
+                    { _id: new ObjectId(withdrawalId) },
+                    { $set: { status: 'PENDING', updatedAt: new Date() } }
+                );
+                throw new Error('Failed to refund user wallet. Rolled back withdrawal status. Error: ' + String(err));
+            }
 
             return NextResponse.json({ success: true, data: updated as any, message: 'Withdrawal rejected' });
         }
 
         // Approve
-        if (!txHash) {
-            return NextResponse.json({ success: false, error: 'Transaction hash required for approval' }, { status: 400 });
+        try {
+            const updated = await approveWithdrawal(
+                withdrawalId,
+                new ObjectId(session.adminId),
+                txHash,
+                adminNote
+            );
+
+            return NextResponse.json({ success: true, data: updated as any, message: 'Withdrawal approved' });
+        } catch (err) {
+            // Rollback status to PENDING on failure
+            await db.collection(Collections.WITHDRAWALS).updateOne(
+                { _id: new ObjectId(withdrawalId) },
+                { $set: { status: 'PENDING', updatedAt: new Date() } }
+            );
+            throw err;
         }
-
-        const updated = await approveWithdrawal(
-            withdrawalId,
-            new ObjectId(session.adminId),
-            txHash,
-            adminNote
-        );
-
-        return NextResponse.json({ success: true, data: updated as any, message: 'Withdrawal approved' });
 
     } catch (error) {
         console.error('Admin withdrawal action error:', error);
-        return NextResponse.json({ success: false, error: 'Failed to process withdrawal' }, { status: 500 });
+        
+        // Rollback status to PENDING on unexpected errors if withdrawalId is available
+        if (withdrawalId) {
+            try {
+                const db = await getDB();
+                await db.collection(Collections.WITHDRAWALS).updateOne(
+                    { _id: new ObjectId(withdrawalId), status: 'PROCESSING' },
+                    { $set: { status: 'PENDING', updatedAt: new Date() } }
+                );
+            } catch (rollbackError) {
+                console.error('Failed to rollback withdrawal status:', rollbackError);
+            }
+        }
+
+        return NextResponse.json({ success: false, error: 'Failed to process withdrawal: ' + String(error) }, { status: 500 });
     }
 }

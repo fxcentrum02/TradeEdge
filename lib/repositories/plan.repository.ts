@@ -13,12 +13,23 @@ export async function findPlanById(id: string | ObjectId) {
     return db.collection<PlanDocument>(Collections.PLANS).findOne({ _id });
 }
 
+let cachedActivePlans: PlanDocument[] | null = null;
+let lastActivePlansFetch = 0;
+const CACHE_TTL_MS = 10000; // 10 seconds cache
+
 export async function findActivePlans() {
+    const now = Date.now();
+    if (cachedActivePlans && (now - lastActivePlansFetch < CACHE_TTL_MS)) {
+        return cachedActivePlans;
+    }
     const db = await getDB();
-    return db.collection<PlanDocument>(Collections.PLANS)
+    const plans = await db.collection<PlanDocument>(Collections.PLANS)
         .find({ isActive: true })
         .sort({ sortOrder: 1, minAmount: 1 })
         .toArray();
+    cachedActivePlans = plans;
+    lastActivePlansFetch = now;
+    return plans;
 }
 
 export async function findAllPlans() {
@@ -94,6 +105,11 @@ export async function createPlan(planData: Omit<PlanDocument, '_id' | 'createdAt
     };
 
     const result = await db.collection<PlanDocument>(Collections.PLANS).insertOne(plan as PlanDocument);
+    
+    // Invalidate cache
+    cachedActivePlans = null;
+    lastActivePlansFetch = 0;
+
     return db.collection<PlanDocument>(Collections.PLANS).findOne({ _id: result.insertedId });
 }
 
@@ -112,6 +128,10 @@ export async function updatePlan(id: string | ObjectId, updates: Partial<PlanDoc
         { returnDocument: 'after' }
     );
 
+    // Invalidate cache
+    cachedActivePlans = null;
+    lastActivePlansFetch = 0;
+
     return result;
 }
 
@@ -119,5 +139,11 @@ export async function deletePlan(id: string | ObjectId) {
     const db = await getDB();
     const _id = typeof id === 'string' ? new ObjectId(id) : id;
 
-    return db.collection<PlanDocument>(Collections.PLANS).deleteOne({ _id });
+    const result = await db.collection<PlanDocument>(Collections.PLANS).deleteOne({ _id });
+
+    // Invalidate cache
+    cachedActivePlans = null;
+    lastActivePlansFetch = 0;
+
+    return result;
 }

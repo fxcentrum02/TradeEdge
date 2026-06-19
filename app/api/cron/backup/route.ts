@@ -47,12 +47,20 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                 // Get data from source
                 const data = await sourceDb.collection(collectionName).find({}).toArray();
                 
-                // Clear existing data in target (Full sync)
-                await targetDb.collection(collectionName).deleteMany({});
-                
                 if (data.length > 0) {
-                    // Insert new data
-                    await targetDb.collection(collectionName).insertMany(data);
+                    const tempCollectionName = `${collectionName}_temp`;
+                    
+                    // Clean up any leftover temp collection
+                    await targetDb.collection(tempCollectionName).drop().catch(() => {});
+                    
+                    // Sync target with source data using temp collection
+                    await targetDb.collection(tempCollectionName).insertMany(data);
+                    
+                    // Atomically rename temp collection to live collection (overwriting it)
+                    await targetDb.collection(tempCollectionName).rename(collectionName, { dropTarget: true });
+                } else {
+                    // If source is empty, empty the target collection
+                    await targetDb.collection(collectionName).deleteMany({});
                 }
                 
                 results[collectionName] = data.length;
