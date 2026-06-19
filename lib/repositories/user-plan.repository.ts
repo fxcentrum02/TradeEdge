@@ -91,7 +91,7 @@ export async function createUserPlan(planData: Omit<UserPlanDocument, '_id' | 'c
     };
 
     const result = await db.collection<UserPlanDocument>(Collections.USER_PLANS).insertOne(userPlan as UserPlanDocument);
-    return db.collection<UserPlanDocument>(Collections.USER_PLANS).findOne({ _id: result.insertedId });
+    return { _id: result.insertedId, ...userPlan } as UserPlanDocument;
 }
 
 export async function updateUserPlan(id: string | ObjectId, updates: Partial<UserPlanDocument>) {

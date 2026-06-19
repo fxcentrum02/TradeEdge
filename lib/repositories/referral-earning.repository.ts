@@ -19,7 +19,7 @@ export async function createReferralEarning(
     };
 
     const result = await db.collection<ReferralEarningDocument>(Collections.REFERRAL_EARNINGS).insertOne(earning as ReferralEarningDocument);
-    return db.collection<ReferralEarningDocument>(Collections.REFERRAL_EARNINGS).findOne({ _id: result.insertedId });
+    return { _id: result.insertedId, ...earning } as ReferralEarningDocument;
 }
 
 export async function findReferralEarningsByUserId(userId: string | ObjectId) {

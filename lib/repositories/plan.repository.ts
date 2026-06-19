@@ -110,7 +110,7 @@ export async function createPlan(planData: Omit<PlanDocument, '_id' | 'createdAt
     cachedActivePlans = null;
     lastActivePlansFetch = 0;
 
-    return db.collection<PlanDocument>(Collections.PLANS).findOne({ _id: result.insertedId });
+    return { _id: result.insertedId, ...plan } as PlanDocument;
 }
 
 export async function updatePlan(id: string | ObjectId, updates: Partial<PlanDocument>) {

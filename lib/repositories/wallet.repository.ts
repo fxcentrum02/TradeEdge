@@ -26,7 +26,7 @@ export async function createWallet(userId: string | ObjectId, initialBalance: nu
     };
 
     const result = await db.collection<WalletDocument>(Collections.WALLETS).insertOne(wallet as WalletDocument);
-    return db.collection<WalletDocument>(Collections.WALLETS).findOne({ _id: result.insertedId });
+    return { _id: result.insertedId, ...wallet } as WalletDocument;
 }
 
 export async function getOrCreateWallet(userId: string | ObjectId) {

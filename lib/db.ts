@@ -13,6 +13,53 @@ if (!MONGODB_URI) {
     throw new Error('[DB] DATABASE_URL environment variable is not defined!');
 }
 
+// ========================================================
+// SLOW QUERY MONITORING
+// ========================================================
+const SLOW_QUERY_THRESHOLD_MS = parseInt(process.env.SLOW_QUERY_THRESHOLD_MS || '100', 10);
+const activeCommands = new Map<number, { commandName: string; collectionName: string; command: any; startTime: number }>();
+
+function registerCommandMonitoring(client: MongoClient) {
+    client.on('commandStarted', (event) => {
+        const cmdName = event.commandName;
+        if (['find', 'aggregate', 'update', 'delete', 'insert', 'findAndModify', 'count'].includes(cmdName)) {
+            // Collection name is usually the value of the command name key
+            const collName = String(event.command[cmdName] || 'unknown');
+            activeCommands.set(event.requestId, {
+                commandName: cmdName,
+                collectionName: collName,
+                command: event.command,
+                startTime: Date.now(),
+            });
+        }
+    });
+
+    client.on('commandSucceeded', (event) => {
+        const info = activeCommands.get(event.requestId);
+        if (info) {
+            activeCommands.delete(event.requestId);
+            const duration = Date.now() - info.startTime;
+            if (duration >= SLOW_QUERY_THRESHOLD_MS) {
+                // Log query excluding internal details/passwords if present
+                const queryLog = { ...info.command };
+                // Redact sensitive fields if any exist
+                if (queryLog.password) queryLog.password = '[REDACTED]';
+                if (queryLog.hash) queryLog.hash = '[REDACTED]';
+                
+                console.warn(
+                    `⚠️ [SLOW QUERY] ${info.commandName.toUpperCase()} on "${info.collectionName}" took ${duration}ms ` +
+                    `(threshold: ${SLOW_QUERY_THRESHOLD_MS}ms). Command:`,
+                    JSON.stringify(queryLog)
+                );
+            }
+        }
+    });
+
+    client.on('commandFailed', (event) => {
+        activeCommands.delete(event.requestId);
+    });
+}
+
 let globalWithMongo = global as typeof globalThis & {
     _mongoClient?: MongoClient;
     _mongoDb?: Db;
@@ -38,6 +85,7 @@ export async function connectDB(): Promise<Db> {
             maxIdleTimeMS: 15000,
             serverSelectionTimeoutMS: 5000,
             connectTimeoutMS: 5000,
+            monitorCommands: true,
         });
 
         const db = client.db(MONGODB_DB);
@@ -45,6 +93,9 @@ export async function connectDB(): Promise<Db> {
         // Verify connection
         await db.command({ ping: 1 });
         console.log('[DB] MongoDB connected successfully. DB:', MONGODB_DB);
+
+        // Register slow query monitoring
+        registerCommandMonitoring(client);
 
         globalWithMongo._mongoClient = client;
         globalWithMongo._mongoDb = db;

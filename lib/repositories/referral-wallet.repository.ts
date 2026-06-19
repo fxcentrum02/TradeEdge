@@ -37,8 +37,7 @@ export async function getOrCreateReferralWallet(userId: string | ObjectId) {
 
         const result = await db.collection<ReferralWalletDocument>(Collections.REFERRAL_WALLETS)
             .insertOne(doc as ReferralWalletDocument);
-        wallet = await db.collection<ReferralWalletDocument>(Collections.REFERRAL_WALLETS)
-            .findOne({ _id: result.insertedId });
+        wallet = { _id: result.insertedId, ...doc } as ReferralWalletDocument;
     }
 
     return wallet;

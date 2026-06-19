@@ -84,7 +84,7 @@ export async function createPaymentTicket(
     };
 
     const result = await db.collection<PaymentTicketDocument>(Collections.PAYMENT_TICKETS).insertOne(ticket as PaymentTicketDocument);
-    return db.collection<PaymentTicketDocument>(Collections.PAYMENT_TICKETS).findOne({ _id: result.insertedId });
+    return { _id: result.insertedId, ...ticket } as PaymentTicketDocument;
 }
 
 export async function updatePaymentTicket(

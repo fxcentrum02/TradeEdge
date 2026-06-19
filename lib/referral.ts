@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import { getDB } from './db';
 import { Collections } from './db/collections';
 import { REFERRAL_COMMISSIONS, getTierCommissionPercentage } from './constants';
-import { findUserById, findDirectReferrals, getReferralTreeByTier, countAllDescendants } from './repositories/user.repository';
+import { findUserById, findDirectReferrals, findDirectReferralIds, getReferralTreeByTier, countAllDescendants } from './repositories/user.repository';
 import { createReferralEarning, getReferralEarningsByTier, getTotalReferralEarnings, getEarningsFromUser } from './repositories/referral-earning.repository';
 import { creditReferralWallet, findReferralWalletByUserId, getTotalReferralClaimed } from './repositories/referral-wallet.repository';
 import { getTotalActiveAmount, countActivePlansByUserId, getTotalInvestedAmount } from './repositories/user-plan.repository';
@@ -21,8 +21,8 @@ import type { ReferralEarningDocument, UserDocument } from './db/types';
 export async function getTierUnlockInvestment(userId: ObjectId): Promise<number> {
     const personalInvestment = await getTotalActiveAmount(userId);
 
-    const directReferrals = await findDirectReferrals(userId);
-    const directReferralIds = directReferrals.map(r => r._id);
+    // Use lightweight projection — only need _id for $in filter
+    const directReferralIds = await findDirectReferralIds(userId);
 
     let directInvestment = 0;
     if (directReferralIds.length > 0) {

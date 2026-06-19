@@ -46,8 +46,7 @@ export async function createMilestoneAward(
         const result = await db.collection<MilestoneAwardDocument>(Collections.MILESTONE_AWARDS)
             .insertOne(data as MilestoneAwardDocument);
 
-        return db.collection<MilestoneAwardDocument>(Collections.MILESTONE_AWARDS)
-            .findOne({ _id: result.insertedId });
+        return { _id: result.insertedId, ...data } as MilestoneAwardDocument;
     } catch (error: any) {
         // Duplicate key error code 11000 → milestone already awarded
         if (error?.code === 11000) {

@@ -84,7 +84,7 @@ export async function createWithdrawal(
     };
 
     const result = await db.collection<WithdrawalDocument>(Collections.WITHDRAWALS).insertOne(withdrawal as WithdrawalDocument);
-    return db.collection<WithdrawalDocument>(Collections.WITHDRAWALS).findOne({ _id: result.insertedId });
+    return { _id: result.insertedId, ...withdrawal } as WithdrawalDocument;
 }
 
 export async function updateWithdrawal(id: string | ObjectId, updates: Partial<WithdrawalDocument>) {

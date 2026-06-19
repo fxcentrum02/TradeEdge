@@ -34,7 +34,7 @@ export async function createUser(userData: Omit<UserDocument, '_id' | 'createdAt
     };
 
     const result = await db.collection<UserDocument>(Collections.USERS).insertOne(user as UserDocument);
-    return db.collection<UserDocument>(Collections.USERS).findOne({ _id: result.insertedId });
+    return { _id: result.insertedId, ...user } as UserDocument;
 }
 
 export async function updateUser(id: string | ObjectId, updates: Partial<UserDocument>) {
@@ -98,6 +98,20 @@ export async function findDirectReferrals(userId: string | ObjectId) {
         .find({ referredById: _id })
         .sort({ createdAt: -1 })
         .toArray();
+}
+
+/**
+ * Lightweight variant that only fetches _id of direct referrals.
+ * Use when you only need ObjectIds (e.g. for aggregation $in filters).
+ */
+export async function findDirectReferralIds(userId: string | ObjectId): Promise<ObjectId[]> {
+    const db = await getDB();
+    const _id = typeof userId === 'string' ? new ObjectId(userId) : userId;
+
+    const results = await db.collection<UserDocument>(Collections.USERS)
+        .find({ referredById: _id }, { projection: { _id: 1 } })
+        .toArray();
+    return results.map(r => r._id);
 }
 
 /**
