@@ -83,4 +83,50 @@ export async function getBackupDB(): Promise<Db | null> {
     }
 }
 
-export default { connectDB, getDB, getBackupDB };
+let cachedPaidClient: MongoClient | null = null;
+let cachedPaidDb: Db | null = null;
+
+export async function getPaidDB(): Promise<Db | null> {
+    const uri = process.env.PRIMARY_PAID_DATABASE_URL || process.env.PAID_DATABASE_URL;
+    if (!uri) return null;
+    if (cachedPaidDb && cachedPaidClient) return cachedPaidDb;
+    try {
+        const client = await MongoClient.connect(uri, {
+            maxPoolSize: 5,
+            serverSelectionTimeoutMS: 10000,
+            connectTimeoutMS: 10000,
+        });
+        const db = client.db(process.env.MONGODB_DB_NAME || 'TradeEdge');
+        cachedPaidClient = client;
+        cachedPaidDb = db;
+        return db;
+    } catch (error) {
+        console.error('[DB] Paid MongoDB connection FAILED:', error);
+        return null;
+    }
+}
+
+let cachedFreeClient: MongoClient | null = null;
+let cachedFreeDb: Db | null = null;
+
+export async function getFreeDB(): Promise<Db | null> {
+    const uri = process.env.FREE_TEST_DATABASE_URL || process.env.FREE_TEST_DB_URL;
+    if (!uri) return null;
+    if (cachedFreeDb && cachedFreeClient) return cachedFreeDb;
+    try {
+        const client = await MongoClient.connect(uri, {
+            maxPoolSize: 5,
+            serverSelectionTimeoutMS: 10000,
+            connectTimeoutMS: 10000,
+        });
+        const db = client.db(process.env.MONGODB_DB_NAME || 'TradeEdge');
+        cachedFreeClient = client;
+        cachedFreeDb = db;
+        return db;
+    } catch (error) {
+        console.error('[DB] Free MongoDB connection FAILED:', error);
+        return null;
+    }
+}
+
+export default { connectDB, getDB, getBackupDB, getPaidDB, getFreeDB };
