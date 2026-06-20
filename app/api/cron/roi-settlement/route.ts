@@ -27,6 +27,12 @@ interface CronSummary {
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<CronSummary>>> {
     try {
+        // Skip execution on Vercel Preview environment to isolate production databases
+        if (process.env.VERCEL_ENV === 'preview') {
+            console.log('[cron] Skipping daily ROI settlement on Vercel Preview environment.');
+            return NextResponse.json({ success: true, message: 'Skipped on preview environment' } as any);
+        }
+
         // Verify secret: support both Vercel cron header and manual Bearer token
         const authHeader = request.headers.get('authorization');
         const cronSecret = process.env.CRON_SECRET;

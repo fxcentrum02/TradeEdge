@@ -5,13 +5,14 @@ import type { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
-function getHost(uri: string): string {
+function getNormalizedHost(uri: string): string {
+    if (!uri) return '';
     try {
-        return new URL(uri).host;
+        // Extract the host part: between '@' and first of '/', '?', '#', or end of string
+        const match = uri.match(/@([^/?#\s]+)/);
+        return match ? match[1].trim().toLowerCase() : '';
     } catch {
-        // Fallback if standard URL parser fails on custom protocols
-        const match = uri.match(/@([^/?#]+)/);
-        return match ? match[1] : '';
+        return '';
     }
 }
 
@@ -22,6 +23,12 @@ function getHost(uri: string): string {
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
     try {
+        // Skip execution on Vercel Preview environment to isolate production databases
+        if (process.env.VERCEL_ENV === 'preview') {
+            console.log('[Clone Sync] Skipping execution on Vercel Preview environment.');
+            return NextResponse.json({ success: true, message: 'Skipped on preview environment' });
+        }
+
         // Verify secret: support both Vercel cron header and manual Bearer token
         const authHeader = request.headers.get('authorization');
         const cronSecret = process.env.CRON_SECRET;
@@ -42,25 +49,39 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             return NextResponse.json({ success: false, error: 'Paid/Free DB URLs not configured' }, { status: 500 });
         }
 
-        const activeHost = getHost(activeUri);
-        const paidHost = getHost(paidUri);
-        const freeHost = getHost(freeUri);
+        const activeHost = getNormalizedHost(activeUri);
+        const paidHost = getNormalizedHost(paidUri);
+        const freeHost = getNormalizedHost(freeUri);
+
+        if (!activeHost) {
+            console.error('[Clone Sync] Active database host is invalid');
+            return NextResponse.json({ success: false, error: 'Active database host is invalid' }, { status: 400 });
+        }
 
         let targetDb = null;
         let targetLabel = '';
+        let targetUri = '';
 
-        if (activeHost === paidHost) {
-            // Active is Paid DB, target is Free DB
-            targetDb = await getFreeDB();
-            targetLabel = 'Free Test DB';
-        } else if (activeHost === freeHost) {
+        if (activeHost === freeHost) {
             // Active is Free DB, target is Paid DB
             targetDb = await getPaidDB();
             targetLabel = 'Primary Paid DB';
-        } else {
-            // Active is neither or unknown, fallback to free DB to be safe
+            targetUri = paidUri;
+        } else if (activeHost === paidHost) {
+            // Active is Paid DB, target is Free DB
             targetDb = await getFreeDB();
-            targetLabel = 'Free Test DB (Fallback)';
+            targetLabel = 'Free Test DB';
+            targetUri = freeUri;
+        } else {
+            // Active matches neither - abort to avoid overwriting production DBs
+            console.error(`[Clone Sync] Active host (${activeHost}) matches neither Free host (${freeHost}) nor Paid host (${paidHost}). Sync aborted for safety.`);
+            return NextResponse.json({ success: false, error: 'Database host mismatch. Sync aborted for safety.' }, { status: 400 });
+        }
+
+        // Safety Guard: Abort if target host matches active host
+        if (getNormalizedHost(targetUri) === activeHost) {
+            console.error(`[Clone Sync] Target host matches active host (${activeHost}). Preventing self-overwrite.`);
+            return NextResponse.json({ success: false, error: 'Target database matches active database. Sync aborted.' }, { status: 400 });
         }
 
         if (!targetDb) {

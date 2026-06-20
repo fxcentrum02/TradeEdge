@@ -9,12 +9,28 @@ import { pusherServer } from '@/lib/pusher';
 import { remoteLog } from '@/lib/logger';
 import type { ApiResponse } from '@/types';
 
+function getNormalizedHost(uri: string): string {
+    if (!uri) return '';
+    try {
+        const match = uri.match(/@([^/?#\s]+)/);
+        return match ? match[1].trim().toLowerCase() : '';
+    } catch {
+        return '';
+    }
+}
+
 /**
  * POST /api/cron/backup
  * Performs a full data copy from primary DB to backup DB.
  */
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
     try {
+        // Skip execution on Vercel Preview environment to isolate production databases
+        if (process.env.VERCEL_ENV === 'preview') {
+            console.log('[Backup] Skipping execution on Vercel Preview environment.');
+            return NextResponse.json({ success: true, message: 'Skipped on preview environment' });
+        }
+
         // Auth check (same as ROI cron)
         const authHeader = request.headers.get('authorization');
         const cronSecret = process.env.CRON_SECRET;
@@ -23,6 +39,22 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
         if (!isVercelCron && !isManualWithSecret) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const sourceUri = process.env.DATABASE_URL!;
+        const targetUri = process.env.BACKUP_DATABASE_URL;
+
+        if (!targetUri) {
+            remoteLog('Backup failed: BACKUP_DATABASE_URL not configured', {}, 'ERROR');
+            return NextResponse.json({ success: false, error: 'Backup DB not configured' }, { status: 500 });
+        }
+
+        const sourceHost = getNormalizedHost(sourceUri);
+        const targetHost = getNormalizedHost(targetUri);
+
+        if (sourceHost && targetHost && sourceHost === targetHost) {
+            console.error(`[Backup] Source and target hosts are the same (${sourceHost}). Backup aborted for safety.`);
+            return NextResponse.json({ success: false, error: 'Backup target matches source database. Backup aborted.' }, { status: 400 });
         }
 
         const sourceDb = await getDB();
