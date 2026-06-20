@@ -954,6 +954,7 @@ export default function ReferralsPage() {
                                     >
                                         <Avatar
                                             src={ref.photoUrl || undefined}
+                                            imgProps={{ referrerPolicy: 'no-referrer' }}
                                             sx={{ 
                                                 width: 44, 
                                                 height: 44, 

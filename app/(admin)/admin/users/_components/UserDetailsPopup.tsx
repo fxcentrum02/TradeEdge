@@ -84,6 +84,7 @@ const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: n
                 )}
                 <Avatar 
                     src={node.photoUrl || undefined}
+                    imgProps={{ referrerPolicy: 'no-referrer' }}
                     sx={{ width: 24, height: 24, fontSize: 10, bgcolor: 'primary.main', fontWeight: 700 }}
                 >
                     {getInitials(node.firstName || node.telegramUsername || '?')}
@@ -243,6 +244,7 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                             }}>
                                 <Avatar
                                     src={data.profile.photoUrl || undefined}
+                                    imgProps={{ referrerPolicy: 'no-referrer' }}
                                     sx={{
                                         width: isMobile ? 64 : 80, height: isMobile ? 64 : 80, 
                                         fontSize: isMobile ? 24 : 32, fontWeight: 700,

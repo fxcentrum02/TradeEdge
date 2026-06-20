@@ -82,6 +82,8 @@ const TreeItem = ({ node, level }: TreeItemProps) => {
                     )}
 
                     <Avatar
+                        src={node.photoUrl || undefined}
+                        imgProps={{ referrerPolicy: 'no-referrer' }}
                         sx={{
                             width: isMobile ? 28 : 32,
                             height: isMobile ? 28 : 32,
@@ -90,7 +92,7 @@ const TreeItem = ({ node, level }: TreeItemProps) => {
                             fontWeight: 700
                         }}
                     >
-                        {node.firstName?.charAt(0) || '?'}
+                        {node.firstName?.charAt(0) || node.telegramUsername?.charAt(0) || '?'}
                     </Avatar>
 
                     <Box sx={{ flex: 1, minWidth: 0 }}>

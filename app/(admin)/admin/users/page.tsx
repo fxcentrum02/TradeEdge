@@ -174,6 +174,7 @@ export default function AdminUsersPage() {
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar 
                                                     src={user.photoUrl || undefined}
+                                                    imgProps={{ referrerPolicy: 'no-referrer' }}
                                                     sx={{ width: 36, height: 36, bgcolor: COLORS[idx % COLORS.length], fontSize: 13, fontWeight: 700 }}
                                                 >
                                                     {getInitials(user.firstName || user.telegramUsername || 'U')}
@@ -255,6 +256,7 @@ export default function AdminUsersPage() {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <Avatar 
                                                             src={user.photoUrl || undefined}
+                                                            imgProps={{ referrerPolicy: 'no-referrer' }}
                                                             sx={{ width: 32, height: 32, fontSize: 12, fontWeight: 700, bgcolor: COLORS[idx % COLORS.length] }}
                                                         >
                                                             {getInitials(user.firstName || user.telegramUsername || 'U')}
