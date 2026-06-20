@@ -18,7 +18,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import HistoryIcon from '@mui/icons-material/History';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { formatCurrency, formatDateTime, getInitials } from '@/lib/utils';
+import { formatCurrency, formatDateTime, getInitials, getAvatarUrl } from '@/lib/utils';
 import type { ReferralStats } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -953,7 +953,7 @@ export default function ReferralsPage() {
                                         }}
                                     >
                                         <Avatar
-                                            src={ref.photoUrl || undefined}
+                                            src={getAvatarUrl(ref.photoUrl)}
                                             imgProps={{ referrerPolicy: 'no-referrer' }}
                                             sx={{ 
                                                 width: 44, 

@@ -10,7 +10,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import DownloadIcon from '@mui/icons-material/Download';
-import { formatCurrency, formatRelativeTime, getInitials } from '@/lib/utils';
+import { formatCurrency, formatRelativeTime, getInitials, getAvatarUrl } from '@/lib/utils';
 import DateRangeFilterBar from '../_components/DateRangeFilterBar';
 import AdminAdvancedFilters, { FilterFieldConfig, FilterValues } from '../_components/AdminAdvancedFilters';
 import UserDetailsPopup from './_components/UserDetailsPopup';
@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
                                         <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar 
-                                                    src={user.photoUrl || undefined}
+                                                    src={getAvatarUrl(user.photoUrl)}
                                                     imgProps={{ referrerPolicy: 'no-referrer' }}
                                                     sx={{ width: 36, height: 36, bgcolor: COLORS[idx % COLORS.length], fontSize: 13, fontWeight: 700 }}
                                                 >
@@ -255,7 +255,7 @@ export default function AdminUsersPage() {
                                                 <TableCell sx={{ py: 2 }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <Avatar 
-                                                            src={user.photoUrl || undefined}
+                                                            src={getAvatarUrl(user.photoUrl)}
                                                             imgProps={{ referrerPolicy: 'no-referrer' }}
                                                             sx={{ width: 32, height: 32, fontSize: 12, fontWeight: 700, bgcolor: COLORS[idx % COLORS.length] }}
                                                         >

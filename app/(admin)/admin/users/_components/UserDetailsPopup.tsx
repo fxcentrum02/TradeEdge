@@ -24,7 +24,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { formatCurrency, formatDateTime, getInitials } from '@/lib/utils';
+import { formatCurrency, formatDateTime, getInitials, getAvatarUrl } from '@/lib/utils';
 import DateRangeFilterBar from '../../_components/DateRangeFilterBar';
 import type { HierarchyTreeNode } from '@/types';
 
@@ -83,7 +83,7 @@ const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: n
                     <Box sx={{ width: 18 }} />
                 )}
                 <Avatar 
-                    src={node.photoUrl || undefined}
+                    src={getAvatarUrl(node.photoUrl)}
                     imgProps={{ referrerPolicy: 'no-referrer' }}
                     sx={{ width: 24, height: 24, fontSize: 10, bgcolor: 'primary.main', fontWeight: 700 }}
                 >
@@ -243,7 +243,7 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                 textAlign: isMobile ? 'center' : 'left'
                             }}>
                                 <Avatar
-                                    src={data.profile.photoUrl || undefined}
+                                    src={getAvatarUrl(data.profile.photoUrl)}
                                     imgProps={{ referrerPolicy: 'no-referrer' }}
                                     sx={{
                                         width: isMobile ? 64 : 80, height: isMobile ? 64 : 80, 

@@ -142,3 +142,16 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
 export function delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+/**
+ * Get avatar URL, proxying Telegram URLs if necessary to bypass blocks/hotlinking restrictions
+ */
+export function getAvatarUrl(photoUrl?: string | null): string | undefined {
+    if (!photoUrl) return undefined;
+    // Proxy telegram URLs through our server to bypass ISP DNS block / hotlink 403
+    if (photoUrl.includes('telegram') || photoUrl.includes('t.me')) {
+        return `/api/proxy-avatar?url=${encodeURIComponent(photoUrl)}`;
+    }
+    return photoUrl;
+}
+

@@ -15,7 +15,7 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import PeopleIcon from '@mui/icons-material/People';
-import { formatCurrency, formatNumber } from '@/lib/utils';
+import { formatCurrency, formatNumber, getAvatarUrl } from '@/lib/utils';
 import type { HierarchyLevelStat, HierarchyTreeNode } from '@/types';
 
 // ===========================================
@@ -82,7 +82,7 @@ const TreeItem = ({ node, level }: TreeItemProps) => {
                     )}
 
                     <Avatar
-                        src={node.photoUrl || undefined}
+                        src={getAvatarUrl(node.photoUrl)}
                         imgProps={{ referrerPolicy: 'no-referrer' }}
                         sx={{
                             width: isMobile ? 28 : 32,
