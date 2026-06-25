@@ -151,6 +151,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const router = useRouter();
 
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/admin/auth/logout', { method: 'POST' });
+        } catch (err) {
+            console.error('Logout failed:', err);
+        }
+        window.location.href = 'https://tradespoweredge.xyz';
+    };
+
     const [maintenance, setMaintenance] = useState<{ active: boolean; duration: string }>({ active: false, duration: '' });
     const [checkingMaintenance, setCheckingMaintenance] = useState(true);
 
@@ -485,7 +494,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </Box>
                     <IconButton
                         size="small"
-                        onClick={() => router.push('/')}
+                        onClick={handleLogout}
                         sx={{ color: '#64748b', '&:hover': { color: '#ef4444' } }}
                     >
                         <LogoutIcon fontSize="small" />
