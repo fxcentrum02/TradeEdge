@@ -184,8 +184,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         fetch('/api/admin/settings')
-            .then(res => res.json())
-            .then(data => {
+            .then(async res => {
+                if (res.status === 401 || res.status === 403) {
+                    router.push('/admin/login');
+                    return;
+                }
+                const data = await res.json();
                 if (data.success && data.data) {
                     setAppSettings({
                         appName: data.data.appName || 'Trade Edge',
@@ -194,14 +198,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
             })
             .catch(() => { });
-    }, []);
+    }, [router]);
 
     useEffect(() => {
         // Fetch stats on load and when pathname changes (e.g., navigating back to tickets lists)
         const fetchStats = () => {
             fetch('/api/admin/sidebar-stats')
-                .then(res => res.json())
-                .then(data => {
+                .then(async res => {
+                    if (res.status === 401 || res.status === 403) {
+                        router.push('/admin/login');
+                        return;
+                    }
+                    const data = await res.json();
                     if (data.success && data.data) {
                         setSidebarStats(data.data);
                     }
@@ -237,7 +245,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             pusherClient.unsubscribe('global-events');
         };
 
-    }, [pathname]);
+    }, [pathname, router]);
 
     const brandColor = appSettings.brandColor;
     const appName = appSettings.appName;
