@@ -47,7 +47,20 @@ export async function getAdminSession(): Promise<AdminSessionPayload | null> {
     const session = await verifyAdminSessionToken(token);
     if (!session) {
         console.log(`[AUTH] Admin session verification failed for token`);
+        return null;
     }
+
+    try {
+        const { findAdminById } = await import('./repositories/admin.repository');
+        const admin = await findAdminById(session.adminId);
+        if (!admin || !admin.isActive) {
+            console.log(`[AUTH] Admin session invalid: admin ${session.email} (ID: ${session.adminId}) not found or inactive`);
+            return null;
+        }
+    } catch (error) {
+        console.error('[AUTH] Failed to check admin in DB:', error);
+    }
+
     return session;
 }
 
@@ -63,6 +76,21 @@ export async function getAdminSessionFromRequest(request: NextRequest): Promise<
     }
 
     const session = await verifyAdminSessionToken(token);
+    if (!session) {
+        return null;
+    }
+
+    try {
+        const { findAdminById } = await import('./repositories/admin.repository');
+        const admin = await findAdminById(session.adminId);
+        if (!admin || !admin.isActive) {
+            console.log(`[AUTH] Admin request session invalid: admin ${session.email} (ID: ${session.adminId}) not found or inactive`);
+            return null;
+        }
+    } catch (error) {
+        console.error('[AUTH] Failed to check admin in DB for request:', error);
+    }
+
     return session;
 }
 
