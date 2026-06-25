@@ -187,7 +187,7 @@ export default function TicketDetailsPopup({
 
                     {/* User & Request Info */}
                     <Grid container spacing={2}>
-                        <Grid size={{ xs: 6 }}>
+                        <Grid size={{ xs: !isPending && ticket.processedAt ? 4 : 6 }}>
                             <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                     <Avatar sx={{ width: 32, height: 32, bgcolor: '#8b5cf6', fontSize: 14 }}>
@@ -200,19 +200,34 @@ export default function TicketDetailsPopup({
                                 </Stack>
                             </Box>
                         </Grid>
-                        <Grid size={{ xs: 6 }}>
+                        <Grid size={{ xs: !isPending && ticket.processedAt ? 4 : 6 }}>
                             <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                     <Avatar sx={{ width: 32, height: 32, bgcolor: '#f43f5e', fontSize: 14 }}>
                                         <CalendarMonthIcon fontSize="inherit" />
                                     </Avatar>
                                     <Box>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Date</Typography>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Requested</Typography>
                                         <Typography variant="body2" fontWeight={700}>{formatDateTime(ticket.createdAt)}</Typography>
                                     </Box>
                                 </Stack>
                             </Box>
                         </Grid>
+                        {!isPending && ticket.processedAt && (
+                            <Grid size={{ xs: 4 }}>
+                                <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                                    <Stack direction="row" spacing={1.5} alignItems="center">
+                                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#10b981', fontSize: 14 }}>
+                                            <CalendarMonthIcon fontSize="inherit" />
+                                        </Avatar>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Processed</Typography>
+                                            <Typography variant="body2" fontWeight={700}>{formatDateTime(ticket.processedAt)}</Typography>
+                                        </Box>
+                                    </Stack>
+                                </Box>
+                            </Grid>
+                        )}
                     </Grid>
 
                     {/* Transaction Identity */}
@@ -255,6 +270,27 @@ export default function TicketDetailsPopup({
                                 <Box>
                                     <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>Network</Typography>
                                     <Chip label={ticket.network || 'BEP20'} size="small" sx={{ fontWeight: 700 }} />
+                                </Box>
+                            )}
+
+                            {!isPending && type === 'withdrawal' && ticket.txHash && (
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                                        Payout TX Hash
+                                    </Typography>
+                                    <Box sx={{
+                                        p: 1.5, borderRadius: 2, bgcolor: '#f1f5f9', border: '1px dashed #cbd5e1',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                                    }}>
+                                        <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', color: '#1e293b' }}>
+                                            {ticket.txHash}
+                                        </Typography>
+                                        <Tooltip title={copySuccess === 'payoutTx' ? 'Copied!' : 'Copy'} TransitionComponent={Zoom} arrow>
+                                            <IconButton size="small" onClick={() => handleCopy(ticket.txHash, 'payoutTx')}>
+                                                <ContentCopyIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
                                 </Box>
                             )}
                         </Stack>

@@ -50,7 +50,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
         } else if (resource === 'withdrawals') {
             const withdrawals = await db.collection(Collections.WITHDRAWALS).find({}).sort({ createdAt: -1 }).toArray();
-            csvContent = 'ID,UserID,Amount,Fee,NetAmount,Status,Address,TxHash,CreatedAt\n';
+            csvContent = 'ID,UserID,Amount,Fee,NetAmount,Status,Address,TxHash,CreatedAt,ProcessedAt\n';
             csvContent += withdrawals.map(w => [
                 w._id,
                 w.userId,
@@ -60,7 +60,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 w.status,
                 w.walletAddress,
                 w.txHash || '',
-                w.createdAt.toISOString()
+                w.createdAt.toISOString(),
+                w.processedAt ? new Date(w.processedAt).toISOString() : ''
             ].join(',')).join('\n');
         } else {
             return new NextResponse('Invalid resource', { status: 400 });

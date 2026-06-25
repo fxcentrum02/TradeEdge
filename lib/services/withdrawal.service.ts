@@ -227,17 +227,20 @@ export class WithdrawalService {
         amountMax?: string | null;
         page: number;
         limit: number;
+        dateType?: string | null;
     }) {
-        const { status, startDate, endDate, amountMin, amountMax, page, limit } = filters;
+        const { status, startDate, endDate, amountMin, amountMax, page, limit, dateType } = filters;
         const skip = (page - 1) * limit;
 
         const db = await getDB();
         const matchStage: any = {};
         if (status) matchStage.status = status;
+
+        const dateField = dateType === 'processedAt' ? 'processedAt' : 'createdAt';
         if (startDate || endDate) {
-            matchStage.createdAt = {};
-            if (startDate) { const s = new Date(startDate); s.setHours(0, 0, 0, 0); matchStage.createdAt.$gte = s; }
-            if (endDate) { const e = new Date(endDate); e.setHours(23, 59, 59, 999); matchStage.createdAt.$lte = e; }
+            matchStage[dateField] = {};
+            if (startDate) { const s = new Date(startDate); s.setHours(0, 0, 0, 0); matchStage[dateField].$gte = s; }
+            if (endDate) { const e = new Date(endDate); e.setHours(23, 59, 59, 999); matchStage[dateField].$lte = e; }
         }
         if (amountMin) matchStage.amount = { ...matchStage.amount, $gte: parseFloat(amountMin) };
         if (amountMax) matchStage.amount = { ...matchStage.amount, $lte: parseFloat(amountMax) };

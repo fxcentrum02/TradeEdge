@@ -5,6 +5,7 @@ import {
     Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Chip, Button, Skeleton, Alert, Avatar, Tabs, Tab,
     Snackbar, Card, CardContent, Stack, IconButton, useMediaQuery, useTheme,
+    ToggleButtonGroup, ToggleButton,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
@@ -62,6 +63,7 @@ export default function AdminWithdrawalsPage() {
     const [endDate, setEndDate] = useState('');
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterValues, setFilterValues] = useState<FilterValues>({});
+    const [dateType, setDateType] = useState<'createdAt' | 'processedAt'>('createdAt');
 
     const fetchWithdrawals = useCallback(async () => {
         setLoading(true);
@@ -70,6 +72,7 @@ export default function AdminWithdrawalsPage() {
             if (tab === 'PENDING') params.set('status', 'PENDING');
             if (startDate) params.set('startDate', startDate);
             if (endDate) params.set('endDate', endDate);
+            if (dateType) params.set('dateType', dateType);
             if (filterValues.amountMin) params.set('amountMin', String(filterValues.amountMin));
             if (filterValues.amountMax) params.set('amountMax', String(filterValues.amountMax));
             const res = await fetch(`/api/admin/withdrawals?${params}`, { credentials: 'include' });
@@ -77,7 +80,13 @@ export default function AdminWithdrawalsPage() {
             if (data.success) setWithdrawals(data.data.items || []);
         } catch { /* silent */ }
         finally { setLoading(false); }
-    }, [tab, startDate, endDate, filterValues]);
+    }, [tab, startDate, endDate, dateType, filterValues]);
+
+    useEffect(() => {
+        if (tab === 'PENDING') {
+            setDateType('createdAt');
+        }
+    }, [tab]);
 
     useEffect(() => {
         fetchWithdrawals();
@@ -171,8 +180,54 @@ export default function AdminWithdrawalsPage() {
                 </Button>
             </Box>
 
-            {/* Date Range Filter */}
-            <DateRangeFilterBar startDate={startDate} endDate={endDate} onChange={(s, e) => { setStartDate(s); setEndDate(e); }} />
+            {/* Date Selector and Range Filter */}
+            <Box sx={{ mb: 1 }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                        Date Filter Target:
+                    </Typography>
+                    <ToggleButtonGroup
+                        value={dateType}
+                        exclusive
+                        onChange={(_, v) => { if (v !== null) setDateType(v); }}
+                        size="small"
+                        disabled={tab === 'PENDING'}
+                        sx={{
+                            bgcolor: 'background.paper',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                            borderRadius: 2.5,
+                            p: 0.5,
+                            border: '1px solid #e2e8f0',
+                            '& .MuiToggleButton-root': {
+                                px: 2,
+                                py: 0.5,
+                                border: 'none',
+                                borderRadius: '6px !important',
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
+                                color: '#64748b',
+                                '&.Mui-selected': {
+                                    bgcolor: 'var(--brand-main)',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: 'var(--brand-main)',
+                                    }
+                                }
+                            }
+                        }}
+                    >
+                        <ToggleButton value="createdAt">Request Date</ToggleButton>
+                        <ToggleButton value="processedAt">Approval Date</ToggleButton>
+                    </ToggleButtonGroup>
+                    {tab === 'PENDING' && (
+                        <Typography variant="caption" color="text.secondary">
+                            (Approval Date is disabled for pending requests)
+                        </Typography>
+                    )}
+                </Stack>
+                <DateRangeFilterBar startDate={startDate} endDate={endDate} onChange={(s, e) => { setStartDate(s); setEndDate(e); }} />
+            </Box>
 
             {/* Tabs + Filters */}
             <Paper sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
@@ -249,6 +304,11 @@ export default function AdminWithdrawalsPage() {
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">{formatDateTime(w.createdAt)}</Typography>
                                             </Stack>
+                                            {w.processedAt && (
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'right' }}>
+                                                    Processed: {formatDateTime(w.processedAt)}
+                                                </Typography>
+                                            )}
                                         </CardContent>
                                     </Card>
                                 );
@@ -268,6 +328,7 @@ export default function AdminWithdrawalsPage() {
                                     <TableCell sx={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>Network</TableCell>
                                     <TableCell sx={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>Status</TableCell>
                                     <TableCell sx={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>Requested</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>Processed</TableCell>
                                     <TableCell sx={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }} align="right">Actions</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -275,12 +336,12 @@ export default function AdminWithdrawalsPage() {
                                 {loading ? (
                                     Array.from({ length: 5 }).map((_, i) => (
                                         <TableRow key={i}>
-                                            {Array.from({ length: 8 }).map((_, j) => (<TableCell key={j}><Skeleton /></TableCell>))}
+                                            {Array.from({ length: 9 }).map((_, j) => (<TableCell key={j}><Skeleton /></TableCell>))}
                                         </TableRow>
                                     ))
                                 ) : withdrawals.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                                        <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
                                             <Typography color="text.secondary">{tab === 'PENDING' ? 'No pending withdrawals 🎉' : 'No withdrawals found'}</Typography>
                                         </TableCell>
                                     </TableRow>
@@ -323,6 +384,9 @@ export default function AdminWithdrawalsPage() {
                                                 </TableCell>
                                                 <TableCell sx={{ py: 2 }}>
                                                     <Typography variant="caption" color="text.secondary">{formatDateTime(w.createdAt)}</Typography>
+                                                </TableCell>
+                                                <TableCell sx={{ py: 2 }}>
+                                                    <Typography variant="caption" color="text.secondary">{w.processedAt ? formatDateTime(w.processedAt) : '—'}</Typography>
                                                 </TableCell>
                                                 <TableCell sx={{ py: 2 }} align="right">
                                                     {w.status === 'PENDING' ? (

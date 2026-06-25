@@ -27,6 +27,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         const endDate = searchParams.get('endDate');
         const amountMin = searchParams.get('amountMin');
         const amountMax = searchParams.get('amountMax');
+        const dateType = searchParams.get('dateType');
 
         const result = await WithdrawalService.adminGetWithdrawals({
             status,
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             amountMax,
             page,
             limit,
+            dateType,
         });
 
         return NextResponse.json({
