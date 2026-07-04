@@ -5,7 +5,7 @@
 import { ObjectId } from 'mongodb';
 import { getDB } from '../db';
 import { Collections } from '../db/collections';
-import type { ReferralWalletDocument, TransactionDocument } from '../db/types';
+import type { ReferralWalletDocument, TransactionDocument, TransactionType } from '../db/types';
 import { creditWallet } from './wallet.repository';
 
 import { REFERRAL_COMMISSIONS } from '../constants';
@@ -49,7 +49,10 @@ export async function getOrCreateReferralWallet(userId: string | ObjectId) {
 export async function creditReferralWallet(
     userId: string | ObjectId,
     amount: number,
-    description?: string
+    description?: string,
+    txType: TransactionType = 'REFERRAL_EARNING',
+    reference?: string,
+    metadata?: any
 ): Promise<{ success: boolean; newBalance: number }> {
     const db = await getDB();
     const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
@@ -69,11 +72,12 @@ export async function creditReferralWallet(
     // Log transaction (in main transactions collection for audit trail)
     const transaction: Omit<TransactionDocument, '_id'> = {
         userId: _userId,
-        type: 'REFERRAL_EARNING',
+        type: txType,
         amount,
         balanceAfter: newBalance,
         description: description || 'Referral commission',
-        metadata: { wallet: 'referral' },
+        reference,
+        metadata: metadata ? { wallet: 'referral', ...metadata } : { wallet: 'referral' },
         createdAt: new Date(),
     };
 

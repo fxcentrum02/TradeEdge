@@ -224,35 +224,20 @@ export async function checkAndAwardMilestones(
             });
 
             if (awarded) {
-                // Credit the referral wallet
+                // Credit the referral wallet with dedicated MILESTONE_BONUS transaction
                 await creditReferralWallet(
                     _userId,
                     milestone.reward,
-                    `Milestone Bonus: ${milestone.threshold.toLocaleString()} USDT threshold reached`
-                );
-
-                // Log dedicated MILESTONE_BONUS transaction for audit trail
-                const db = await getDB();
-                const wallet = await db.collection(Collections.REFERRAL_WALLETS).findOne({ userId: _userId });
-                const balanceAfter = wallet?.balance ?? milestone.reward;
-
-                const tx: Omit<TransactionDocument, '_id'> = {
-                    userId: _userId,
-                    type: 'MILESTONE_BONUS',
-                    amount: milestone.reward,
-                    balanceAfter,
-                    description: `Milestone Reward: ${milestone.threshold.toLocaleString()} USDT threshold`,
-                    reference: awarded._id.toString(),
-                    metadata: {
+                    `Milestone Reward: ${milestone.threshold.toLocaleString()} USDT threshold`,
+                    'MILESTONE_BONUS',
+                    awarded._id.toString(),
+                    {
                         milestoneThreshold: milestone.threshold,
                         legA: legA.toFixed(2),
                         legB: legB.toFixed(2),
                         legC: legC.toFixed(2),
-                    },
-                    createdAt: now,
-                };
-
-                await db.collection(Collections.TRANSACTIONS).insertOne(tx as TransactionDocument);
+                    }
+                );
 
                 newlyAwarded = true;
                 newlyAwardedCount++;
