@@ -26,11 +26,11 @@ try {
     }
 } catch { /* ignore if .env doesn't exist */ }
 
-const LIVE_URI = process.env.PRIMARY_PAID_DATABASE_URL || process.env.PAID_DATABASE_URL;
+const LIVE_URI = process.env.DATABASE_URL;
 const DB_NAME = process.env.MONGODB_DB_NAME || 'TradeEdge';
 
 if (!LIVE_URI) {
-    console.error('PRIMARY_PAID_DATABASE_URL not set in .env');
+    console.error('DATABASE_URL not set in .env');
     process.exit(1);
 }
 

@@ -65,10 +65,6 @@ let globalWithMongo = global as typeof globalThis & {
     _mongoDb?: Db;
     _mongoBackupClient?: MongoClient;
     _mongoBackupDb?: Db;
-    _mongoPaidClient?: MongoClient;
-    _mongoPaidDb?: Db;
-    _mongoFreeClient?: MongoClient;
-    _mongoFreeDb?: Db;
 };
 
 export async function connectDB(): Promise<Db> {
@@ -142,48 +138,4 @@ export async function getBackupDB(): Promise<Db | null> {
     }
 }
 
-export async function getPaidDB(): Promise<Db | null> {
-    const uri = process.env.PRIMARY_PAID_DATABASE_URL || process.env.PAID_DATABASE_URL;
-    if (!uri) return null;
-    if (globalWithMongo._mongoPaidDb && globalWithMongo._mongoPaidClient) return globalWithMongo._mongoPaidDb;
-    try {
-        const client = await MongoClient.connect(uri, {
-            maxPoolSize: 3,
-            minPoolSize: 0,
-            maxIdleTimeMS: 15000,
-            serverSelectionTimeoutMS: 5000,
-            connectTimeoutMS: 5000,
-        });
-        const db = client.db(process.env.MONGODB_DB_NAME || 'TradeEdge');
-        globalWithMongo._mongoPaidClient = client;
-        globalWithMongo._mongoPaidDb = db;
-        return db;
-    } catch (error) {
-        console.error('[DB] Paid MongoDB connection FAILED:', error);
-        return null;
-    }
-}
-
-export async function getFreeDB(): Promise<Db | null> {
-    const uri = process.env.FREE_TEST_DATABASE_URL || process.env.FREE_TEST_DB_URL;
-    if (!uri) return null;
-    if (globalWithMongo._mongoFreeDb && globalWithMongo._mongoFreeClient) return globalWithMongo._mongoFreeDb;
-    try {
-        const client = await MongoClient.connect(uri, {
-            maxPoolSize: 3,
-            minPoolSize: 0,
-            maxIdleTimeMS: 15000,
-            serverSelectionTimeoutMS: 5000,
-            connectTimeoutMS: 5000,
-        });
-        const db = client.db(process.env.MONGODB_DB_NAME || 'TradeEdge');
-        globalWithMongo._mongoFreeClient = client;
-        globalWithMongo._mongoFreeDb = db;
-        return db;
-    } catch (error) {
-        console.error('[DB] Free MongoDB connection FAILED:', error);
-        return null;
-    }
-}
-
-export default { connectDB, getDB, getBackupDB, getPaidDB, getFreeDB };
+export default { connectDB, getDB, getBackupDB };
