@@ -174,11 +174,32 @@ export async function distributeRoiCommissionsBatch(
 export async function getEstimatedTomorrowReferralEarnings(userId: string | ObjectId): Promise<number> {
     const _userId = typeof userId === 'string' ? new ObjectId(userId) : userId;
     const tierTree = await getReferralTreeByTier(_userId, REFERRAL_COMMISSIONS.MAX_TIER);
-    const unlockInvestment = await getTierUnlockInvestment(_userId);
     
-    let estimatedEarnings = 0;
+    const allUserIds = tierTree.flatMap(t => t.userIds);
+    if (allUserIds.length === 0) return 0;
+
+    const unlockInvestment = await getTierUnlockInvestment(_userId);
     const db = await getDB();
     const now = new Date();
+
+    // Fetch all active user plans and join with plan definitions in one single query
+    const activePlans = await db.collection(Collections.USER_PLANS).aggregate([
+        { $match: { userId: { $in: allUserIds }, isActive: true, endDate: { $gt: now } } },
+        { $lookup: { from: Collections.PLANS, localField: 'planId', foreignField: '_id', as: 'planData' } },
+        { $unwind: '$planData' }
+    ]).toArray();
+
+    // Map user plans in memory
+    const userPlansMap = new Map<string, typeof activePlans>();
+    for (const plan of activePlans) {
+        const uidStr = plan.userId.toString();
+        if (!userPlansMap.has(uidStr)) {
+            userPlansMap.set(uidStr, []);
+        }
+        userPlansMap.get(uidStr)!.push(plan);
+    }
+
+    let estimatedEarnings = 0;
 
     for (let i = 1; i <= REFERRAL_COMMISSIONS.MAX_TIER; i++) {
         const treeData = tierTree.find(t => t.tier === i);
@@ -190,16 +211,12 @@ export async function getEstimatedTomorrowReferralEarnings(userId: string | Obje
         const percentage = getTierCommissionPercentage(i);
         if (percentage <= 0) continue;
 
-        // Fetch active plans and cross-reference planar daily ROI
-        const activePlans = await db.collection(Collections.USER_PLANS).aggregate([
-            { $match: { userId: { $in: treeData.userIds }, isActive: true, endDate: { $gt: now } } },
-            { $lookup: { from: Collections.PLANS, localField: 'planId', foreignField: '_id', as: 'planData' } },
-            { $unwind: '$planData' }
-        ]).toArray();
-
-        for (const up of activePlans) {
-            const dailyRoiAmount = (up.amount * up.planData.dailyRoi) / 100;
-            estimatedEarnings += (dailyRoiAmount * percentage) / 100;
+        for (const uid of treeData.userIds) {
+            const plans = userPlansMap.get(uid.toString()) || [];
+            for (const up of plans) {
+                const dailyRoiAmount = (up.amount * up.planData.dailyRoi) / 100;
+                estimatedEarnings += (dailyRoiAmount * percentage) / 100;
+            }
         }
     }
     return estimatedEarnings;
@@ -526,18 +543,28 @@ export async function refreshUserStatsBatch(userIds: Set<string | ObjectId>): Pr
     const db = await getDB();
     const allAffected = new Set<string>();
 
+    // 1. Fetch all user linkages in a single query to walk the tree in memory
+    const users = await db.collection(Collections.USERS).find(
+        {},
+        { projection: { _id: 1, referredById: 1 } }
+    ).toArray();
+
+    // 2. Build parent map
+    const parentMap = new Map<string, string>();
+    for (const u of users) {
+        if (u.referredById) {
+            parentMap.set(u._id.toString(), u.referredById.toString());
+        }
+    }
+
+    // 3. Traverse parent chains in memory
     for (const id of userIds) {
-        let currentId: ObjectId | undefined = typeof id === 'string' ? new ObjectId(id) : id;
+        let currentIdStr = id.toString();
         let depth = 0;
-        while (currentId && depth <= REFERRAL_COMMISSIONS.MAX_TIER) {
-            const sid = currentId.toString();
-            if (allAffected.has(sid)) break;
-            allAffected.add(sid);
-            const user = await db.collection(Collections.USERS).findOne(
-                { _id: currentId }, 
-                { projection: { referredById: 1 } }
-            ) as { _id: ObjectId; referredById: ObjectId | null } | null;
-            currentId = user?.referredById || undefined;
+        while (currentIdStr && depth <= REFERRAL_COMMISSIONS.MAX_TIER) {
+            if (allAffected.has(currentIdStr)) break;
+            allAffected.add(currentIdStr);
+            currentIdStr = parentMap.get(currentIdStr) || '';
             depth++;
         }
     }
@@ -561,25 +588,40 @@ export async function refreshUserStatsBatch(userIds: Set<string | ObjectId>): Pr
 async function recalculateAndSaveUserStats(userId: ObjectId): Promise<void> {
     const db = await getDB();
     
-    // 1. Recalculate Stats for THIS user
-    const [
-        directCount,
-        tierTree,
-        totalDownline,
-        totalEarnings,
-        tradePower
-    ] = await Promise.all([
-        db.collection(Collections.USERS).countDocuments({ referredById: userId }),
-        getReferralTreeByTier(userId, REFERRAL_COMMISSIONS.MAX_TIER),
-        countAllDescendants(userId),
+    // 1. Fetch descendants in a single unified graphLookup to calculate counts in memory
+    const descendantsResult = await db.collection(Collections.USERS).aggregate([
+        { $match: { _id: userId } },
+        {
+            $graphLookup: {
+                from: Collections.USERS,
+                startWith: '$_id',
+                connectFromField: '_id',
+                connectToField: 'referredById',
+                depthField: 'depth',
+                as: 'descendants'
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                'descendants._id': 1,
+                'descendants.depth': 1
+            }
+        }
+    ]).toArray();
+
+    const descendants = (descendantsResult[0]?.descendants || []) as { _id: ObjectId; depth: number }[];
+    const directCount = descendants.filter(d => d.depth === 0).length;
+    const totalDownline = descendants.length;
+    const totalCount = descendants.filter(d => d.depth < REFERRAL_COMMISSIONS.MAX_TIER).length;
+
+    // 2. Fetch earnings and active trade power
+    const [totalEarnings, tradePower] = await Promise.all([
         getTotalReferralEarnings(userId),
         getTotalActiveAmount(userId)
     ]);
 
-    // totalReferralCount = sum of all user IDs in the 10-tier tree
-    const totalCount = tierTree.reduce((sum: number, tierData) => sum + tierData.userIds.length, 0);
-
-    // 2. Update the user document
+    // 3. Update the user document
     await db.collection(Collections.USERS).updateOne(
         { _id: userId },
         {

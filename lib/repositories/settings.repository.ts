@@ -21,12 +21,9 @@ const defaultSettings: Omit<AppSettings, '_id' | 'updatedAt'> = {
 };
 
 let cachedSettings: AppSettings | null = null;
-let lastSettingsFetch = 0;
-const CACHE_TTL_MS = 10000; // 10 seconds cache
 
 export async function getSettings(): Promise<AppSettings> {
-    const now = Date.now();
-    if (cachedSettings && (now - lastSettingsFetch < CACHE_TTL_MS)) {
+    if (cachedSettings) {
         return cachedSettings;
     }
 
@@ -72,7 +69,6 @@ export async function getSettings(): Promise<AppSettings> {
     }
 
     cachedSettings = result;
-    lastSettingsFetch = now;
     return result;
 }
 
@@ -96,7 +92,6 @@ export async function updateSettings(updates: Partial<Omit<AppSettings, '_id' | 
 
     // Invalidate cache immediately
     cachedSettings = null;
-    lastSettingsFetch = 0;
 
     return newSettings;
 }

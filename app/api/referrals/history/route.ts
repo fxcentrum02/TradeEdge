@@ -51,31 +51,34 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             { $match: matchStage },
             { $sort: { createdAt: -1 } },
             {
-                $lookup: {
-                    from: Collections.USERS,
-                    localField: 'fromUserId',
-                    foreignField: '_id',
-                    as: 'fromUser'
-                }
-            },
-            { $unwind: { path: '$fromUser', preserveNullAndEmptyArrays: true } },
-            {
-                $project: {
-                    _id: 1,
-                    amount: 1,
-                    tier: 1,
-                    createdAt: 1,
-                    fromUser: {
-                        firstName: 1,
-                        lastName: 1,
-                        telegramUsername: 1
-                    }
-                }
-            },
-            {
                 $facet: {
                     metadata: [{ $count: 'total' }],
-                    data: [{ $skip: skip }, { $limit: limit }]
+                    data: [
+                        { $skip: skip },
+                        { $limit: limit },
+                        {
+                            $lookup: {
+                                from: Collections.USERS,
+                                localField: 'fromUserId',
+                                foreignField: '_id',
+                                as: 'fromUser'
+                            }
+                        },
+                        { $unwind: { path: '$fromUser', preserveNullAndEmptyArrays: true } },
+                        {
+                            $project: {
+                                _id: 1,
+                                amount: 1,
+                                tier: 1,
+                                createdAt: 1,
+                                fromUser: {
+                                    firstName: 1,
+                                    lastName: 1,
+                                    telegramUsername: 1
+                                }
+                            }
+                        }
+                    ]
                 }
             }
         ];

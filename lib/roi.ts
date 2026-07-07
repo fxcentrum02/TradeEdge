@@ -71,12 +71,6 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
         }).toArray();
         const runningWalletMap = new Map(userWallets.map(w => [w.userId.toString(), w.balance]));
 
-        // 1b. Pre-fetch referral wallets for balanceAfter calculation
-        const refWallets = await db.collection(Collections.REFERRAL_WALLETS).find({
-            userId: { $in: allUserIds.map(id => new ObjectId(id)) }
-        }).toArray();
-        const runningRefWalletMap = new Map(refWallets.map(w => [w.userId.toString(), w.balance]));
-
         const payoutsToProcess: { fromUserId: ObjectId; roiAmount: number; sourceId: ObjectId }[] = [];
         const walletIncrements = new Map<string, number>(); 
         const planUpdates: any[] = [];
@@ -146,6 +140,12 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
         // 2. Handle Referral Commissions in Batch
         const { distributeRoiCommissionsBatch } = await import('./referral');
         const { distributions, affectedReferrers } = await distributeRoiCommissionsBatch(payoutsToProcess);
+
+        // Pre-fetch referral wallets for the actual referrers who earned commissions in this batch (Bug fix: affectedReferrers instead of plan owners)
+        const refWallets = await db.collection(Collections.REFERRAL_WALLETS).find({
+            userId: { $in: Array.from(affectedReferrers).map(id => new ObjectId(id)) }
+        }).toArray();
+        const runningRefWalletMap = new Map(refWallets.map(w => [w.userId.toString(), w.balance]));
 
         const earningLogs: any[] = [];
         const refWalletIncrements = new Map<string, number>();
