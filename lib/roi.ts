@@ -167,21 +167,23 @@ async function processDailyRoiSettlementBatch(): Promise<SettlementResult & { af
                 createdAt: now
             });
 
-            // Also log to main TRANSACTIONS collection for audit trail (consistent with creditReferralWallet)
-            transactionLogs.push({
-                userId: new ObjectId(dist.userId),
-                type: 'REFERRAL_EARNING' as const,
-                amount: dist.amount,
-                balanceAfter: newRefBalance,
-                description: `Referral commission from Tier ${dist.tier}`,
-                reference: dist.sourceId.toString(),
-                metadata: { wallet: 'referral' },
-                createdAt: now
-            });
-
             refWalletIncrements.set(dist.userId, (refWalletIncrements.get(dist.userId) || 0) + dist.amount);
             affectedReferrers.add(dist.userId);
             result.affectedUserIds.add(dist.userId);
+        }
+
+        // Aggregate daily referral earnings into a single daily transaction summary log entry per user
+        for (const [uid, totalAmount] of refWalletIncrements.entries()) {
+            const finalRefBalance = runningRefWalletMap.get(uid) || 0;
+            transactionLogs.push({
+                userId: new ObjectId(uid),
+                type: 'REFERRAL_EARNING' as const,
+                amount: Number(totalAmount.toFixed(8)),
+                balanceAfter: finalRefBalance,
+                description: 'Daily referral commission summary',
+                metadata: { wallet: 'referral', aggregated: true },
+                createdAt: now
+            });
         }
 
         // 3. Execute Bulk Database Operations

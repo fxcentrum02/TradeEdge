@@ -1,0 +1,19 @@
+[
+  {
+    "_id": "global_settings_singleton",
+    "appName": "Trade Edges",
+    "brandColor": "#84cc16",
+    "defaultPlanDurationDays": 30,
+    "maintenanceMode": false,
+    "minWithdrawalAmount": 11,
+    "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=0xCc7Bdb2C7F66BAaE88bDe1aa87731C6A85e216b6",
+    "receivingAddress": "0xCc7Bdb2C7F66BAaE88bDe1aa87731C6A85e216b6",
+    "referralClaimMultiplier": 1,
+    "tier1ReferralPercentage": 10,
+    "updatedAt": "2026-07-05T08:34:43.308Z",
+    "withdrawalFeeType": "PERCENTAGE",
+    "withdrawalFeeValue": 5,
+    "minReferralWithdrawalAmount": 1,
+    "maintenanceEstimatedDuration": "1 hour, we are updating system."
+  }
+]

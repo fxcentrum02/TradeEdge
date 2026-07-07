@@ -1,0 +1,54 @@
+[
+  {
+    "_id": "69ba0fe7802ec3c5733cc9f4",
+    "name": "Investor",
+    "description": null,
+    "minAmount": 3001,
+    "maxAmount": 6000,
+    "dailyRoi": 0.8,
+    "duration": 250,
+    "isActive": true,
+    "sortOrder": 3,
+    "createdAt": "2026-03-18T02:37:27.340Z",
+    "updatedAt": "2026-05-29T12:06:26.433Z"
+  },
+  {
+    "_id": "6a1981a33a4a5c03c877d34c",
+    "name": "Partner",
+    "description": null,
+    "minAmount": 6001,
+    "maxAmount": 25000,
+    "dailyRoi": 1,
+    "duration": 200,
+    "isActive": true,
+    "sortOrder": 4,
+    "createdAt": "2026-05-29T12:08:03.089Z",
+    "updatedAt": "2026-05-29T12:08:03.089Z"
+  },
+  {
+    "_id": "6a106546104a98deb9193c8b",
+    "name": "Beginner",
+    "description": null,
+    "minAmount": 10,
+    "maxAmount": 1000,
+    "dailyRoi": 0.4,
+    "duration": 500,
+    "isActive": true,
+    "sortOrder": 1,
+    "createdAt": "2026-05-22T14:16:38.429Z",
+    "updatedAt": "2026-06-02T05:55:06.407Z"
+  },
+  {
+    "_id": "69ba0fbd802ec3c5733cc9f3",
+    "name": "Leader",
+    "description": null,
+    "minAmount": 1001,
+    "maxAmount": 3000,
+    "dailyRoi": 0.6,
+    "duration": 333,
+    "isActive": true,
+    "sortOrder": 2,
+    "createdAt": "2026-03-18T02:36:45.067Z",
+    "updatedAt": "2026-05-29T12:07:08.371Z"
+  }
+]

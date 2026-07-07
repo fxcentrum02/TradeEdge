@@ -1,0 +1,807 @@
+[
+  {
+    "_id": "6a266ce1183713b299f60717",
+    "telegramId": "7354828580",
+    "createdAt": "2026-06-08T07:18:57.538Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-06-08T07:19:04.176Z"
+  },
+  {
+    "_id": "6a2a83137fbfc5214f7d6b41",
+    "telegramId": "5766244436",
+    "createdAt": "2026-06-11T09:42:43.135Z",
+    "referralCode": "UNHNFSP9",
+    "updatedAt": "2026-06-13T06:13:33.055Z"
+  },
+  {
+    "_id": "69d3ad65a59dcec9ba6ca82c",
+    "telegramId": "8345433672",
+    "createdAt": "2026-04-06T12:56:05.423Z",
+    "referralCode": "637AEJZS",
+    "updatedAt": "2026-04-25T15:45:19.262Z"
+  },
+  {
+    "_id": "69be8be43bbd24981586ab32",
+    "telegramId": "7792783790",
+    "createdAt": "2026-03-21T12:15:32.687Z",
+    "referralCode": "U9QKQJ3Z",
+    "updatedAt": "2026-03-21T12:15:32.687Z"
+  },
+  {
+    "_id": "69c8ce743bbd24981586ab4a",
+    "telegramId": "8237798621",
+    "createdAt": "2026-03-29T07:02:12.874Z",
+    "referralCode": "J236J528",
+    "updatedAt": "2026-03-29T07:02:24.481Z"
+  },
+  {
+    "_id": "69cd12103bbd24981586ab5f",
+    "telegramId": "8609520966",
+    "createdAt": "2026-04-01T12:39:44.196Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-04-01T12:39:53.226Z"
+  },
+  {
+    "_id": "69bebbe43bbd24981586ab33",
+    "telegramId": "5749656863",
+    "createdAt": "2026-03-21T15:40:20.673Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-03-25T11:34:19.403Z"
+  },
+  {
+    "_id": "6a3cdb0e489cffd8842aa383",
+    "telegramId": "8830736331",
+    "createdAt": "2026-06-25T07:38:54.126Z",
+    "referralCode": "6RFSU83N",
+    "updatedAt": "2026-06-25T07:38:57.233Z"
+  },
+  {
+    "_id": "69bc42e93bbd24981586ab2b",
+    "telegramId": "7727170489",
+    "createdAt": "2026-03-19T18:39:37.722Z",
+    "referralCode": "NMD2BA7U",
+    "updatedAt": "2026-03-19T18:39:37.722Z"
+  },
+  {
+    "_id": "69bc33f93bbd24981586ab2a",
+    "telegramId": "5186886928",
+    "createdAt": "2026-03-19T17:35:53.866Z",
+    "referralCode": "GLMM4PTN",
+    "updatedAt": "2026-03-23T10:49:34.416Z"
+  },
+  {
+    "_id": "69ba22963bbd24981586ab18",
+    "telegramId": "5491464878",
+    "createdAt": "2026-03-18T03:57:10.844Z",
+    "referralCode": "YWSYLQAD",
+    "updatedAt": "2026-06-13T12:51:52.505Z"
+  },
+  {
+    "_id": "69bab0163bbd24981586ab22",
+    "telegramId": "7290077127",
+    "createdAt": "2026-03-18T14:00:54.261Z",
+    "referralCode": "92DKVRQK",
+    "updatedAt": "2026-03-18T14:00:54.261Z"
+  },
+  {
+    "_id": "6a2bfad47fbfc5214f7d6b48",
+    "telegramId": "1145942183",
+    "createdAt": "2026-06-12T12:25:56.555Z",
+    "referralCode": "H7XY8MVW",
+    "updatedAt": "2026-06-12T12:26:02.090Z"
+  },
+  {
+    "_id": "69ba18863bbd24981586ab15",
+    "telegramId": "794567140",
+    "createdAt": "2026-03-18T03:14:14.727Z",
+    "referralCode": "8VZPTJMP",
+    "updatedAt": "2026-03-30T05:35:41.656Z"
+  },
+  {
+    "_id": "69cbd8ee3bbd24981586ab5d",
+    "telegramId": "1477268712",
+    "createdAt": "2026-03-31T14:23:42.549Z",
+    "referralCode": "AVVRPKJM",
+    "updatedAt": "2026-04-01T11:57:30.651Z"
+  },
+  {
+    "_id": "69bd50813bbd24981586ab2d",
+    "telegramId": "2041603826",
+    "createdAt": "2026-03-20T13:49:53.722Z",
+    "referralCode": "FV99NCF7",
+    "updatedAt": "2026-03-29T04:20:22.310Z"
+  },
+  {
+    "_id": "69c961393bbd24981586ab4f",
+    "telegramId": "8593687883",
+    "createdAt": "2026-03-29T17:28:25.451Z",
+    "referralCode": "S3LLPMWG",
+    "updatedAt": "2026-03-29T17:28:31.829Z"
+  },
+  {
+    "_id": "69d62bc9a59dcec9ba6ca82f",
+    "telegramId": "556594865",
+    "createdAt": "2026-04-08T10:19:53.093Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-04-08T10:20:02.825Z"
+  },
+  {
+    "_id": "69ba1ad73bbd24981586ab17",
+    "telegramId": "782703150",
+    "createdAt": "2026-03-18T03:24:07.880Z",
+    "referralCode": "YWSYLQAD",
+    "updatedAt": "2026-06-25T16:48:24.638Z"
+  },
+  {
+    "_id": "6a26d4a0183713b299f60719",
+    "telegramId": "8282102470",
+    "createdAt": "2026-06-08T14:41:36.689Z",
+    "referralCode": "BMY23T8A",
+    "updatedAt": "2026-06-08T17:02:51.365Z"
+  },
+  {
+    "_id": "69c7ecc43bbd24981586ab49",
+    "telegramId": "7276439080",
+    "createdAt": "2026-03-28T14:59:16.526Z",
+    "referralCode": "GLMM4PTN",
+    "updatedAt": "2026-03-28T14:59:26.514Z"
+  },
+  {
+    "_id": "6a0eed58898dd8987ee99fc5",
+    "telegramId": "1387378799",
+    "createdAt": "2026-05-21T11:32:40.676Z",
+    "referralCode": "JTCCAX35",
+    "updatedAt": "2026-05-21T11:32:52.279Z"
+  },
+  {
+    "_id": "69c27ae53bbd24981586ab3e",
+    "telegramId": "8728324754",
+    "createdAt": "2026-03-24T11:52:05.341Z",
+    "referralCode": "HK7DBXYH",
+    "updatedAt": "2026-03-24T11:52:13.706Z"
+  },
+  {
+    "_id": "69ca0ee73bbd24981586ab5a",
+    "telegramId": "8624259916",
+    "createdAt": "2026-03-30T05:49:27.864Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-03-30T06:48:35.543Z"
+  },
+  {
+    "_id": "6a2e98687fbfc5214f7d6b4e",
+    "telegramId": "5747187311",
+    "createdAt": "2026-06-14T12:02:48.140Z",
+    "referralCode": "J236J528",
+    "updatedAt": "2026-06-14T12:02:55.844Z"
+  },
+  {
+    "_id": "69d0dbd7a59dcec9ba6ca829",
+    "telegramId": "800783730",
+    "createdAt": "2026-04-04T09:37:27.028Z",
+    "referralCode": "6N5B5HH2",
+    "updatedAt": "2026-04-04T09:38:55.794Z"
+  },
+  {
+    "_id": "6a43e3bf489cffd8842afe11",
+    "telegramId": "8685147904",
+    "createdAt": "2026-06-30T15:41:51.461Z",
+    "referralCode": "AVVRPKJM",
+    "updatedAt": "2026-06-30T15:41:56.031Z"
+  },
+  {
+    "_id": "69c538513bbd24981586ab46",
+    "telegramId": "943675146",
+    "createdAt": "2026-03-26T13:44:49.778Z",
+    "referralCode": "U9QKQJ3Z",
+    "updatedAt": "2026-03-31T12:03:53.268Z"
+  },
+  {
+    "_id": "6a17e9e9967bcc2a0ba34088",
+    "telegramId": "6853525377",
+    "createdAt": "2026-05-28T07:08:25.781Z",
+    "referralCode": "DQEHZF66",
+    "updatedAt": "2026-05-28T07:08:45.752Z"
+  },
+  {
+    "_id": "69be21c93bbd24981586ab30",
+    "telegramId": "1831573874",
+    "createdAt": "2026-03-21T04:42:49.441Z",
+    "referralCode": "GLMM4PTN",
+    "updatedAt": "2026-03-21T04:42:49.441Z"
+  },
+  {
+    "_id": "69f4a2fd7e5fe0b6e9e1b625",
+    "telegramId": "6412859296",
+    "createdAt": "2026-05-01T12:56:29.222Z",
+    "referralCode": "QYE4FEKC",
+    "updatedAt": "2026-05-01T12:56:43.768Z"
+  },
+  {
+    "_id": "69c354103bbd24981586ab40",
+    "telegramId": "8417790933",
+    "createdAt": "2026-03-25T03:18:40.395Z",
+    "referralCode": "QYE4FEKC",
+    "updatedAt": "2026-06-03T01:21:58.545Z"
+  },
+  {
+    "_id": "69c9656f3bbd24981586ab52",
+    "telegramId": "1418499821",
+    "createdAt": "2026-03-29T17:46:23.827Z",
+    "referralCode": "VTDZKV5U",
+    "updatedAt": "2026-04-17T03:52:34.617Z"
+  },
+  {
+    "_id": "6a268a12183713b299f60718",
+    "telegramId": "7986091629",
+    "createdAt": "2026-06-08T09:23:30.487Z",
+    "referralCode": "QYE4FEKC",
+    "updatedAt": "2026-06-08T09:26:37.767Z"
+  },
+  {
+    "_id": "69d65249a59dcec9ba6ca833",
+    "telegramId": "1289110542",
+    "createdAt": "2026-04-08T13:04:09.271Z",
+    "referralCode": "JY6XH9EH",
+    "updatedAt": "2026-04-08T13:04:29.365Z"
+  },
+  {
+    "_id": "69ce58203bbd24981586ab60",
+    "telegramId": "8689798855",
+    "createdAt": "2026-04-02T11:50:56.351Z",
+    "referralCode": "HK7DBXYH",
+    "updatedAt": "2026-04-02T11:51:01.260Z"
+  },
+  {
+    "_id": "69d65a4aa59dcec9ba6ca834",
+    "telegramId": "8329608792",
+    "createdAt": "2026-04-08T13:38:18.873Z",
+    "referralCode": "JY6XH9EH",
+    "updatedAt": "2026-04-08T13:38:32.216Z"
+  },
+  {
+    "_id": "6a2c22fb7fbfc5214f7d6b49",
+    "telegramId": "6022682453",
+    "createdAt": "2026-06-12T15:17:15.631Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-12T15:17:20.316Z"
+  },
+  {
+    "_id": "69cf62f33bbd24981586ab66",
+    "telegramId": "8068901254",
+    "createdAt": "2026-04-03T06:49:23.396Z",
+    "referralCode": "6N5B5HH2",
+    "updatedAt": "2026-04-03T06:49:32.195Z"
+  },
+  {
+    "_id": "69c963223bbd24981586ab50",
+    "telegramId": "8673783532",
+    "createdAt": "2026-03-29T17:36:34.089Z",
+    "referralCode": "ENSHWTNZ",
+    "updatedAt": "2026-03-29T17:36:38.213Z"
+  },
+  {
+    "_id": "69bee4223bbd24981586ab34",
+    "telegramId": "1645863901",
+    "createdAt": "2026-03-21T18:32:02.650Z",
+    "referralCode": "HPK6UCRY",
+    "updatedAt": "2026-06-17T04:35:23.605Z"
+  },
+  {
+    "_id": "69bfe52a3bbd24981586ab37",
+    "telegramId": "6633955892",
+    "createdAt": "2026-03-22T12:48:42.582Z",
+    "referralCode": "GLMM4PTN",
+    "updatedAt": "2026-03-22T12:48:50.944Z"
+  },
+  {
+    "_id": "6a06b7a7637db2cb047cb319",
+    "telegramId": "8511912793",
+    "createdAt": "2026-05-15T06:05:27.774Z",
+    "referralCode": "6N5B5HH2",
+    "updatedAt": "2026-05-15T06:05:33.437Z"
+  },
+  {
+    "_id": "6a3902b7d54466667a2b11d3",
+    "telegramId": "1200110621",
+    "createdAt": "2026-06-22T09:39:02.855Z",
+    "referralCode": "HA5PLBWZ",
+    "updatedAt": "2026-06-22T09:39:20.671Z"
+  },
+  {
+    "_id": "69c4f2c53bbd24981586ab44",
+    "telegramId": "8340453960",
+    "createdAt": "2026-03-26T08:48:05.977Z",
+    "referralCode": "FV99NCF7",
+    "updatedAt": "2026-03-26T08:48:17.129Z"
+  },
+  {
+    "_id": "69ba524c3bbd24981586ab1c",
+    "telegramId": "1625982541",
+    "createdAt": "2026-03-18T07:20:43.947Z",
+    "referralCode": "GLMM4PTN",
+    "updatedAt": "2026-03-24T11:29:41.339Z"
+  },
+  {
+    "_id": "69ca09b53bbd24981586ab59",
+    "telegramId": "8716426837",
+    "createdAt": "2026-03-30T05:27:17.862Z",
+    "referralCode": "S3LLPMWG",
+    "updatedAt": "2026-03-30T05:32:36.153Z"
+  },
+  {
+    "_id": "69db7677a59dcec9ba6ca839",
+    "telegramId": "7024933894",
+    "createdAt": "2026-04-12T10:39:51.098Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-04-12T11:12:27.125Z"
+  },
+  {
+    "_id": "69ccffc93bbd24981586ab5e",
+    "telegramId": "2044103090",
+    "createdAt": "2026-04-01T11:21:45.715Z",
+    "referralCode": "SL3ZYKRS",
+    "updatedAt": "2026-04-01T11:21:55.984Z"
+  },
+  {
+    "_id": "69d78267a59dcec9ba6ca835",
+    "telegramId": "5962569938",
+    "createdAt": "2026-04-09T10:41:43.981Z",
+    "referralCode": "HPK6UCRY",
+    "updatedAt": "2026-04-09T10:46:01.931Z"
+  },
+  {
+    "_id": "6a2429e0183713b299f60716",
+    "telegramId": "6240619353",
+    "createdAt": "2026-06-06T14:08:32.290Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-06T14:08:36.123Z"
+  },
+  {
+    "_id": "69bcebb43bbd24981586ab2c",
+    "telegramId": "8627111171",
+    "createdAt": "2026-03-20T06:39:48.396Z",
+    "referralCode": "YWSYLQAD",
+    "updatedAt": "2026-03-20T06:39:48.396Z"
+  },
+  {
+    "_id": "69c62dad3bbd24981586ab47",
+    "telegramId": "718616706",
+    "createdAt": "2026-03-27T07:11:41.165Z",
+    "referralCode": "GLMM4PTN",
+    "updatedAt": "2026-03-27T07:11:49.623Z"
+  },
+  {
+    "_id": "69bd58413bbd24981586ab2e",
+    "telegramId": "805465329",
+    "createdAt": "2026-03-20T14:22:56.923Z",
+    "referralCode": "MWXHKB8S",
+    "updatedAt": "2026-03-20T14:22:56.923Z"
+  },
+  {
+    "_id": "69c275733bbd24981586ab3d",
+    "telegramId": "8737665416",
+    "createdAt": "2026-03-24T11:28:51.310Z",
+    "referralCode": "U9QKQJ3Z",
+    "updatedAt": "2026-03-27T07:49:21.365Z"
+  },
+  {
+    "_id": "6a2427a4183713b299f60715",
+    "telegramId": "7417033453",
+    "createdAt": "2026-06-06T13:59:00.150Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-06T13:59:06.845Z"
+  },
+  {
+    "_id": "69ba8ed93bbd24981586ab20",
+    "telegramId": "992583727",
+    "createdAt": "2026-03-18T11:39:05.342Z",
+    "referralCode": "6N5B5HH2",
+    "updatedAt": "2026-03-18T11:39:05.342Z"
+  },
+  {
+    "_id": "69c3c8dd3bbd24981586ab43",
+    "telegramId": "8360761138",
+    "createdAt": "2026-03-25T11:37:01.938Z",
+    "referralCode": "B2L9UV5L",
+    "updatedAt": "2026-03-25T11:37:16.507Z"
+  },
+  {
+    "_id": "6a193220967bcc2a0ba34089",
+    "telegramId": "5676373444",
+    "createdAt": "2026-05-29T06:28:49.009Z",
+    "referralCode": "DQEHZF66",
+    "updatedAt": "2026-05-29T06:29:16.551Z"
+  },
+  {
+    "_id": "6a241c1e183713b299f60714",
+    "telegramId": "7695658822",
+    "createdAt": "2026-06-06T13:09:50.535Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-06T13:09:55.303Z"
+  },
+  {
+    "_id": "69c91d3b3bbd24981586ab4c",
+    "telegramId": "7882820553",
+    "createdAt": "2026-03-29T12:38:19.267Z",
+    "referralCode": "S3LLPMWG",
+    "updatedAt": "2026-06-19T08:45:05.089Z"
+  },
+  {
+    "_id": "6a2bc35f7fbfc5214f7d6b44",
+    "telegramId": "8693810792",
+    "createdAt": "2026-06-12T08:29:19.510Z",
+    "referralCode": "JE6J2ZYQ",
+    "updatedAt": "2026-06-12T08:29:26.990Z"
+  },
+  {
+    "_id": "69bbddd23bbd24981586ab29",
+    "telegramId": "7921308982",
+    "createdAt": "2026-03-19T11:28:18.500Z",
+    "referralCode": "6N5B5HH2",
+    "updatedAt": "2026-03-19T11:28:18.500Z"
+  },
+  {
+    "_id": "69bffbff3bbd24981586ab3a",
+    "telegramId": "5992294968",
+    "createdAt": "2026-03-22T14:26:07.637Z",
+    "referralCode": "N3YL86HC",
+    "updatedAt": "2026-03-22T14:26:15.260Z"
+  },
+  {
+    "_id": "69c520b13bbd24981586ab45",
+    "telegramId": "6690660312",
+    "createdAt": "2026-03-26T12:04:01.757Z",
+    "referralCode": "U9QKQJ3Z",
+    "updatedAt": "2026-03-26T12:04:16.998Z"
+  },
+  {
+    "_id": "69f9896b8a71e0719850bd2d",
+    "telegramId": "1166639118",
+    "createdAt": "2026-05-05T06:08:43.005Z",
+    "referralCode": "QYE4FEKC",
+    "updatedAt": "2026-05-05T06:08:58.748Z"
+  },
+  {
+    "_id": "69ba19373bbd24981586ab16",
+    "telegramId": "8375198330",
+    "createdAt": "2026-03-18T03:17:11.588Z",
+    "referralCode": "SDRRFL28",
+    "updatedAt": "2026-05-29T12:45:36.413Z"
+  },
+  {
+    "_id": "69d79310a59dcec9ba6ca836",
+    "telegramId": "6978259323",
+    "createdAt": "2026-04-09T11:52:48.775Z",
+    "referralCode": "2BAGNZJ9",
+    "updatedAt": "2026-06-25T14:58:10.512Z"
+  },
+  {
+    "_id": "6a2eb75c7fbfc5214f7d6b4f",
+    "telegramId": "7736391648",
+    "createdAt": "2026-06-14T14:14:52.658Z",
+    "referralCode": "W786DW2G",
+    "updatedAt": "2026-06-14T14:14:59.763Z"
+  },
+  {
+    "_id": "69ba18533bbd24981586ab14",
+    "telegramId": "6788839937",
+    "createdAt": "2026-03-18T03:13:23.052Z",
+    "referralCode": "NMD2BA7U",
+    "updatedAt": "2026-03-26T03:25:08.513Z"
+  },
+  {
+    "_id": "6a20649e183713b299f60710",
+    "telegramId": "7700867728",
+    "createdAt": "2026-06-03T17:30:06.819Z",
+    "referralCode": "NMD2BA7U",
+    "updatedAt": "2026-06-03T17:30:28.296Z"
+  },
+  {
+    "_id": "69cbd5673bbd24981586ab5c",
+    "telegramId": "8013243811",
+    "createdAt": "2026-03-31T14:08:39.895Z",
+    "referralCode": "U9QKQJ3Z",
+    "updatedAt": "2026-06-30T15:40:33.858Z"
+  },
+  {
+    "_id": "69d63e98a59dcec9ba6ca831",
+    "telegramId": "1794078352",
+    "createdAt": "2026-04-08T11:40:08.102Z",
+    "referralCode": "JKCSD5RX",
+    "updatedAt": "2026-04-08T11:40:19.361Z"
+  },
+  {
+    "_id": "69d3a6eda59dcec9ba6ca82b",
+    "telegramId": "8403430867",
+    "createdAt": "2026-04-06T12:28:29.308Z",
+    "referralCode": "S3LLPMWG",
+    "updatedAt": "2026-04-06T12:51:25.910Z"
+  },
+  {
+    "_id": "69c1feac3bbd24981586ab3c",
+    "telegramId": "8644326958",
+    "createdAt": "2026-03-24T03:02:04.024Z",
+    "referralCode": "YWSYLQAD",
+    "updatedAt": "2026-03-25T02:49:11.135Z"
+  },
+  {
+    "_id": "6a2e25fb7fbfc5214f7d6b4d",
+    "telegramId": "1021580461",
+    "createdAt": "2026-06-14T03:54:35.645Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-14T03:55:16.961Z"
+  },
+  {
+    "_id": "69c918c93bbd24981586ab4b",
+    "telegramId": "5744861004",
+    "createdAt": "2026-03-29T12:19:21.777Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-03-29T12:19:29.555Z"
+  },
+  {
+    "_id": "69d35796a59dcec9ba6ca82a",
+    "telegramId": "8658452969",
+    "createdAt": "2026-04-06T06:49:58.415Z",
+    "referralCode": "TQ42DUBJ",
+    "updatedAt": "2026-04-06T06:50:04.929Z"
+  },
+  {
+    "_id": "69d64c80a59dcec9ba6ca832",
+    "telegramId": "880682914",
+    "createdAt": "2026-04-08T12:39:28.283Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-04-08T12:58:36.375Z"
+  },
+  {
+    "_id": "69baa91c3bbd24981586ab21",
+    "telegramId": "6584262132",
+    "createdAt": "2026-03-18T13:31:08.542Z",
+    "referralCode": "6N5B5HH2",
+    "updatedAt": "2026-03-18T13:31:08.542Z"
+  },
+  {
+    "_id": "69bbb2bd3bbd24981586ab27",
+    "telegramId": "275411501",
+    "createdAt": "2026-03-19T08:24:29.092Z",
+    "referralCode": "6N5B5HH2",
+    "updatedAt": "2026-03-23T17:18:28.734Z"
+  },
+  {
+    "_id": "69c2a4513bbd24981586ab3f",
+    "telegramId": "1384777107",
+    "createdAt": "2026-03-24T14:48:49.685Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-03-24T14:49:02.990Z"
+  },
+  {
+    "_id": "69d63d0ca59dcec9ba6ca830",
+    "telegramId": "8252095103",
+    "createdAt": "2026-04-08T11:33:32.611Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-04-09T09:22:42.814Z"
+  },
+  {
+    "_id": "69ba5f5b3bbd24981586ab1d",
+    "telegramId": "8547477543",
+    "createdAt": "2026-03-18T08:16:27.041Z",
+    "referralCode": "FV99NCF7",
+    "updatedAt": "2026-03-18T08:16:27.041Z"
+  },
+  {
+    "_id": "69ba848e3bbd24981586ab1f",
+    "telegramId": "5828866694",
+    "createdAt": "2026-03-18T10:55:10.656Z",
+    "referralCode": "GLMM4PTN",
+    "updatedAt": "2026-03-20T10:30:53.710Z"
+  },
+  {
+    "_id": "69c936033bbd24981586ab4e",
+    "telegramId": "8725353591",
+    "createdAt": "2026-03-29T14:24:03.837Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-03-29T14:24:10.870Z"
+  },
+  {
+    "_id": "6a2bc7827fbfc5214f7d6b45",
+    "telegramId": "1433319164",
+    "createdAt": "2026-06-12T08:46:58.873Z",
+    "referralCode": "S99TWEK2",
+    "updatedAt": "2026-06-12T08:47:11.472Z"
+  },
+  {
+    "_id": "6a214283183713b299f60711",
+    "telegramId": "8417473861",
+    "createdAt": "2026-06-04T09:16:51.562Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-12T11:28:46.106Z"
+  },
+  {
+    "_id": "69bbbec23bbd24981586ab28",
+    "telegramId": "1697025290",
+    "createdAt": "2026-03-19T09:15:46.426Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-03-21T15:32:03.828Z"
+  },
+  {
+    "_id": "69bff1003bbd24981586ab39",
+    "telegramId": "5057946273",
+    "createdAt": "2026-03-22T13:39:12.396Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-03-22T13:39:21.889Z"
+  },
+  {
+    "_id": "69c92b343bbd24981586ab4d",
+    "telegramId": "8397784812",
+    "createdAt": "2026-03-29T13:37:56.202Z",
+    "referralCode": "HMDX8KJR",
+    "updatedAt": "2026-05-29T08:01:19.736Z"
+  },
+  {
+    "_id": "6a23d762183713b299f60713",
+    "telegramId": "1268568536",
+    "createdAt": "2026-06-06T08:16:34.922Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-06T08:36:16.118Z"
+  },
+  {
+    "_id": "6a2f90cd7fbfc5214f7d6b50",
+    "telegramId": "843059744",
+    "createdAt": "2026-06-15T05:42:37.338Z",
+    "referralCode": "DQEHZF66",
+    "updatedAt": "2026-06-15T05:42:37.338Z"
+  },
+  {
+    "_id": "69c6743f3bbd24981586ab48",
+    "telegramId": "6740575130",
+    "createdAt": "2026-03-27T12:12:47.531Z",
+    "referralCode": "ZJXFZY5A",
+    "updatedAt": "2026-04-02T02:22:54.096Z"
+  },
+  {
+    "_id": "69be3dd33bbd24981586ab31",
+    "telegramId": "6450404237",
+    "createdAt": "2026-03-21T06:42:27.075Z",
+    "referralCode": "FV99NCF7",
+    "updatedAt": "2026-03-25T17:49:17.932Z"
+  },
+  {
+    "_id": "69c982633bbd24981586ab55",
+    "telegramId": "8702392973",
+    "createdAt": "2026-03-29T19:49:55.823Z",
+    "referralCode": "EFW3CNW7",
+    "updatedAt": "2026-03-29T19:50:02.653Z"
+  },
+  {
+    "_id": "69d4d9c8a59dcec9ba6ca82e",
+    "telegramId": "8622632206",
+    "createdAt": "2026-04-07T10:17:44.755Z",
+    "referralCode": "U9QKQJ3Z",
+    "updatedAt": "2026-04-07T10:23:03.453Z"
+  },
+  {
+    "_id": "69de34cca59dcec9ba6ca83b",
+    "telegramId": "8456045657",
+    "createdAt": "2026-04-14T12:36:28.783Z",
+    "referralCode": "U9QKQJ3Z",
+    "updatedAt": "2026-04-14T12:36:33.661Z"
+  },
+  {
+    "_id": "6a2bd0677fbfc5214f7d6b46",
+    "telegramId": "1404146682",
+    "createdAt": "2026-06-12T09:24:55.211Z",
+    "referralCode": "JE6J2ZYQ",
+    "updatedAt": "2026-06-12T09:25:04.261Z"
+  },
+  {
+    "_id": "6a2be37b7fbfc5214f7d6b47",
+    "telegramId": "6520107852",
+    "createdAt": "2026-06-12T10:46:19.065Z",
+    "referralCode": "JE6J2ZYQ",
+    "updatedAt": "2026-06-12T10:46:26.883Z"
+  },
+  {
+    "_id": "6a2d4f427fbfc5214f7d6b4c",
+    "telegramId": "1312527784",
+    "createdAt": "2026-06-13T12:38:26.111Z",
+    "referralCode": "PPN5RMXE",
+    "updatedAt": "2026-06-13T12:38:26.111Z"
+  },
+  {
+    "_id": "6a2aaecc7fbfc5214f7d6b42",
+    "telegramId": "8843551582",
+    "createdAt": "2026-06-11T12:49:16.300Z",
+    "referralCode": "H7XY8MVW",
+    "updatedAt": "2026-06-11T12:49:28.851Z"
+  },
+  {
+    "_id": "6a3cdcec489cffd8842aa387",
+    "telegramId": "8816850434",
+    "createdAt": "2026-06-25T07:46:52.414Z",
+    "referralCode": "6RFSU83N",
+    "updatedAt": "2026-06-25T07:46:55.293Z"
+  },
+  {
+    "_id": "69c969fc3bbd24981586ab53",
+    "telegramId": "7244818663",
+    "createdAt": "2026-03-29T18:05:48.438Z",
+    "referralCode": "VTDZKV5U",
+    "updatedAt": "2026-03-29T18:06:14.958Z"
+  },
+  {
+    "_id": "69bfe5763bbd24981586ab38",
+    "telegramId": "1168415628",
+    "createdAt": "2026-03-22T12:49:58.282Z",
+    "referralCode": "NX78HV7P",
+    "updatedAt": "2026-03-23T02:49:29.746Z"
+  },
+  {
+    "_id": "6a2173b7183713b299f60712",
+    "telegramId": "7715711699",
+    "createdAt": "2026-06-04T12:46:47.673Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-04T12:46:52.819Z"
+  },
+  {
+    "_id": "6a352515d54466667a2ae8e0",
+    "telegramId": "744298083",
+    "createdAt": "2026-06-19T11:16:37.610Z",
+    "referralCode": "TJ3JTVYJ",
+    "updatedAt": "2026-06-19T12:17:27.447Z"
+  },
+  {
+    "_id": "6a369210d54466667a2af711",
+    "telegramId": "1489627662",
+    "createdAt": "2026-06-20T13:13:51.811Z",
+    "referralCode": "HA5PLBWZ",
+    "updatedAt": "2026-06-20T13:13:59.779Z"
+  },
+  {
+    "_id": "69ba6d443bbd24981586ab1e",
+    "telegramId": "8507309761",
+    "createdAt": "2026-03-18T09:15:48.691Z",
+    "referralCode": "YWSYLQAD",
+    "updatedAt": "2026-03-18T09:18:05.235Z"
+  },
+  {
+    "_id": "69c964a93bbd24981586ab51",
+    "telegramId": "8428511974",
+    "createdAt": "2026-03-29T17:43:05.202Z",
+    "referralCode": "VCSP5PJQ",
+    "updatedAt": "2026-03-29T17:43:13.172Z"
+  },
+  {
+    "_id": "6a293504183713b299f6071a",
+    "telegramId": "8938143224",
+    "createdAt": "2026-06-10T09:57:24.267Z",
+    "referralCode": "W786DW2G",
+    "updatedAt": "2026-06-10T09:57:30.011Z"
+  },
+  {
+    "_id": "69ba39203bbd24981586ab19",
+    "telegramId": "8797916082",
+    "createdAt": "2026-03-18T05:33:20.874Z",
+    "referralCode": "J236J528",
+    "updatedAt": "2026-03-18T06:50:56.835Z"
+  },
+  {
+    "_id": "69c980d43bbd24981586ab54",
+    "telegramId": "8362609194",
+    "createdAt": "2026-03-29T19:43:16.730Z",
+    "referralCode": "S3LLPMWG",
+    "updatedAt": "2026-03-29T19:43:26.459Z"
+  },
+  {
+    "_id": "69c132ce3bbd24981586ab3b",
+    "telegramId": "8596057122",
+    "createdAt": "2026-03-23T12:32:14.376Z",
+    "referralCode": "92DKVRQK",
+    "updatedAt": "2026-03-28T16:36:36.956Z"
+  },
+  {
+    "_id": "6a43c9cf489cffd8842af7ce",
+    "telegramId": "5957615625",
+    "createdAt": "2026-06-30T13:51:11.894Z",
+    "referralCode": "QYE4FEKC",
+    "updatedAt": "2026-06-30T13:51:18.612Z"
+  }
+]

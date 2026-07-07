@@ -1,0 +1,50 @@
+[
+  {
+    "_id": "6a480608ddae5177768703a0",
+    "featureTitle": "AI-Powered Business Intelligence",
+    "fullName": "System Admin",
+    "email": "tradeedge@gmail.com",
+    "price": "$499.00 USD",
+    "status": "clicked",
+    "createdAt": "2026-07-03T18:57:12.265Z",
+    "requestedBy": "tradeedge@gmail.com",
+    "ipAddress": "223.181.66.124",
+    "deviceInfo": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Safari/605.1.15"
+  },
+  {
+    "_id": "6a4806d2116e4897c265b742",
+    "featureTitle": "WhatsApp Business Alerts",
+    "fullName": "System Admin",
+    "email": "tradeedge@gmail.com",
+    "price": "$399.00 USD + WhatsApp Charges",
+    "status": "clicked",
+    "createdAt": "2026-07-03T19:00:34.962Z",
+    "requestedBy": "tradeedge@gmail.com",
+    "ipAddress": "223.181.66.124",
+    "deviceInfo": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Safari/605.1.15"
+  },
+  {
+    "_id": "6a4805a95d46e214e14af9be",
+    "featureTitle": "Automated Payout Engine",
+    "fullName": "System Admin",
+    "email": "tradeedge@gmail.com",
+    "price": "$1,499.00 USD",
+    "status": "clicked",
+    "createdAt": "2026-07-03T18:55:37.972Z",
+    "requestedBy": "tradeedge@gmail.com",
+    "ipAddress": "223.181.66.124",
+    "deviceInfo": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Safari/605.1.15"
+  },
+  {
+    "_id": "6a480701116e4897c265b743",
+    "featureTitle": "Automated Payout Engine",
+    "fullName": "System Admin",
+    "email": "tradeedge@gmail.com",
+    "price": "$1,499.00 USD",
+    "status": "clicked",
+    "createdAt": "2026-07-03T19:01:21.314Z",
+    "requestedBy": "tradeedge@gmail.com",
+    "ipAddress": "223.181.66.124",
+    "deviceInfo": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Safari/605.1.15"
+  }
+]

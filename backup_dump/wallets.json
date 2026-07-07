@@ -1,0 +1,814 @@
+[
+  {
+    "_id": "69be8bf23fc987aca0e4b3c8",
+    "userId": "69be8bf13fc987aca0e4b3c7",
+    "balance": 4.943999999999974,
+    "createdAt": "2026-03-21T12:15:46.546Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69de34d16c3708a4817366bc",
+    "userId": "69de34d16c3708a4817366bb",
+    "balance": 0,
+    "createdAt": "2026-04-14T12:36:33.677Z",
+    "updatedAt": "2026-04-14T12:36:33.677Z"
+  },
+  {
+    "_id": "69bff109e9f3a11e9186661e",
+    "userId": "69bff109e9f3a11e9186661d",
+    "balance": 0,
+    "createdAt": "2026-03-22T13:39:21.906Z",
+    "updatedAt": "2026-03-22T13:39:21.906Z"
+  },
+  {
+    "_id": "69c35351a96b75206080b4c2",
+    "userId": "69c35351a96b75206080b4c1",
+    "balance": 300.24589999999966,
+    "createdAt": "2026-03-25T03:15:29.210Z",
+    "updatedAt": "2026-07-05T04:30:02.520Z"
+  },
+  {
+    "_id": "69ce5825ed50de5940d2e530",
+    "userId": "69ce5825ed50de5940d2e52f",
+    "balance": 5.590000000000017,
+    "createdAt": "2026-04-02T11:51:01.297Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a06b7ad3b0050d8fe303b13",
+    "userId": "6a06b7ad3b0050d8fe303b12",
+    "balance": 0,
+    "createdAt": "2026-05-15T06:05:33.456Z",
+    "updatedAt": "2026-05-15T06:05:33.456Z"
+  },
+  {
+    "_id": "69d3ad76bd0fc76bac115fc7",
+    "userId": "69d3ad76bd0fc76bac115fc6",
+    "balance": 0,
+    "createdAt": "2026-04-06T12:56:22.169Z",
+    "updatedAt": "2026-04-06T12:56:22.169Z"
+  },
+  {
+    "_id": "69c91d41dd04360c1aba79cd",
+    "userId": "69c91d41dd04360c1aba79cc",
+    "balance": 0.20000000000000107,
+    "createdAt": "2026-03-29T12:38:25.284Z",
+    "updatedAt": "2026-07-07T08:08:00.648Z"
+  },
+  {
+    "_id": "69bf60d46466db4c66a9b8f0",
+    "userId": "69bf60d46466db4c66a9b8ef",
+    "balance": 156.156,
+    "createdAt": "2026-03-22T03:24:04.693Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69f4a30ba7a1a84d53091829",
+    "userId": "69f4a30ba7a1a84d53091828",
+    "balance": 18.40000000000002,
+    "createdAt": "2026-05-01T12:56:43.785Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a43c9d6ea88c3983310c6a4",
+    "userId": "6a43c9d6ea88c3983310c6a3",
+    "balance": 0,
+    "createdAt": "2026-06-30T13:51:18.869Z",
+    "updatedAt": "2026-06-30T13:51:18.869Z"
+  },
+  {
+    "_id": "69d64c88f51b84a35e682383",
+    "userId": "69d64c87f51b84a35e682382",
+    "balance": 0,
+    "createdAt": "2026-04-08T12:39:36.014Z",
+    "updatedAt": "2026-04-08T12:39:36.014Z"
+  },
+  {
+    "_id": "69d63ea3906d842cd6778a10",
+    "userId": "69d63ea3906d842cd6778a0f",
+    "balance": 0,
+    "createdAt": "2026-04-08T11:40:19.386Z",
+    "updatedAt": "2026-04-08T11:40:19.386Z"
+  },
+  {
+    "_id": "69c9613f2830b98f2120a9d5",
+    "userId": "69c9613f2830b98f2120a9d4",
+    "balance": 0,
+    "createdAt": "2026-03-29T17:28:31.868Z",
+    "updatedAt": "2026-03-29T17:28:31.868Z"
+  },
+  {
+    "_id": "69bee42f003b9630a61cdefc",
+    "userId": "69bee42f003b9630a61cdefb",
+    "balance": 0,
+    "createdAt": "2026-03-21T18:32:15.863Z",
+    "updatedAt": "2026-03-21T18:32:15.863Z"
+  },
+  {
+    "_id": "69d0dbe09ca3f4d4fb6e305b",
+    "userId": "69d0dbe09ca3f4d4fb6e305a",
+    "balance": 0,
+    "createdAt": "2026-04-04T09:37:36.572Z",
+    "updatedAt": "2026-04-04T09:37:36.572Z"
+  },
+  {
+    "_id": "6a2bfada596a3aff01b76978",
+    "userId": "6a2bfada596a3aff01b76977",
+    "balance": 24.024,
+    "createdAt": "2026-06-12T12:26:02.113Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69bbbed48d2aed4eaa05bf6a",
+    "userId": "69bbbed48d2aed4eaa05bf69",
+    "balance": 0,
+    "createdAt": "2026-03-19T09:16:04.907Z",
+    "updatedAt": "2026-03-19T09:16:04.907Z"
+  },
+  {
+    "_id": "69c11abe4a99e639fa416b19",
+    "userId": "69c11abe4a99e639fa416b18",
+    "balance": 0,
+    "createdAt": "2026-03-23T10:49:34.437Z",
+    "updatedAt": "2026-03-23T10:49:34.437Z"
+  },
+  {
+    "_id": "69c980de0bc8e6c7f99db1b5",
+    "userId": "69c980de0bc8e6c7f99db1b4",
+    "balance": 0,
+    "createdAt": "2026-03-29T19:43:26.481Z",
+    "updatedAt": "2026-03-29T19:43:26.481Z"
+  },
+  {
+    "_id": "6a21428c3aa40d6d78525428",
+    "userId": "6a21428c3aa40d6d78525427",
+    "balance": 1.0336000000000012,
+    "createdAt": "2026-06-04T09:17:00.443Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69ba6df178839a2d8a82ba72",
+    "userId": "69ba6df078839a2d8a82ba71",
+    "balance": 0,
+    "createdAt": "2026-03-18T09:18:41.051Z",
+    "updatedAt": "2026-03-18T09:18:41.051Z"
+  },
+  {
+    "_id": "69d75e0180bb941452603e84",
+    "userId": "69d75e0180bb941452603e83",
+    "balance": 14.399999999999997,
+    "createdAt": "2026-04-09T08:06:25.327Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a0eed64b9d1297166c52586",
+    "userId": "6a0eed64b9d1297166c52585",
+    "balance": 0,
+    "createdAt": "2026-05-21T11:32:52.294Z",
+    "updatedAt": "2026-05-21T11:32:52.294Z"
+  },
+  {
+    "_id": "69c9360a8af62f7a28828df8",
+    "userId": "69c9360a8af62f7a28828df7",
+    "balance": 0,
+    "createdAt": "2026-03-29T14:24:10.888Z",
+    "updatedAt": "2026-03-29T14:24:10.888Z"
+  },
+  {
+    "_id": "6a23d76883bdae25eb7f9ca1",
+    "userId": "6a23d76883bdae25eb7f9ca0",
+    "balance": 1.5320000000000045,
+    "createdAt": "2026-06-06T08:16:40.796Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69ccffd49ad93fce8a055d1b",
+    "userId": "69ccffd39ad93fce8a055d1a",
+    "balance": 0,
+    "createdAt": "2026-04-01T11:21:56.005Z",
+    "updatedAt": "2026-04-01T11:21:56.005Z"
+  },
+  {
+    "_id": "69bcebc39e708643e027a78e",
+    "userId": "69bcebc29e708643e027a78d",
+    "balance": 0,
+    "createdAt": "2026-03-20T06:40:03.496Z",
+    "updatedAt": "2026-03-20T06:40:03.496Z"
+  },
+  {
+    "_id": "69bd585a82985e4ac4a62902",
+    "userId": "69bd585982985e4ac4a62901",
+    "balance": 0,
+    "createdAt": "2026-03-20T14:23:22.237Z",
+    "updatedAt": "2026-03-20T14:23:22.237Z"
+  },
+  {
+    "_id": "69beaf2fd08c57458b2d88bf",
+    "userId": "69beaf2fd08c57458b2d88be",
+    "balance": 0,
+    "createdAt": "2026-03-21T14:46:07.905Z",
+    "updatedAt": "2026-03-21T14:46:07.905Z"
+  },
+  {
+    "_id": "69ba18904034fec97b0853a5",
+    "userId": "69ba188f4034fec97b0853a4",
+    "balance": 55.643505999999576,
+    "createdAt": "2026-03-18T03:14:24.410Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69cbd5749ac128742992320c",
+    "userId": "69cbd5749ac128742992320b",
+    "balance": 5.314400000000127,
+    "createdAt": "2026-03-31T14:08:52.026Z",
+    "updatedAt": "2026-07-07T04:33:12.752Z"
+  },
+  {
+    "_id": "69cd082a9ad93fce8a055d1d",
+    "userId": "69cd082a9ad93fce8a055d1c",
+    "balance": 0,
+    "createdAt": "2026-04-01T11:57:30.668Z",
+    "updatedAt": "2026-04-01T11:57:30.668Z"
+  },
+  {
+    "_id": "69ba849bcd630fd9e10eb04a",
+    "userId": "69ba849acd630fd9e10eb049",
+    "balance": 6.970000000000015,
+    "createdAt": "2026-03-18T10:55:23.383Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69d62bd2d30e7f5ebecf0aa2",
+    "userId": "69d62bd2d30e7f5ebecf0aa1",
+    "balance": 0,
+    "createdAt": "2026-04-08T10:20:02.841Z",
+    "updatedAt": "2026-04-08T10:20:02.841Z"
+  },
+  {
+    "_id": "6a2bc367579212413bcfa081",
+    "userId": "6a2bc366579212413bcfa080",
+    "balance": 0,
+    "createdAt": "2026-06-12T08:29:27.009Z",
+    "updatedAt": "2026-06-12T08:29:27.009Z"
+  },
+  {
+    "_id": "6a43e3c442c99b83ece303e2",
+    "userId": "6a43e3c442c99b83ece303e1",
+    "balance": 0.0019999999999935625,
+    "createdAt": "2026-06-30T15:41:56.295Z",
+    "updatedAt": "2026-07-07T04:36:19.043Z"
+  },
+  {
+    "_id": "6a2e2624c86bec52eac84c59",
+    "userId": "6a2e2624c86bec52eac84c58",
+    "balance": 0,
+    "createdAt": "2026-06-14T03:55:16.980Z",
+    "updatedAt": "2026-06-14T03:55:16.980Z"
+  },
+  {
+    "_id": "69ba4b59f306a04d61acacb1",
+    "userId": "69ba4b58f306a04d61acacb0",
+    "balance": 11.635676000000025,
+    "createdAt": "2026-03-18T06:51:05.521Z",
+    "updatedAt": "2026-07-07T10:00:18.449Z"
+  },
+  {
+    "_id": "69c96326b2d0f3f9e0ea0407",
+    "userId": "69c96326b2d0f3f9e0ea0406",
+    "balance": 0,
+    "createdAt": "2026-03-29T17:36:38.233Z",
+    "updatedAt": "2026-03-29T17:36:38.233Z"
+  },
+  {
+    "_id": "6a266ce859e2f07704ebe889",
+    "userId": "6a266ce859e2f07704ebe888",
+    "balance": 0,
+    "createdAt": "2026-06-08T07:19:04.192Z",
+    "updatedAt": "2026-06-08T07:19:04.192Z"
+  },
+  {
+    "_id": "69d3579c9d98c053d0684573",
+    "userId": "69d3579c9d98c053d0684572",
+    "balance": 0.4999999999999627,
+    "createdAt": "2026-04-06T06:50:04.962Z",
+    "updatedAt": "2026-07-07T07:48:25.322Z"
+  },
+  {
+    "_id": "69c96577b2d0f3f9e0ea040b",
+    "userId": "69c96577b2d0f3f9e0ea040a",
+    "balance": 26.836000000000098,
+    "createdAt": "2026-03-29T17:46:31.704Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69d4d9ce5057ce5d3733563b",
+    "userId": "69d4d9ce5057ce5d3733563a",
+    "balance": 6.7399999999999745,
+    "createdAt": "2026-04-07T10:17:50.731Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a268acde86d268c1fc09508",
+    "userId": "6a268acde86d268c1fc09507",
+    "balance": 0,
+    "createdAt": "2026-06-08T09:26:37.787Z",
+    "updatedAt": "2026-06-08T09:26:37.787Z"
+  },
+  {
+    "_id": "6a241c239b16fefdd2d4f734",
+    "userId": "6a241c239b16fefdd2d4f733",
+    "balance": 12.400000000000006,
+    "createdAt": "2026-06-06T13:09:55.327Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69bfe532a759170370431f0b",
+    "userId": "69bfe532a759170370431f0a",
+    "balance": 0,
+    "createdAt": "2026-03-22T12:48:50.963Z",
+    "updatedAt": "2026-03-22T12:48:50.963Z"
+  },
+  {
+    "_id": "69c53857c5d51366956838a5",
+    "userId": "69c53857c5d51366956838a4",
+    "balance": 13.343999999999983,
+    "createdAt": "2026-03-26T13:44:55.459Z",
+    "updatedAt": "2026-07-07T04:58:27.650Z"
+  },
+  {
+    "_id": "69c964b1b2d0f3f9e0ea0409",
+    "userId": "69c964b1b2d0f3f9e0ea0408",
+    "balance": 0,
+    "createdAt": "2026-03-29T17:43:13.202Z",
+    "updatedAt": "2026-03-29T17:43:13.202Z"
+  },
+  {
+    "_id": "69db767f49ddd9c915655cba",
+    "userId": "69db767f49ddd9c915655cb9",
+    "balance": 0,
+    "createdAt": "2026-04-12T10:39:59.817Z",
+    "updatedAt": "2026-04-12T10:39:59.817Z"
+  },
+  {
+    "_id": "6a2bc78f52fdddbcddb544ae",
+    "userId": "6a2bc78f52fdddbcddb544ad",
+    "balance": 0,
+    "createdAt": "2026-06-12T08:47:11.491Z",
+    "updatedAt": "2026-06-12T08:47:11.491Z"
+  },
+  {
+    "_id": "69be3de84a40f69dc9fcba95",
+    "userId": "69be3de74a40f69dc9fcba94",
+    "balance": 0.766399999999944,
+    "createdAt": "2026-03-21T06:42:48.185Z",
+    "updatedAt": "2026-07-07T04:37:58.506Z"
+  },
+  {
+    "_id": "69c27aed0c50c543354d9918",
+    "userId": "69c27aed0c50c543354d9917",
+    "balance": 37.006000000000014,
+    "createdAt": "2026-03-24T11:52:13.729Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a17e9fd5d8defc05a8e5c11",
+    "userId": "6a17e9fd5d8defc05a8e5c10",
+    "balance": 0,
+    "createdAt": "2026-05-28T07:08:45.768Z",
+    "updatedAt": "2026-05-28T07:08:45.768Z"
+  },
+  {
+    "_id": "69be21d0fe89f0a8d9f1ac92",
+    "userId": "69be21cffe89f0a8d9f1ac91",
+    "balance": 5.7766000000000055,
+    "createdAt": "2026-03-21T04:42:56.180Z",
+    "updatedAt": "2026-07-07T15:40:15.908Z"
+  },
+  {
+    "_id": "69c3c8ec8098b7e090c75897",
+    "userId": "69c3c8ec8098b7e090c75896",
+    "balance": 0,
+    "createdAt": "2026-03-25T11:37:16.527Z",
+    "updatedAt": "2026-03-25T11:37:16.527Z"
+  },
+  {
+    "_id": "69ca0af402236c11273ad095",
+    "userId": "69ca0af402236c11273ad094",
+    "balance": 0,
+    "createdAt": "2026-03-30T05:32:36.176Z",
+    "updatedAt": "2026-03-30T05:32:36.176Z"
+  },
+  {
+    "_id": "69bfe57d611c1cca6fed436d",
+    "userId": "69bfe57d611c1cca6fed436c",
+    "balance": 0,
+    "createdAt": "2026-03-22T12:50:05.422Z",
+    "updatedAt": "2026-03-22T12:50:05.422Z"
+  },
+  {
+    "_id": "6a3cdb112fb67111ab587ae0",
+    "userId": "6a3cdb112fb67111ab587adf",
+    "balance": 0,
+    "createdAt": "2026-06-25T07:38:57.500Z",
+    "updatedAt": "2026-06-25T07:38:57.500Z"
+  },
+  {
+    "_id": "69ba52579a4cbdea14c5a1e4",
+    "userId": "69ba52569a4cbdea14c5a1e3",
+    "balance": 8.115580000000053,
+    "createdAt": "2026-03-18T07:20:55.075Z",
+    "updatedAt": "2026-07-07T04:36:42.432Z"
+  },
+  {
+    "_id": "69c520c1b7f96cc70c5f5743",
+    "userId": "69c520c1b7f96cc70c5f5742",
+    "balance": 0,
+    "createdAt": "2026-03-26T12:04:17.036Z",
+    "updatedAt": "2026-03-26T12:04:17.036Z"
+  },
+  {
+    "_id": "69bf3e83b96477220da244ca",
+    "userId": "69bf3e83b96477220da244c9",
+    "balance": 0,
+    "createdAt": "2026-03-22T00:57:39.851Z",
+    "updatedAt": "2026-03-22T00:57:39.851Z"
+  },
+  {
+    "_id": "6a2064b46f68b88544c78f7d",
+    "userId": "6a2064b46f68b88544c78f7c",
+    "balance": 0,
+    "createdAt": "2026-06-03T17:30:28.332Z",
+    "updatedAt": "2026-06-03T17:30:28.332Z"
+  },
+  {
+    "_id": "6a2a83170eef454bf8efd9ec",
+    "userId": "6a2a83170eef454bf8efd9eb",
+    "balance": 10.000000000000004,
+    "createdAt": "2026-06-11T09:42:47.819Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a2bd07082568e69f493610f",
+    "userId": "6a2bd07082568e69f493610e",
+    "balance": 0,
+    "createdAt": "2026-06-12T09:25:04.274Z",
+    "updatedAt": "2026-06-12T09:25:04.274Z"
+  },
+  {
+    "_id": "6a2be3828eead93df8fb29ec",
+    "userId": "6a2be3828eead93df8fb29eb",
+    "balance": 3.0000000000000018,
+    "createdAt": "2026-06-12T10:46:26.920Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69c27579192ed1cf05440fd4",
+    "userId": "69c27579192ed1cf05440fd3",
+    "balance": 3.19440000000002,
+    "createdAt": "2026-03-24T11:28:57.841Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a29350a09f378a80bab8015",
+    "userId": "6a29350a09f378a80bab8014",
+    "balance": 0,
+    "createdAt": "2026-06-10T09:57:30.047Z",
+    "updatedAt": "2026-07-07T12:53:48.765Z"
+  },
+  {
+    "_id": "69ba22b4eacdb890aee75c6b",
+    "userId": "69ba22b3eacdb890aee75c6a",
+    "balance": 14.46783199999994,
+    "createdAt": "2026-03-18T03:57:40.664Z",
+    "updatedAt": "2026-07-07T10:01:23.622Z"
+  },
+  {
+    "_id": "69beb8663c4125ec4bae8f41",
+    "userId": "69beb8653c4125ec4bae8f40",
+    "balance": 0,
+    "createdAt": "2026-03-21T15:25:26.489Z",
+    "updatedAt": "2026-03-21T15:25:26.489Z"
+  },
+  {
+    "_id": "6a2d4ed8e4cb7f0b9d7d9bdc",
+    "userId": "6a2d4ed8e4cb7f0b9d7d9bdb",
+    "balance": 0,
+    "createdAt": "2026-06-13T12:36:40.172Z",
+    "updatedAt": "2026-06-13T12:36:40.172Z"
+  },
+  {
+    "_id": "69ba17aa4034fec97b0853a3",
+    "userId": "69ba17a94034fec97b0853a2",
+    "balance": 0,
+    "createdAt": "2026-03-18T03:10:34.563Z",
+    "updatedAt": "2026-03-18T03:10:34.563Z"
+  },
+  {
+    "_id": "6a2173bc6842558ca87de893",
+    "userId": "6a2173bc6842558ca87de892",
+    "balance": 0.8000000000000114,
+    "createdAt": "2026-06-04T12:46:52.837Z",
+    "updatedAt": "2026-07-07T12:53:14.680Z"
+  },
+  {
+    "_id": "6a26d4a7e6445e33ffb10d1f",
+    "userId": "6a26d4a7e6445e33ffb10d1e",
+    "balance": 0,
+    "createdAt": "2026-06-08T14:41:43.046Z",
+    "updatedAt": "2026-06-08T14:41:43.046Z"
+  },
+  {
+    "_id": "6a2429e4932b09da903f7adf",
+    "userId": "6a2429e4932b09da903f7ade",
+    "balance": 6.200000000000003,
+    "createdAt": "2026-06-06T14:08:36.162Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69bffc074b7c8783a5314d71",
+    "userId": "69bffc074b7c8783a5314d70",
+    "balance": 0,
+    "createdAt": "2026-03-22T14:26:15.302Z",
+    "updatedAt": "2026-03-22T14:26:15.302Z"
+  },
+  {
+    "_id": "6a2aaed85cd76b90170244b6",
+    "userId": "6a2aaed85cd76b90170244b5",
+    "balance": 6.156000000000006,
+    "createdAt": "2026-06-11T12:49:28.873Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69c62db52e7743e482b236e0",
+    "userId": "69c62db52e7743e482b236df",
+    "balance": 0,
+    "createdAt": "2026-03-27T07:11:49.643Z",
+    "updatedAt": "2026-03-27T07:11:49.643Z"
+  },
+  {
+    "_id": "69d63d13d3973faf55dd3a2c",
+    "userId": "69d63d13d3973faf55dd3a2b",
+    "balance": 0,
+    "createdAt": "2026-04-08T11:33:39.277Z",
+    "updatedAt": "2026-04-08T11:33:39.277Z"
+  },
+  {
+    "_id": "6a2e986f98670cc5afbfeace",
+    "userId": "6a2e986f98670cc5afbfeacd",
+    "balance": 0.9200000000000003,
+    "createdAt": "2026-06-14T12:02:55.862Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69c92b4012a0f0b383ca048c",
+    "userId": "69c92b4012a0f0b383ca048b",
+    "balance": 0,
+    "createdAt": "2026-03-29T13:38:08.445Z",
+    "updatedAt": "2026-03-29T13:38:08.445Z"
+  },
+  {
+    "_id": "69f9897a109fe98ff7e42a20",
+    "userId": "69f9897a109fe98ff7e42a1f",
+    "balance": 0,
+    "createdAt": "2026-05-05T06:08:58.769Z",
+    "updatedAt": "2026-05-05T06:08:58.769Z"
+  },
+  {
+    "_id": "69ba8ee8e49bd2c80fa431e1",
+    "userId": "69ba8ee8e49bd2c80fa431e0",
+    "balance": 0,
+    "createdAt": "2026-03-18T11:39:20.951Z",
+    "updatedAt": "2026-03-18T11:39:20.951Z"
+  },
+  {
+    "_id": "69ba193d4034fec97b0853ac",
+    "userId": "69ba193c4034fec97b0853ab",
+    "balance": 0.00040799999996465885,
+    "createdAt": "2026-03-18T03:17:17.531Z",
+    "updatedAt": "2026-07-07T11:50:03.141Z"
+  },
+  {
+    "_id": "69c8ce80833d3f3d139c0ce9",
+    "userId": "69c8ce80833d3f3d139c0ce8",
+    "balance": 0,
+    "createdAt": "2026-03-29T07:02:24.503Z",
+    "updatedAt": "2026-03-29T07:02:24.503Z"
+  },
+  {
+    "_id": "6a2c23002e20d011819de9a8",
+    "userId": "6a2c23002e20d011819de9a7",
+    "balance": 0,
+    "createdAt": "2026-06-12T15:17:20.332Z",
+    "updatedAt": "2026-06-12T15:17:20.332Z"
+  },
+  {
+    "_id": "69c918d12fbe40a85e2204d0",
+    "userId": "69c918d12fbe40a85e2204cf",
+    "balance": 0,
+    "createdAt": "2026-03-29T12:19:29.582Z",
+    "updatedAt": "2026-03-29T12:19:29.582Z"
+  },
+  {
+    "_id": "6a19323cfdb10da9c0c5fc26",
+    "userId": "6a19323cfdb10da9c0c5fc25",
+    "balance": 0,
+    "createdAt": "2026-05-29T06:29:16.569Z",
+    "updatedAt": "2026-05-29T06:29:16.569Z"
+  },
+  {
+    "_id": "69ba183652e807021ca85a39",
+    "userId": "69ba183652e807021ca85a38",
+    "balance": 20.4,
+    "createdAt": "2026-03-18T03:12:54.781Z",
+    "updatedAt": "2026-03-21T04:30:23.880Z"
+  },
+  {
+    "_id": "69d3a6f9a8f99cc6f02969ce",
+    "userId": "69d3a6f9a8f99cc6f02969cd",
+    "balance": 1.8000000000000425,
+    "createdAt": "2026-04-06T12:28:41.890Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69cf62fcefd02e6feac27c1b",
+    "userId": "69cf62fcefd02e6feac27c1a",
+    "balance": 0,
+    "createdAt": "2026-04-03T06:49:32.211Z",
+    "updatedAt": "2026-04-03T06:49:32.211Z"
+  },
+  {
+    "_id": "69c9826aacf83efd509ab7b1",
+    "userId": "69c9826aacf83efd509ab7b0",
+    "balance": 0,
+    "createdAt": "2026-03-29T19:50:02.691Z",
+    "updatedAt": "2026-03-29T19:50:02.691Z"
+  },
+  {
+    "_id": "69d7826ffa640ce24b447761",
+    "userId": "69d7826ffa640ce24b447760",
+    "balance": 0,
+    "createdAt": "2026-04-09T10:41:51.430Z",
+    "updatedAt": "2026-04-09T10:41:51.430Z"
+  },
+  {
+    "_id": "69c96a17f4ea04e21ad43a2b",
+    "userId": "69c96a16f4ea04e21ad43a2a",
+    "balance": 0,
+    "createdAt": "2026-03-29T18:06:15.011Z",
+    "updatedAt": "2026-03-29T18:06:15.011Z"
+  },
+  {
+    "_id": "6a369218e759e8aca19d4d7b",
+    "userId": "6a369217e759e8aca19d4d7a",
+    "balance": 0,
+    "createdAt": "2026-06-20T13:14:00.040Z",
+    "updatedAt": "2026-06-20T13:14:00.040Z"
+  },
+  {
+    "_id": "69c1feb5a0f5f4f213b5d582",
+    "userId": "69c1feb5a0f5f4f213b5d581",
+    "balance": 24.667520000000152,
+    "createdAt": "2026-03-24T03:02:13.074Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69bbdde433ea0b5a2e16b59f",
+    "userId": "69bbdde433ea0b5a2e16b59e",
+    "balance": 4.950000000000011,
+    "createdAt": "2026-03-19T11:28:36.840Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a2eb7636a187a5efc71bbb0",
+    "userId": "6a2eb7636a187a5efc71bbaf",
+    "balance": 0,
+    "createdAt": "2026-06-14T14:14:59.784Z",
+    "updatedAt": "2026-06-14T14:14:59.784Z"
+  },
+  {
+    "_id": "69d767ced98d21534df9f6a5",
+    "userId": "69d767ced98d21534df9f6a4",
+    "balance": 0,
+    "createdAt": "2026-04-09T08:48:14.376Z",
+    "updatedAt": "2026-04-09T08:48:14.376Z"
+  },
+  {
+    "_id": "6a35251c23bee2633354f22f",
+    "userId": "6a35251c23bee2633354f22e",
+    "balance": 0,
+    "createdAt": "2026-06-19T11:16:44.798Z",
+    "updatedAt": "2026-06-19T11:16:44.798Z"
+  },
+  {
+    "_id": "69bd508a82985e4ac4a62900",
+    "userId": "69bd508982985e4ac4a628ff",
+    "balance": 0,
+    "createdAt": "2026-03-20T13:50:02.176Z",
+    "updatedAt": "2026-03-20T13:50:02.176Z"
+  },
+  {
+    "_id": "69c132dc0948da59fd224e9d",
+    "userId": "69c132dc0948da59fd224e9c",
+    "balance": 0,
+    "createdAt": "2026-03-23T12:32:28.793Z",
+    "updatedAt": "2026-03-23T12:32:28.793Z"
+  },
+  {
+    "_id": "69d65a5891183216d4ad15aa",
+    "userId": "69d65a5891183216d4ad15a9",
+    "balance": 0,
+    "createdAt": "2026-04-08T13:38:32.232Z",
+    "updatedAt": "2026-04-08T13:38:32.232Z"
+  },
+  {
+    "_id": "6a2427aa87c69506b1046011",
+    "userId": "6a2427aa87c69506b1046010",
+    "balance": 6.200000000000003,
+    "createdAt": "2026-06-06T13:59:06.863Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a3d42020dd0118aca2092bb",
+    "userId": "6a3d42020dd0118aca2092ba",
+    "balance": 18.200000000000017,
+    "createdAt": "2026-06-25T14:58:10.783Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "6a3d5bd85b2548ef3e4869f0",
+    "userId": "6a3d5bd85b2548ef3e4869ef",
+    "balance": 0,
+    "createdAt": "2026-06-25T16:48:24.904Z",
+    "updatedAt": "2026-06-25T16:48:24.904Z"
+  },
+  {
+    "_id": "69c674498c58a02824036d7e",
+    "userId": "69c674498c58a02824036d7d",
+    "balance": 0,
+    "createdAt": "2026-03-27T12:12:57.378Z",
+    "updatedAt": "2026-03-27T12:12:57.378Z"
+  },
+  {
+    "_id": "69d6525dfe4027536afcaeb5",
+    "userId": "69d6525dfe4027536afcaeb4",
+    "balance": 0,
+    "createdAt": "2026-04-08T13:04:29.384Z",
+    "updatedAt": "2026-04-08T13:04:29.384Z"
+  },
+  {
+    "_id": "69ba5f66e9b0ffe6a0d6b6ef",
+    "userId": "69ba5f66e9b0ffe6a0d6b6ee",
+    "balance": 10.567999999999998,
+    "createdAt": "2026-03-18T08:16:38.737Z",
+    "updatedAt": "2026-07-07T04:30:11.962Z"
+  },
+  {
+    "_id": "69ba180152e807021ca85a37",
+    "userId": "69ba180052e807021ca85a36",
+    "balance": 0,
+    "createdAt": "2026-03-18T03:12:01.464Z",
+    "updatedAt": "2026-03-18T03:12:01.464Z"
+  },
+  {
+    "_id": "69c2a45f531f35325d9ad2b9",
+    "userId": "69c2a45f531f35325d9ad2b8",
+    "balance": 0,
+    "createdAt": "2026-03-24T14:49:03.022Z",
+    "updatedAt": "2026-03-24T14:49:03.022Z"
+  },
+  {
+    "_id": "69bbb2dfe4ddd265d47704a5",
+    "userId": "69bbb2dee4ddd265d47704a4",
+    "balance": 0,
+    "createdAt": "2026-03-19T08:25:03.065Z",
+    "updatedAt": "2026-03-19T08:25:03.065Z"
+  },
+  {
+    "_id": "69c7eccea0248b08d8e91d36",
+    "userId": "69c7eccea0248b08d8e91d35",
+    "balance": 0,
+    "createdAt": "2026-03-28T14:59:26.533Z",
+    "updatedAt": "2026-03-28T14:59:26.533Z"
+  },
+  {
+    "_id": "69ca0f015639e0a684911ead",
+    "userId": "69ca0f015639e0a684911eac",
+    "balance": 0.15999999999996817,
+    "createdAt": "2026-03-30T05:49:53.655Z",
+    "updatedAt": "2026-07-07T15:06:22.528Z"
+  },
+  {
+    "_id": "6a3902c89e034ac5897f93e4",
+    "userId": "6a3902c89e034ac5897f93e3",
+    "balance": 0,
+    "createdAt": "2026-06-22T09:39:20.937Z",
+    "updatedAt": "2026-06-22T09:39:20.937Z"
+  },
+  {
+    "_id": "6a3cdcef25c2932dae128f1d",
+    "userId": "6a3cdcef25c2932dae128f1c",
+    "balance": 0,
+    "createdAt": "2026-06-25T07:46:55.556Z",
+    "updatedAt": "2026-06-25T07:46:55.556Z"
+  }
+]
