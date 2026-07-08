@@ -13,6 +13,8 @@ interface AuthContextType {
     login: (initData: string, referralCode?: string) => Promise<boolean>;
     logout: () => Promise<void>;
     authFetch: (url: string, options?: RequestInit) => Promise<Response>;
+    swrFetch: (url: string, onSuccess: (data: any) => void, setLoadingState?: (loading: boolean) => void) => Promise<void>;
+    clearCache: (url?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,6 +46,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return fetch(url, { ...options, headers, credentials: 'include' });
     }, [initData]);
+
+    // In-memory cache for SWR (Stale-While-Revalidate)
+    const apiCache = useRef<Map<string, any>>(new Map());
+
+    const swrFetch = useCallback(async (
+        url: string, 
+        onSuccess: (data: any) => void,
+        setLoadingState?: (loading: boolean) => void
+    ) => {
+        // 1. Check cache first
+        const cached = apiCache.current.get(url);
+        if (cached) {
+            onSuccess(cached);
+            if (setLoadingState) setLoadingState(false);
+        } else {
+            if (setLoadingState) setLoadingState(true);
+        }
+
+        // 2. Fetch fresh data in background
+        try {
+            const res = await authFetch(url);
+            if (res.ok) {
+                const json = await res.json();
+                if (json.success && json.data) {
+                    apiCache.current.set(url, json.data);
+                    onSuccess(json.data);
+                }
+            }
+        } catch (err) {
+            console.error(`SWR fetch failed for ${url}:`, err);
+        } finally {
+            if (setLoadingState) setLoadingState(false);
+        }
+    }, [authFetch]);
+
+    const clearCache = useCallback((url?: string) => {
+        if (url) {
+            apiCache.current.delete(url);
+        } else {
+            apiCache.current.clear();
+        }
+    }, []);
 
     const login = useCallback(async (initDataToken: string, referralCode?: string): Promise<boolean> => {
         try {
@@ -109,6 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 login,
                 logout,
                 authFetch,
+                swrFetch,
+                clearCache,
             }}
         >
             {children}

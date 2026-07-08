@@ -6,27 +6,18 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { formatCurrency } from '@/lib/utils';
 import type { Plan } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function PlansPage() {
     const router = useRouter();
+    const { swrFetch } = useAuth();
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [calcAmount, setCalcAmount] = useState<string>('100');
 
     useEffect(() => {
-        const fetchPlans = async () => {
-            try {
-                const res = await fetch('/api/plans');
-                const data = await res.json();
-                if (data.success) setPlans(data.data);
-            } catch (error) {
-                console.error('Plans error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchPlans();
-    }, []);
+        swrFetch('/api/plans', setPlans, setLoading);
+    }, [swrFetch]);
 
     if (loading) {
         return (

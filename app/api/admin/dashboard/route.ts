@@ -8,6 +8,10 @@ import { getDB } from '@/lib/db';
 import { Collections } from '@/lib/db/collections';
 import type { ApiResponse } from '@/types';
 
+let cachedDashboardData: any = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 60000; // 60 seconds
+
 /**
  * GET /api/admin/dashboard - Get admin dashboard stats (comprehensive)
  */
@@ -17,6 +21,14 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
         if (!session) {
             return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 403 });
+        }
+
+        const now = Date.now();
+        if (cachedDashboardData && (now - lastCacheTime < CACHE_TTL_MS)) {
+            return NextResponse.json({
+                success: true,
+                data: cachedDashboardData,
+            });
         }
 
         const db = await getDB();
@@ -88,35 +100,40 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             .limit(6)
             .toArray();
 
+        const dashboardData = {
+            totalUsers,
+            activeUsers,
+            todayNewUsers,
+            todaySubscriptions,
+            pendingTickets,
+            totalInvested: subscriptionsAgg[0]?.total || 0,
+            totalEarnings: earningsAgg[0]?.total || 0,
+            roiPaidTotal: roiAgg[0]?.total || 0,
+            totalWithdrawals: withdrawalsAgg[0]?.total || 0,
+            pendingWithdrawals: pendingWithdrawalsAgg[0]?.total || 0,
+            totalTicketAmount: ticketAmountAgg[0]?.total || 0,
+            recentTickets: recentTickets.map(t => ({
+                _id: t._id.toString(),
+                amount: t.amount,
+                status: t.status,
+                createdAt: t.createdAt,
+                userName: t.userInfo?.firstName || t.userInfo?.telegramUsername || 'Unknown',
+            })),
+            recentUsers: recentUsers.map(u => ({
+                _id: u._id.toString(),
+                firstName: u.firstName,
+                telegramUsername: u.telegramUsername,
+                telegramId: u.telegramId,
+                createdAt: u.createdAt,
+            })),
+        };
+
+        cachedDashboardData = dashboardData;
+        lastCacheTime = now;
+
         return NextResponse.json({
             success: true,
-            data: {
-                totalUsers,
-                activeUsers,
-                todayNewUsers,
-                todaySubscriptions,
-                pendingTickets,
-                totalInvested: subscriptionsAgg[0]?.total || 0,
-                totalEarnings: earningsAgg[0]?.total || 0,
-                roiPaidTotal: roiAgg[0]?.total || 0,
-                totalWithdrawals: withdrawalsAgg[0]?.total || 0,
-                pendingWithdrawals: pendingWithdrawalsAgg[0]?.total || 0,
-                totalTicketAmount: ticketAmountAgg[0]?.total || 0,
-                recentTickets: recentTickets.map(t => ({
-                    _id: t._id.toString(),
-                    amount: t.amount,
-                    status: t.status,
-                    createdAt: t.createdAt,
-                    userName: t.userInfo?.firstName || t.userInfo?.telegramUsername || 'Unknown',
-                })),
-                recentUsers: recentUsers.map(u => ({
-                    _id: u._id.toString(),
-                    firstName: u.firstName,
-                    telegramUsername: u.telegramUsername,
-                    telegramId: u.telegramId,
-                    createdAt: u.createdAt,
-                })),
-            },
+            data: dashboardData,
         });
 
     } catch (error) {

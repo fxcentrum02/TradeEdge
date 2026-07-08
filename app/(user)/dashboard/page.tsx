@@ -74,7 +74,7 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
-    const { user, authFetch } = useAuth();
+    const { user, authFetch, swrFetch, clearCache } = useAuth();
     const router = useRouter();
     const [dashboard, setDashboard] = useState<DashboardData | null>(null);
     const [plans, setPlans] = useState<Plan[]>([]);
@@ -121,34 +121,23 @@ export default function DashboardPage() {
         return () => clearInterval(timer);
     }, []);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            // Consolidated fetch: get user data, plans, and tickets in one RTT
-            const res = await authFetch('/api/users/me?include=dashboard');
-            const data = await res.json();
-            
-            if (data.success) {
-                const userData = data.data;
-                setDashboard(userData);
-                
-                // Extract plans and tickets from the consolidated response
-                if (userData.availablePlans) {
-                    setPlans(userData.availablePlans);
-                }
-                if (userData.pendingTickets) {
-                    setPendingTickets(userData.pendingTickets);
-                }
-            }
-        } catch (error) {
-            console.error('Dashboard error:', error);
-        } finally {
-            setLoading(false);
+    const fetchData = useCallback(async (forceRefresh = false) => {
+        if (forceRefresh) {
+            clearCache('/api/users/me?include=dashboard');
         }
-    }, [authFetch]);
+        await swrFetch('/api/users/me?include=dashboard', (userData) => {
+            setDashboard(userData);
+            if (userData.availablePlans) {
+                setPlans(userData.availablePlans);
+            }
+            if (userData.pendingTickets) {
+                setPendingTickets(userData.pendingTickets);
+            }
+        }, setLoading);
+    }, [swrFetch, clearCache]);
 
     useEffect(() => {
-        fetchData();
+        fetchData(false);
 
         let userChannel: any = null;
         if (user?.id) {
@@ -160,7 +149,7 @@ export default function DashboardPage() {
                     message: `Payment approved! +${data.amount} USDT Mining Power added.`,
                     severity: 'success'
                 });
-                fetchData();
+                fetchData(true);
             });
 
             userChannel.bind('ticket-rejected', (data: any) => {
@@ -169,7 +158,7 @@ export default function DashboardPage() {
                     message: `Payment of ${data.amount} USDT was rejected.`,
                     severity: 'error'
                 });
-                fetchData();
+                fetchData(true);
             });
 
             userChannel.bind('withdrawal-approved', (data: any) => {
@@ -178,7 +167,7 @@ export default function DashboardPage() {
                     message: `Your withdrawal of ${data.amount} USDT was approved!`,
                     severity: 'success'
                 });
-                fetchData();
+                fetchData(true);
             });
 
             userChannel.bind('withdrawal-rejected', (data: any) => {
@@ -187,13 +176,13 @@ export default function DashboardPage() {
                     message: `Your withdrawal of ${data.amount} USDT was rejected.`,
                     severity: 'error'
                 });
-                fetchData();
+                fetchData(true);
             });
         }
 
         const globalChannel = pusherClient.subscribe('global-events');
         globalChannel.bind('roi-settled', () => {
-            fetchData();
+            fetchData(true);
         });
 
         return () => {
@@ -208,7 +197,7 @@ export default function DashboardPage() {
             message: `Successfully exchanged ${data.amount} USDT to Compounding Power!`,
             severity: 'success'
         });
-        fetchData();
+        fetchData(true);
     };
 
     if (loading) {

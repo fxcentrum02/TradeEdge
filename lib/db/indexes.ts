@@ -86,6 +86,10 @@ export async function createIndexes() {
         { name: 'userId_index' }
     );
     await db.collection(Collections.REFERRAL_EARNINGS).createIndex(
+        { userId: 1, createdAt: -1 },
+        { name: 'userId_createdAt_desc_compound' }
+    );
+    await db.collection(Collections.REFERRAL_EARNINGS).createIndex(
         { userId: 1, tier: 1 },
         { name: 'userId_tier_index' }
     );
@@ -98,6 +102,10 @@ export async function createIndexes() {
     await db.collection(Collections.TRANSACTIONS).createIndex(
         { userId: 1 },
         { name: 'userId_index' }
+    );
+    await db.collection(Collections.TRANSACTIONS).createIndex(
+        { userId: 1, createdAt: -1 },
+        { name: 'userId_createdAt_desc_compound' }
     );
     await db.collection(Collections.TRANSACTIONS).createIndex(
         { type: 1 },

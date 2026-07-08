@@ -29,7 +29,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { MilestoneStatus, MilestonePageData } from '@/app/api/referrals/milestones/route';
 
 export default function ReferralsPage() {
-    const { authFetch } = useAuth();
+    const { authFetch, swrFetch, clearCache } = useAuth();
     const [activeTab, setActiveTab] = useState(0);
     const [stats, setStats] = useState<ReferralStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -63,17 +63,11 @@ export default function ReferralsPage() {
     const [historyFilter, setHistoryFilter] = useState('all');
     const [totalHistory, setTotalHistory] = useState(0);
 
-    const fetchStats = async () => {
-        try {
-            setLoading(true);
-            const res = await authFetch('/api/referrals');
-            const data = await res.json();
-            if (data.success) setStats(data.data);
-        } catch (error) {
-            console.error('Referrals error:', error);
-        } finally {
-            setLoading(false);
+    const fetchStats = async (forceRefresh = false) => {
+        if (forceRefresh) {
+            clearCache('/api/referrals');
         }
+        await swrFetch('/api/referrals', setStats, setLoading);
     };
 
     const fetchHistory = async (page: number, filter: string) => {
@@ -97,14 +91,24 @@ export default function ReferralsPage() {
     }, []);
 
     useEffect(() => {
-        if (activeTab === 1) {
+        if (activeTab === 0) {
+            fetchStats(false);
+        } else if (activeTab === 1) {
             fetchHistory(historyPage, historyFilter);
-        } else if (activeTab === 2) {
+        }
+    }, [activeTab, historyPage, historyFilter]);
+
+    useEffect(() => {
+        if (activeTab === 2) {
             fetchInsights();
-        } else if (activeTab === 3) {
+        }
+    }, [activeTab, startDate, endDate]);
+
+    useEffect(() => {
+        if (activeTab === 3) {
             fetchMilestones();
         }
-    }, [activeTab, historyPage, historyFilter, startDate, endDate]);
+    }, [activeTab]);
 
     const fetchInsights = async () => {
         try {
@@ -202,15 +206,7 @@ export default function ReferralsPage() {
                 setClaimDialogOpen(false);
                 
                 // Refresh stats to show updated balance
-                try {
-                    const statsRes = await authFetch('/api/referrals');
-                    const statsData = await statsRes.json();
-                    if (statsData.success) {
-                        setStats(statsData.data);
-                    }
-                } catch (refreshError) {
-                    console.error('Stats refresh error:', refreshError);
-                }
+                fetchStats(true);
 
                 setTimeout(() => setClaimSuccess(null), 5000);
             } else {
