@@ -40,9 +40,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             return NextResponse.json({ success: false, error: 'Invalid amount' }, { status: 400 });
         }
 
-        if (amount < PLAN_CONFIG.MIN_INVESTMENT) {
+        if (amount < PLAN_CONFIG.MIN_REINVESTMENT) {
             return NextResponse.json(
-                { success: false, error: `Minimum reinvestment is ${PLAN_CONFIG.MIN_INVESTMENT} USDT` },
+                { success: false, error: `Minimum reinvestment is ${PLAN_CONFIG.MIN_REINVESTMENT} USDT` },
                 { status: 400 }
             );
         }

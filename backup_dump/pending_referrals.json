@@ -49,13 +49,6 @@
     "updatedAt": "2026-03-25T11:34:19.403Z"
   },
   {
-    "_id": "6a3cdb0e489cffd8842aa383",
-    "telegramId": "8830736331",
-    "createdAt": "2026-06-25T07:38:54.126Z",
-    "referralCode": "6RFSU83N",
-    "updatedAt": "2026-06-25T07:38:57.233Z"
-  },
-  {
     "_id": "69bc42e93bbd24981586ab2b",
     "telegramId": "7727170489",
     "createdAt": "2026-03-19T18:39:37.722Z",
@@ -194,13 +187,6 @@
     "createdAt": "2026-03-26T13:44:49.778Z",
     "referralCode": "U9QKQJ3Z",
     "updatedAt": "2026-03-31T12:03:53.268Z"
-  },
-  {
-    "_id": "6a17e9e9967bcc2a0ba34088",
-    "telegramId": "6853525377",
-    "createdAt": "2026-05-28T07:08:25.781Z",
-    "referralCode": "DQEHZF66",
-    "updatedAt": "2026-05-28T07:08:45.752Z"
   },
   {
     "_id": "69be21c93bbd24981586ab30",
@@ -406,13 +392,6 @@
     "updatedAt": "2026-03-25T11:37:16.507Z"
   },
   {
-    "_id": "6a193220967bcc2a0ba34089",
-    "telegramId": "5676373444",
-    "createdAt": "2026-05-29T06:28:49.009Z",
-    "referralCode": "DQEHZF66",
-    "updatedAt": "2026-05-29T06:29:16.551Z"
-  },
-  {
     "_id": "6a241c1e183713b299f60714",
     "telegramId": "7695658822",
     "createdAt": "2026-06-06T13:09:50.535Z",
@@ -424,7 +403,7 @@
     "telegramId": "7882820553",
     "createdAt": "2026-03-29T12:38:19.267Z",
     "referralCode": "S3LLPMWG",
-    "updatedAt": "2026-06-19T08:45:05.089Z"
+    "updatedAt": "2026-07-17T07:00:58.348Z"
   },
   {
     "_id": "6a2bc35f7fbfc5214f7d6b44",
@@ -481,20 +460,6 @@
     "createdAt": "2026-06-14T14:14:52.658Z",
     "referralCode": "W786DW2G",
     "updatedAt": "2026-06-14T14:14:59.763Z"
-  },
-  {
-    "_id": "69ba18533bbd24981586ab14",
-    "telegramId": "6788839937",
-    "createdAt": "2026-03-18T03:13:23.052Z",
-    "referralCode": "NMD2BA7U",
-    "updatedAt": "2026-03-26T03:25:08.513Z"
-  },
-  {
-    "_id": "6a20649e183713b299f60710",
-    "telegramId": "7700867728",
-    "createdAt": "2026-06-03T17:30:06.819Z",
-    "referralCode": "NMD2BA7U",
-    "updatedAt": "2026-06-03T17:30:28.296Z"
   },
   {
     "_id": "69cbd5673bbd24981586ab5c",
@@ -700,25 +665,11 @@
     "updatedAt": "2026-06-12T10:46:26.883Z"
   },
   {
-    "_id": "6a2d4f427fbfc5214f7d6b4c",
-    "telegramId": "1312527784",
-    "createdAt": "2026-06-13T12:38:26.111Z",
-    "referralCode": "PPN5RMXE",
-    "updatedAt": "2026-06-13T12:38:26.111Z"
-  },
-  {
     "_id": "6a2aaecc7fbfc5214f7d6b42",
     "telegramId": "8843551582",
     "createdAt": "2026-06-11T12:49:16.300Z",
     "referralCode": "H7XY8MVW",
     "updatedAt": "2026-06-11T12:49:28.851Z"
-  },
-  {
-    "_id": "6a3cdcec489cffd8842aa387",
-    "telegramId": "8816850434",
-    "createdAt": "2026-06-25T07:46:52.414Z",
-    "referralCode": "6RFSU83N",
-    "updatedAt": "2026-06-25T07:46:55.293Z"
   },
   {
     "_id": "69c969fc3bbd24981586ab53",
@@ -803,5 +754,12 @@
     "createdAt": "2026-06-30T13:51:11.894Z",
     "referralCode": "QYE4FEKC",
     "updatedAt": "2026-06-30T13:51:18.612Z"
+  },
+  {
+    "_id": "6a65a44a83d57cb5e0f5e942",
+    "telegramId": "7700867728",
+    "createdAt": "2026-07-26T06:08:10.295Z",
+    "referralCode": "7G25VJ48",
+    "updatedAt": "2026-07-26T06:30:33.551Z"
   }
 ]

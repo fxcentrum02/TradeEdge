@@ -10,10 +10,10 @@
     "receivingAddress": "0xCc7Bdb2C7F66BAaE88bDe1aa87731C6A85e216b6",
     "referralClaimMultiplier": 1,
     "tier1ReferralPercentage": 10,
-    "updatedAt": "2026-07-05T08:34:43.308Z",
+    "updatedAt": "2026-07-18T03:53:46.421Z",
     "withdrawalFeeType": "PERCENTAGE",
     "withdrawalFeeValue": 5,
     "minReferralWithdrawalAmount": 1,
-    "maintenanceEstimatedDuration": "1 hour, we are updating system."
+    "maintenanceEstimatedDuration": ""
   }
 ]

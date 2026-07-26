@@ -281,17 +281,6 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                                 fontWeight: 700, borderRadius: 1.5
                                             }}
                                         />
-                                        {!data.profile.isDeleted && !data.profile.isAdmin && (
-                                            <Button 
-                                                size="small" 
-                                                color="error" 
-                                                variant="outlined" 
-                                                onClick={() => setDeleteConfirmOpen(true)}
-                                                sx={{ borderRadius: 1.5, height: 24, fontSize: '0.75rem', textTransform: 'none' }}
-                                            >
-                                                Delete Customer
-                                            </Button>
-                                        )}
                                     </Stack>
                                 </Box>
                                 <Box sx={{ 

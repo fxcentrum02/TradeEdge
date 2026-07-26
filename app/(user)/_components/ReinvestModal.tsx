@@ -13,6 +13,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { formatCurrency } from '@/lib/utils';
 import type { Plan } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { PLAN_CONFIG } from '@/lib/constants';
 
 interface ReinvestModalProps {
     open: boolean;
@@ -31,7 +32,7 @@ export default function ReinvestModal({ open, onClose, onSuccess, balance, plans
 
     useEffect(() => {
         const numAmount = parseFloat(amount);
-        if (isNaN(numAmount) || numAmount < 10) {
+        if (isNaN(numAmount) || numAmount < PLAN_CONFIG.MIN_REINVESTMENT) {
             setMatchedPlan(null);
             return;
         }
@@ -48,8 +49,8 @@ export default function ReinvestModal({ open, onClose, onSuccess, balance, plans
         setError('');
         const numAmount = parseFloat(amount);
 
-        if (!numAmount || numAmount < 10) {
-            setError('Minimum reinvestment is 10 USDT');
+        if (!numAmount || numAmount < PLAN_CONFIG.MIN_REINVESTMENT) {
+            setError(`Minimum reinvestment is ${PLAN_CONFIG.MIN_REINVESTMENT} USDT`);
             return;
         }
 
@@ -120,7 +121,7 @@ export default function ReinvestModal({ open, onClose, onSuccess, balance, plans
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Min 10 USDT"
+                    placeholder={`Min ${PLAN_CONFIG.MIN_REINVESTMENT} USDT`}
                     autoFocus
                     InputProps={{
                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
