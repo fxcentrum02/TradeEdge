@@ -115,14 +115,14 @@ export default function TransactionsPage() {
         <Box sx={{ pb: 10 }}>
             {/* Header */}
             <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: 'var(--brand-main)', width: 48, height: 48 }}>
+                <Avatar sx={{ bgcolor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', border: '1px solid rgba(6, 182, 212, 0.3)', width: 48, height: 48 }}>
                     <HistoryIcon />
                 </Avatar>
                 <Box>
-                    <Typography variant="h5" fontWeight={800}>
+                    <Typography variant="h5" fontWeight={800} color="#f8fafc">
                         History
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="#94a3b8">
                         All your wallet activities
                     </Typography>
                 </Box>
@@ -139,11 +139,15 @@ export default function TransactionsPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     sx={{
                         mb: 2,
-                        bgcolor: 'white',
-                        borderRadius: 3,
                         '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                            borderRadius: 2,
+                            bgcolor: 'rgba(30, 41, 59, 0.8)',
+                            color: '#ffffff',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            '& fieldset': { border: 'none' },
+                            '&:hover': { border: '1px solid rgba(6, 182, 212, 0.4)' },
+                            '&.Mui-focused': { border: '1px solid #06b6d4' },
+                            '& input::placeholder': { color: '#64748b', opacity: 1 },
                         }
                     }}
                 />
@@ -164,15 +168,17 @@ export default function TransactionsPage() {
                             key={type}
                             label={type === 'ALL' ? 'All' : (TRANSACTION_UI_MAP[type as TransactionType]?.label || type)}
                             onClick={() => setActiveType(type)}
-                            color={activeType === type ? 'primary' : 'default'}
-                            variant={activeType === type ? 'filled' : 'outlined'}
                             sx={{
                                 borderRadius: 2,
                                 fontWeight: 700,
                                 textTransform: 'none',
-                                px: 1,
-                                height: 32,
-                                bgcolor: activeType === type ? 'var(--brand-main)' : 'white'
+                                px: 1.2,
+                                height: 34,
+                                background: activeType === type ? 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)' : 'rgba(30, 41, 59, 0.6)',
+                                color: activeType === type ? '#ffffff' : '#94a3b8',
+                                border: activeType === type ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                                boxShadow: activeType === type ? '0 4px 14px rgba(6, 182, 212, 0.35)' : 'none',
+                                transition: 'all 0.15s ease',
                             }}
                         />
                     ))}
@@ -182,42 +188,43 @@ export default function TransactionsPage() {
             <Paper
                 elevation={0}
                 sx={{
-                    borderRadius: 4,
+                    borderRadius: 2,
                     overflow: 'hidden',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                    border: '1px solid rgba(0,0,0,0.05)'
+                    background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
                 }}
             >
                 {loading && page === 1 ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                        <CircularProgress sx={{ color: 'var(--brand-main)' }} />
+                        <CircularProgress sx={{ color: '#06b6d4' }} />
                     </Box>
                 ) : error ? (
                     <Box sx={{ py: 8, textAlign: 'center', px: 2 }}>
-                        <Typography color="error" gutterBottom sx={{ fontWeight: 600 }}>{error}</Typography>
+                        <Typography color="#f87171" gutterBottom sx={{ fontWeight: 600 }}>{error}</Typography>
                         <Button 
                             variant="outlined" 
                             size="small" 
                             onClick={() => fetchTransactions(1)}
-                            sx={{ borderRadius: 2, mt: 1, textTransform: 'none' }}
+                            sx={{ borderRadius: 2.5, mt: 1, textTransform: 'none', color: '#06b6d4', borderColor: '#06b6d4' }}
                         >
                             Try Again
                         </Button>
                     </Box>
                 ) : transactions.length === 0 ? (
                     <Box sx={{ py: 8, textAlign: 'center' }}>
-                        <Typography color="text.secondary">No transactions yet.</Typography>
+                        <Typography color="#94a3b8">No transactions yet.</Typography>
                     </Box>
                 ) : (
                     <List disablePadding>
                         {transactions.map((tx, index) => {
                             const ui = TRANSACTION_UI_MAP[tx.type] || { label: tx.type, color: '#64748b', icon: null };
                             const isPositive = tx.amount > 0;
-                            const amountColor = isPositive ? '#10b981' : '#ef4444';
+                            const amountColor = isPositive ? '#34d399' : '#f87171';
 
                             return (
                                 <Box key={tx.id}>
-                                    {index > 0 && <Divider sx={{ opacity: 0.5 }} />}
+                                    {index > 0 && <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.06)' }} />}
                                     <ListItem sx={{ py: 2 }}>
                                         <ListItemText
                                             primaryTypographyProps={{ component: 'div' }}
@@ -227,19 +234,20 @@ export default function TransactionsPage() {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <Box
                                                             sx={{
-                                                                width: 24,
-                                                                height: 24,
-                                                                borderRadius: '6px',
-                                                                bgcolor: ui.color + '20',
+                                                                width: 28,
+                                                                height: 28,
+                                                                borderRadius: '8px',
+                                                                bgcolor: ui.color + '25',
                                                                 color: ui.color,
                                                                 display: 'flex',
                                                                 alignItems: 'center',
-                                                                justifyContent: 'center'
+                                                                justifyContent: 'center',
+                                                                border: `1px solid ${ui.color}40`,
                                                             }}
                                                         >
                                                             {ui.icon}
                                                         </Box>
-                                                        <Typography variant="subtitle2" fontWeight={700}>
+                                                        <Typography variant="subtitle2" fontWeight={700} color="#f1f5f9">
                                                             {ui.label}
                                                         </Typography>
                                                     </Box>
@@ -250,15 +258,15 @@ export default function TransactionsPage() {
                                             }
                                             secondary={
                                                 <Box>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                    <Typography variant="caption" color="#94a3b8" sx={{ display: 'block', mb: 0.5 }}>
                                                         {tx.description || 'Transaction processed'}
                                                     </Typography>
                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>
+                                                        <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem' }}>
                                                             {new Date(tx.createdAt).toLocaleString()}
                                                         </Typography>
                                                         <Stack direction="row" spacing={0.5} alignItems="center">
-                                                            <AccountBalanceWalletIcon sx={{ fontSize: 12, color: '#94a3b8' }} />
+                                                            <AccountBalanceWalletIcon sx={{ fontSize: 12, color: '#64748b' }} />
                                                             <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
                                                                 {tx.balanceAfter.toFixed(2)}
                                                             </Typography>
@@ -276,18 +284,18 @@ export default function TransactionsPage() {
 
                 {hasMore && (
                     <Box ref={lastElementRef} sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                        {loadingMore && <CircularProgress size={24} sx={{ color: 'var(--brand-main)' }} />}
+                        {loadingMore && <CircularProgress size={24} sx={{ color: '#06b6d4' }} />}
                     </Box>
                 )}
 
                 {!hasMore && transactions.length > 0 && (
                     <Box sx={{ py: 3, textAlign: 'center' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        <Typography variant="caption" color="#64748b" sx={{ fontWeight: 600 }}>
                             End of history
                         </Typography>
                     </Box>
                 )}
             </Paper>
-        </Box >
+        </Box>
     );
 }

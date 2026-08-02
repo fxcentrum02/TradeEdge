@@ -188,13 +188,13 @@ export default function PlansPage() {
                 startIcon={<TrendingUpIcon />}
                 onClick={() => router.push('/buy-tp')}
                 sx={{
-                    background: 'linear-gradient(135deg, var(--brand-main) 0%, var(--brand-dark) 100%)',
-                    borderRadius: 3,
-                    py: 2,
+                    background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                    borderRadius: 2,
+                    py: 1.8,
                     fontWeight: 700,
                     fontSize: '1rem',
                     textTransform: 'none',
-                    boxShadow: '0 4px 14px rgba(132,204,22,0.4)',
+                    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.35)',
                 }}
             >
                 Buy Mining Power Now →

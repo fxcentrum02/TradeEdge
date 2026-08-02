@@ -21,6 +21,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { formatCurrency, formatDateTime, getInitials, getAvatarUrl } from '@/lib/utils';
 import type { ReferralStats } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import ReferralTierMatrix from './_components/ReferralTierMatrix';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell
 } from 'recharts';
@@ -245,26 +246,37 @@ export default function ReferralsPage() {
     return (
         <Box sx={{ pb: 10 }}>
             {/* Page Header */}
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <PeopleIcon fontSize="small" sx={{ color: '#8b5cf6' }} />
-                Friends
+            <Typography variant="h6" fontWeight={800} sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: '#f8fafc' }}>
+                <PeopleIcon fontSize="small" sx={{ color: '#06b6d4' }} />
+                Friends & Referrals
             </Typography>
 
             {/* Tabs */}
-            <Paper sx={{ mb: 3, borderRadius: 3, overflow: 'hidden' }}>
+            <Paper
+                elevation={0}
+                sx={{
+                    mb: 3,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.4)',
+                }}
+            >
                 <Tabs
                     value={activeTab}
                     onChange={handleTabChange}
                     variant="fullWidth"
-                    indicatorColor="primary"
-                    textColor="primary"
                     sx={{
                         '& .MuiTab-root': {
                             fontSize: '0.8rem',
                             fontWeight: 700,
                             textTransform: 'none',
-                            py: 1.5
-                        }
+                            py: 1.6,
+                            color: '#94a3b8',
+                            '&.Mui-selected': { color: '#06b6d4 !important' },
+                        },
+                        '& .MuiTabs-indicator': { bgcolor: '#06b6d4', height: 3 },
                     }}
                 >
                     <Tab icon={<TrendingUpIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Tiered Earnings" />
@@ -277,30 +289,40 @@ export default function ReferralsPage() {
             {activeTab === 0 && (
                 <>
                     {/* Explanatory Text */}
-                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: '#fdfcfe', border: '1px solid #f3e8ff' }}>
-                        <Typography variant="subtitle2" fontWeight={800} color="#7c3aed" gutterBottom>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 2.2,
+                            mb: 3,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.35)',
+                        }}
+                    >
+                        <Typography variant="subtitle2" fontWeight={800} color="#38bdf8" gutterBottom sx={{ letterSpacing: '0.2px' }}>
                             Referral Program Rewards
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.6 }}>
+                        <Typography variant="body2" color="#94a3b8" sx={{ mb: 1.5, lineHeight: 1.6 }}>
                             Earn massive rewards by building your network! Our 20-tier referral program allows you to earn a percentage of the daily ROI earned by your friends and their downline.
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                             <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-                                <Box sx={{ mt: 0.5, width: 16, height: 16, borderRadius: '50%', bgcolor: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981' }} />
+                                <Box sx={{ mt: 0.5, width: 16, height: 16, borderRadius: '50%', bgcolor: 'rgba(52, 211, 153, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#34d399' }} />
                                 </Box>
                                 <Box>
-                                    <Typography variant="caption" fontWeight={700} color="#1e293b">20-Tier ROI Commissions</Typography>
-                                    <Typography variant="caption" display="block" color="text.secondary">Earn a percentage of the daily ROI earned by your entire network up to 20 levels deep!</Typography>
+                                    <Typography variant="caption" fontWeight={700} color="#f8fafc">20-Tier ROI Commissions</Typography>
+                                    <Typography variant="caption" display="block" color="#94a3b8">Earn a percentage of the daily ROI earned by your entire network up to 20 levels deep!</Typography>
                                 </Box>
                             </Box>
                             <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-                                <Box sx={{ mt: 0.5, width: 16, height: 16, borderRadius: '50%', bgcolor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#f59e0b' }} />
+                                <Box sx={{ mt: 0.5, width: 16, height: 16, borderRadius: '50%', bgcolor: 'rgba(251, 191, 36, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#fbbf24' }} />
                                 </Box>
                                 <Box>
-                                    <Typography variant="caption" fontWeight={700} color="#1e293b">Dynamic Tier Unlocking</Typography>
-                                    <Typography variant="caption" display="block" color="text.secondary">Tier 1 is always unlocked. Tiers 2-20 unlock as your personal and direct team investment grows (100 USDT per Tier).</Typography>
+                                    <Typography variant="caption" fontWeight={700} color="#f8fafc">Dynamic Tier Unlocking</Typography>
+                                    <Typography variant="caption" display="block" color="#94a3b8">Tier 1 is always unlocked. Tiers 2-20 unlock as your personal and direct team investment grows (100 USDT per Tier).</Typography>
                                 </Box>
                             </Box>
                         </Box>
@@ -310,22 +332,23 @@ export default function ReferralsPage() {
                     <Card
                         sx={{
                             mb: 2,
-                            borderRadius: 3,
-                            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)',
                             color: 'white',
                             overflow: 'hidden',
+                            boxShadow: '0 12px 36px rgba(79, 70, 229, 0.35)',
                         }}
                     >
-                        <CardContent sx={{ p: 2 }}>
+                        <CardContent sx={{ p: 2.5 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Box>
-                                    <Typography variant="caption" sx={{ opacity: 0.9, mb: 0.5, display: 'block' }}>
+                                    <Typography variant="caption" sx={{ opacity: 0.9, mb: 0.5, display: 'block', fontWeight: 600 }}>
                                         Referral Bonus
                                     </Typography>
-                                    <Typography variant="h5" fontWeight={800}>
+                                    <Typography variant="h4" fontWeight={900}>
                                         {formatCurrency(stats?.referralWalletBalance || 0)}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ opacity: 0.8, fontSize: '0.65rem' }}>
+                                    <Typography variant="caption" sx={{ opacity: 0.8, fontSize: '0.68rem' }}>
                                         Total Lifetime Earned: {formatCurrency(stats?.totalEarnings || 0)}
                                     </Typography>
                                 </Box>
@@ -336,17 +359,17 @@ export default function ReferralsPage() {
                                         onClick={handleClaimClick}
                                         disabled={claiming || !stats?.referralWalletBalance || stats.referralWalletBalance < ((stats?.minReferralWithdrawalAmount || 10) - 0.001)}
                                         sx={{
-                                            bgcolor: claiming ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)',
+                                            bgcolor: claiming ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.25)',
                                             color: 'white',
                                             backdropFilter: 'blur(10px)',
                                             borderRadius: 2,
-                                            px: 2,
-                                            py: 0.5,
-                                            fontWeight: 600,
+                                            px: 2.4,
+                                            py: 0.8,
+                                            fontWeight: 700,
                                             textTransform: 'none',
-                                            fontSize: '0.8rem',
-                                            '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
-                                            '&:disabled': { color: 'rgba(255,255,255,0.5)' }
+                                            fontSize: '0.85rem',
+                                            '&:hover': { bgcolor: 'rgba(255,255,255,0.35)' },
+                                            '&:disabled': { color: 'rgba(255,255,255,0.4)' }
                                         }}
                                     >
                                         {claiming ? 'Processing...' : 'Claim'}
@@ -359,35 +382,41 @@ export default function ReferralsPage() {
                                 </Box>
                             </Box>
                             {claimSuccess && (
-                                <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#10b981', fontWeight: 600 }}>
+                                <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#34d399', fontWeight: 700 }}>
                                     {claimSuccess}
                                 </Typography>
                             )}
                         </CardContent>
                     </Card>
+
                     {/* Share Referral Link */}
                     <Paper
+                        elevation={0}
                         sx={{
                             mb: 2,
-                            p: 1.5,
-                            borderRadius: 3,
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.35)',
                         }}
                     >
-                        <Typography variant="caption" color="text.secondary">Your Referral Link (Telegram)</Typography>
+                        <Typography variant="caption" color="#94a3b8" fontWeight={600}>Your Referral Link (Telegram)</Typography>
                         <Typography
                             variant="body2"
                             fontWeight={600}
                             sx={{
                                 fontFamily: 'monospace',
-                                bgcolor: '#f1f5f9',
-                                p: 0.5,
-                                px: 1,
-                                borderRadius: 1,
-                                mt: 0.5,
+                                bgcolor: 'rgba(56, 189, 248, 0.1)',
+                                color: '#38bdf8',
+                                border: '1px solid rgba(56, 189, 248, 0.25)',
+                                p: 1,
+                                px: 1.2,
+                                borderRadius: 2,
+                                mt: 0.8,
                                 mb: 1.5,
                                 wordBreak: 'break-all',
-                                fontSize: '0.7rem',
+                                fontSize: '0.72rem',
                             }}
                         >
                             {stats?.telegramLink || '...'}
@@ -402,8 +431,10 @@ export default function ReferralsPage() {
                                     flex: 1,
                                     borderRadius: 2,
                                     textTransform: 'none',
-                                    color: copied ? '#10b981' : undefined,
-                                    borderColor: copied ? '#10b981' : undefined,
+                                    fontWeight: 700,
+                                    color: copied ? '#34d399' : '#38bdf8',
+                                    borderColor: copied ? '#34d399' : 'rgba(56, 189, 248, 0.4)',
+                                    py: 0.8,
                                 }}
                             >
                                 {copied ? 'Copied!' : 'Copy Link'}
@@ -415,10 +446,12 @@ export default function ReferralsPage() {
                                 onClick={shareToTelegram}
                                 sx={{
                                     flex: 1,
-                                    bgcolor: '#3b82f6',
+                                    background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
                                     borderRadius: 2,
                                     textTransform: 'none',
-                                    '&:hover': { bgcolor: '#2563eb' },
+                                    fontWeight: 700,
+                                    py: 0.8,
+                                    boxShadow: '0 6px 18px rgba(6, 182, 212, 0.35)',
                                 }}
                             >
                                 Share on Telegram
@@ -427,135 +460,54 @@ export default function ReferralsPage() {
                     </Paper>
 
                     {/* Stats Cards */}
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 2 }}>
-                        <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-                            <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                                <Avatar sx={{ bgcolor: '#ecfdf5', color: '#10b981', mx: 'auto', mb: 0.5, width: 28, height: 28 }}>
-                                    <PeopleIcon sx={{ fontSize: 16 }} />
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.2, mb: 2 }}>
+                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)' }}>
+                            <CardContent sx={{ textAlign: 'center', py: 1.8, px: 1 }}>
+                                <Avatar sx={{ bgcolor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', mx: 'auto', mb: 0.5, width: 32, height: 32 }}>
+                                    <PeopleIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
-                                <Typography variant="subtitle1" fontWeight={800}>
+                                <Typography variant="subtitle1" fontWeight={900} color="#ffffff">
                                     {stats?.totalReferrals || 0}
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
+                                <Typography variant="caption" color="#94a3b8" sx={{ fontSize: '0.62rem', fontWeight: 600 }}>
                                     Direct Refs
                                 </Typography>
                             </CardContent>
                         </Card>
-                        <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-                            <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                                <Avatar sx={{ bgcolor: '#eff6ff', color: '#3b82f6', mx: 'auto', mb: 0.5, width: 28, height: 28 }}>
-                                    <PeopleIcon sx={{ fontSize: 16 }} />
+                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)' }}>
+                            <CardContent sx={{ textAlign: 'center', py: 1.8, px: 1 }}>
+                                <Avatar sx={{ bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', mx: 'auto', mb: 0.5, width: 32, height: 32 }}>
+                                    <PeopleIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
-                                <Typography variant="subtitle1" fontWeight={800}>
+                                <Typography variant="subtitle1" fontWeight={900} color="#ffffff">
                                     {stats?.totalDownlineCount || 0}
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
+                                <Typography variant="caption" color="#94a3b8" sx={{ fontSize: '0.62rem', fontWeight: 600 }}>
                                     Total Downline
                                 </Typography>
                             </CardContent>
                         </Card>
-                        <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-                            <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                                <Avatar sx={{ bgcolor: '#fef3c7', color: '#f59e0b', mx: 'auto', mb: 0.5, width: 28, height: 28 }}>
-                                    <MonetizationOnIcon sx={{ fontSize: 16 }} />
+                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)' }}>
+                            <CardContent sx={{ textAlign: 'center', py: 1.8, px: 1 }}>
+                                <Avatar sx={{ bgcolor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', mx: 'auto', mb: 0.5, width: 32, height: 32 }}>
+                                    <MonetizationOnIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
-                                <Typography variant="subtitle1" fontWeight={800}>
+                                <Typography variant="subtitle1" fontWeight={900} color="#ffffff">
                                     {formatCurrency(stats?.totalDownlineTradePower || 0)}
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
+                                <Typography variant="caption" color="#94a3b8" sx={{ fontSize: '0.62rem', fontWeight: 600 }}>
                                     Downline MP
                                 </Typography>
                             </CardContent>
                         </Card>
                     </Box>
 
-                    {/* Tier Table */}
-                    <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1 }}>
-                        <Typography variant="caption" fontWeight={700} color="text.secondary">
-                            Tiered Earnings (20 Levels)
-                        </Typography>
-                        <Chip
-                            label={`${stats?.tier20TotalCount || 0} users`}
-                            size="small"
-                            sx={{ bgcolor: '#f1f5f9', fontWeight: 600, fontSize: '0.65rem', height: 20 }}
-                        />
-                    </Box>
-                    <Card sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ bgcolor: '#f8fafc' }}>
-                                        <TableCell sx={{ fontWeight: 800 }}>Tier</TableCell>
-                                        <TableCell align="center" sx={{ fontWeight: 800 }}>Users (A/T)</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 800 }}>Investment</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 800 }}>Earnings</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {stats?.tiers.map((tier) => (
-                                        <TableRow
-                                            key={tier.tier}
-                                            onClick={() => handleTierClick(tier.tier, tier.userCount)}
-                                            sx={{
-                                                cursor: tier.tier === 1 && tier.userCount > 0 ? 'pointer' : 'default',
-                                                '&:hover': { bgcolor: tier.tier === 1 && tier.userCount > 0 ? '#f1f5f9' : 'transparent' },
-                                                opacity: tier.isUnlocked ? 1 : 0.6,
-                                                bgcolor: tier.isUnlocked ? 'inherit' : '#f8fafc'
-                                            }}
-                                        >
-                                            <TableCell sx={{ fontWeight: 700 }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    Tier {tier.tier}
-                                                    {!tier.isUnlocked && <LockIcon sx={{ fontSize: '0.8rem', color: 'error.main', ml: 0.5 }} />}
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                    <Typography variant="body2" fontWeight={700}>
-                                                        {tier.activeUserCount} / {tier.userCount}
-                                                    </Typography>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 600 }}>
-                                                {formatCurrency(tier.totalInvested)}
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 700, color: tier.isUnlocked ? '#10b981' : 'text.secondary' }}>
-                                                {formatCurrency(tier.totalEarnings)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Card>
-                    {/* Tier Percentages Breakdown */}
-                    <Box sx={{ mt: 3, mb: 1, px: 1 }}>
-                        <Typography variant="caption" fontWeight={700} color="text.secondary" gutterBottom display="block">
-                            ROI Commission Structure (by Tier)
-                        </Typography>
-                        <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #f1f5f9', bgcolor: '#fff' }}>
-                            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1.5 }}>
-                                {[
-                                    20, 15, 10, 5, 5, 
-                                    4, 4, 3, 3, 2, 
-                                    2, 1.5, 1.5, 1, 1.5, 
-                                    1.5, 2, 2, 3, 3
-                                ].map((pct, i) => (
-                                    <Box key={i} sx={{ textAlign: 'center' }}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', display: 'block', fontWeight: 600 }}>
-                                            T{i + 1}
-                                        </Typography>
-                                        <Typography variant="body2" fontWeight={800} color="#7c3aed">
-                                            {pct}%
-                                        </Typography>
-                                    </Box>
-                                ))}
-                            </Box>
-                        </Paper>
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block', fontStyle: 'italic', px: 1 }}>
-                            * You earn these percentages based on the daily ROI earned by your network in each respective tier.
-                        </Typography>
-                    </Box>
+                    {/* Tier Table & Percentage Breakdown */}
+                    <ReferralTierMatrix
+                        tierBreakdown={stats?.tiers || []}
+                        tier20TotalCount={stats?.tier20TotalCount || 0}
+                        onTierClick={handleTierClick}
+                    />
                 </>
             )}
 
@@ -572,10 +524,15 @@ export default function ReferralsPage() {
                                     setHistoryPage(1);
                                 }}
                                 sx={{
-                                    bgcolor: historyFilter === f ? '#8b5cf6' : '#f1f5f9',
-                                    color: historyFilter === f ? 'white' : 'text.secondary',
+                                    borderRadius: 3,
                                     fontWeight: 700,
-                                    '&:hover': { bgcolor: historyFilter === f ? '#7c3aed' : '#e2e8f0' }
+                                    textTransform: 'none',
+                                    px: 1.2,
+                                    height: 32,
+                                    background: historyFilter === f ? 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)' : 'rgba(30, 41, 59, 0.6)',
+                                    color: historyFilter === f ? '#ffffff' : '#94a3b8',
+                                    border: historyFilter === f ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                                    boxShadow: historyFilter === f ? '0 4px 14px rgba(6, 182, 212, 0.35)' : 'none',
                                 }}
                             />
                         ))}
@@ -585,41 +542,41 @@ export default function ReferralsPage() {
                     {historyLoading && history.length === 0 ? (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <Skeleton key={i} variant="rounded" height={80} sx={{ borderRadius: 3 }} />
+                                <Skeleton key={i} variant="rounded" height={80} sx={{ borderRadius: 2 }} />
                             ))}
                         </Box>
                     ) : history.length === 0 ? (
-                        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: '#f8fafc' }}>
-                            <HistoryIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1 }} />
-                            <Typography variant="body1" fontWeight={600} color="text.secondary">No earning history found</Typography>
-                            <Typography variant="caption" color="text.secondary">Your referral earnings will appear here</Typography>
+                        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2, background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                            <HistoryIcon sx={{ fontSize: 48, color: '#64748b', mb: 1 }} />
+                            <Typography variant="body1" fontWeight={700} color="#f8fafc">No earning history found</Typography>
+                            <Typography variant="caption" color="#94a3b8">Your referral earnings will appear here</Typography>
                         </Paper>
                     ) : (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                             {history.map((record) => (
-                                <Card key={record.id} sx={{ borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
-                                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                <Card key={record.id} sx={{ borderRadius: 2, background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 12px 32px rgba(0,0,0,0.35)' }}>
+                                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                             <Box>
-                                                <Typography variant="body2" fontWeight={800} color="#1e293b">
+                                                <Typography variant="body2" fontWeight={900} color="#34d399">
                                                     +{formatCurrency(record.amount)}
                                                 </Typography>
-                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                                <Typography variant="caption" color="#94a3b8" sx={{ display: 'block', mt: 0.2 }}>
                                                     {formatDateTime(record.createdAt)}
                                                 </Typography>
                                             </Box>
                                             <Chip
                                                 label={`Level ${record.tier}`}
                                                 size="small"
-                                                sx={{ bgcolor: '#f5f3ff', color: '#7c3aed', fontWeight: 800, fontSize: '0.65rem', height: 20 }}
+                                                sx={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 800, fontSize: '0.68rem', height: 22 }}
                                             />
                                         </Box>
-                                        <Divider sx={{ my: 1, borderStyle: 'dashed' }} />
+                                        <Divider sx={{ my: 1.2, borderColor: 'rgba(255, 255, 255, 0.06)' }} />
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.7rem', bgcolor: '#f1f5f9', color: '#64748b' }}>
+                                            <Avatar sx={{ width: 26, height: 26, fontSize: '0.72rem', bgcolor: 'rgba(255, 255, 255, 0.1)', color: '#f1f5f9' }}>
                                                 {getInitials(record.fromUser?.firstName, record.fromUser?.lastName)}
                                             </Avatar>
-                                            <Typography variant="caption" fontWeight={600} color="text.secondary">
+                                            <Typography variant="caption" fontWeight={600} color="#f8fafc">
                                                 From {record.fromUser?.firstName || record.fromUser?.telegramUsername || 'Anonymous'}
                                             </Typography>
                                         </Box>
@@ -634,7 +591,7 @@ export default function ReferralsPage() {
                                         size="small"
                                         disabled={historyLoading}
                                         onClick={() => setHistoryPage(prev => prev + 1)}
-                                        sx={{ textTransform: 'none', fontWeight: 700, color: '#8b5cf6' }}
+                                        sx={{ textTransform: 'none', fontWeight: 800, color: '#38bdf8' }}
                                     >
                                         {historyLoading ? 'Loading...' : 'Load More'}
                                     </Button>
@@ -649,10 +606,10 @@ export default function ReferralsPage() {
                 <>
                     {/* Insights Header & Range Picker */}
                     <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle2" fontWeight={800} color="text.secondary" gutterBottom>
+                        <Typography variant="subtitle2" fontWeight={800} color="#f8fafc" gutterBottom>
                             Tier Earnings by Date Range
                         </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 1.5, mt: 1.5 }}>
                             <TextField
                                 type="date"
                                 label="From"
@@ -661,7 +618,16 @@ export default function ReferralsPage() {
                                 InputLabelProps={{ shrink: true }}
                                 size="small"
                                 fullWidth
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2,
+                                        bgcolor: 'rgba(30, 41, 59, 0.8)',
+                                        color: '#ffffff',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        '& fieldset': { border: 'none' },
+                                    },
+                                    '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                }}
                             />
                             <TextField
                                 type="date"
@@ -671,7 +637,16 @@ export default function ReferralsPage() {
                                 InputLabelProps={{ shrink: true }}
                                 size="small"
                                 fullWidth
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2,
+                                        bgcolor: 'rgba(30, 41, 59, 0.8)',
+                                        color: '#ffffff',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        '& fieldset': { border: 'none' },
+                                    },
+                                    '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                }}
                             />
                         </Box>
                     </Box>
@@ -680,18 +655,17 @@ export default function ReferralsPage() {
                     {insightsLoading ? (
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
                             {[...Array(6)].map((_, i) => (
-                                <Skeleton key={i} variant="rounded" height={90} sx={{ borderRadius: 3 }} />
+                                <Skeleton key={i} variant="rounded" height={90} sx={{ borderRadius: 2 }} />
                             ))}
                         </Box>
                     ) : insights.length === 0 ? (
-                        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: '#f8fafc' }}>
-                            <FilterListIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1 }} />
-                            <Typography variant="body1" fontWeight={600} color="text.secondary">No earnings in this range</Typography>
-                            <Typography variant="caption" color="text.secondary">Try selecting a different date range</Typography>
+                        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2, background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                            <FilterListIcon sx={{ fontSize: 48, color: '#64748b', mb: 1 }} />
+                            <Typography variant="body1" fontWeight={700} color="#f8fafc">No earnings in this range</Typography>
+                            <Typography variant="caption" color="#94a3b8">Try selecting a different date range</Typography>
                         </Paper>
                     ) : (
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
-                            {/* We show all 20 tiers, highlighting those with data */}
                             {[...Array(20)].map((_, i) => {
                                 const tierNum = i + 1;
                                 const insight = insights.find(ins => ins.tier === tierNum);
@@ -701,30 +675,31 @@ export default function ReferralsPage() {
                                     <Card 
                                         key={tierNum} 
                                         sx={{ 
-                                            borderRadius: 3, 
-                                            boxShadow: hasEarning ? '0 4px 12px rgba(139, 92, 246, 0.1)' : 'none',
-                                            border: hasEarning ? '1px solid #ddd6fe' : '1px solid #f1f5f9',
-                                            bgcolor: hasEarning ? '#fff' : '#fcfcff'
+                                            borderRadius: 2, 
+                                            background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                                            border: hasEarning ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.06)',
+                                            boxShadow: hasEarning ? '0 8px 24px rgba(6, 182, 212, 0.2)' : 'none',
+                                            opacity: hasEarning ? 1 : 0.65,
                                         }}
                                     >
-                                        <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
+                                        <CardContent sx={{ p: 1.8, pb: '16px !important' }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                                                <Typography variant="caption" fontWeight={800} color={hasEarning ? '#7c3aed' : 'text.secondary'}>
+                                                <Typography variant="caption" fontWeight={800} color={hasEarning ? '#38bdf8' : '#94a3b8'}>
                                                     TIER {tierNum}
                                                 </Typography>
                                                 {hasEarning && (
                                                     <Chip 
                                                         label={`${insight?.userCount || 0} users`} 
                                                         size="small" 
-                                                        sx={{ height: 16, fontSize: '0.6rem', bgcolor: '#f5f3ff', color: '#7c3aed', fontWeight: 700 }}
+                                                        sx={{ height: 18, fontSize: '0.62rem', bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontWeight: 800 }}
                                                     />
                                                 )}
                                             </Box>
-                                            <Typography variant="subtitle1" fontWeight={800} color={hasEarning ? '#1e293b' : '#94a3b8'}>
+                                            <Typography variant="subtitle1" fontWeight={900} color={hasEarning ? '#ffffff' : '#64748b'}>
                                                 {formatCurrency(insight?.totalEarnings || 0)}
                                             </Typography>
                                             {!hasEarning && (
-                                                <Typography variant="caption" color="#cbd5e1" fontWeight={600}>
+                                                <Typography variant="caption" color="#64748b" fontWeight={600}>
                                                     No earnings
                                                 </Typography>
                                             )}
@@ -740,33 +715,43 @@ export default function ReferralsPage() {
             {activeTab === 3 && (
                 <>
                     {/* Milestones Header */}
-                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: '#fffbf0', border: '1px solid #fde68a' }}>
-                        <Typography variant="subtitle2" fontWeight={800} color="#b45309" gutterBottom>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 2.2,
+                            mb: 3,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.35)',
+                        }}
+                    >
+                        <Typography variant="subtitle2" fontWeight={800} color="#fbbf24" gutterBottom>
                             🏆 Milestone Bonus Program
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, lineHeight: 1.6 }}>
+                        <Typography variant="body2" color="#94a3b8" sx={{ mb: 1.5, lineHeight: 1.6 }}>
                             Build a balanced network and unlock massive one-time USDT rewards! Each milestone uses the <strong>40/30/30 rule</strong> across your downline legs.
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            <Chip label="Leg A: 40% of target" size="small" sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
-                            <Chip label="Leg B: 30% of target" size="small" sx={{ bgcolor: '#ecfdf5', color: '#065f46', fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
-                            <Chip label="Leg C (rest): 30%" size="small" sx={{ bgcolor: '#eff6ff', color: '#1e3a8a', fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
+                            <Chip label="Leg A: 40% of target" size="small" sx={{ bgcolor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', fontWeight: 800, fontSize: '0.65rem', height: 22 }} />
+                            <Chip label="Leg B: 30% of target" size="small" sx={{ bgcolor: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)', fontWeight: 800, fontSize: '0.65rem', height: 22 }} />
+                            <Chip label="Leg C (rest): 30%" size="small" sx={{ bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 800, fontSize: '0.65rem', height: 22 }} />
                         </Box>
                     </Paper>
 
                     {/* Summary Stats */}
                     {milestoneData && (
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 3 }}>
-                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}>
-                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                    <Typography variant="caption" sx={{ opacity: 0.9, display: 'block' }}>Milestones Achieved</Typography>
-                                    <Typography variant="h5" fontWeight={800}>{milestoneData.totalAwarded} / 11</Typography>
+                            <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: 'white', boxShadow: '0 12px 32px rgba(6, 182, 212, 0.35)' }}>
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                    <Typography variant="caption" sx={{ opacity: 0.9, display: 'block', fontWeight: 600 }}>Milestones Achieved</Typography>
+                                    <Typography variant="h4" fontWeight={900}>{milestoneData.totalAwarded} / 11</Typography>
                                 </CardContent>
                             </Card>
-                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
-                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                    <Typography variant="caption" sx={{ opacity: 0.9, display: 'block' }}>Total Bonus Earned</Typography>
-                                    <Typography variant="h5" fontWeight={800}>{formatCurrency(milestoneData.totalUSDT)}</Typography>
+                            <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', boxShadow: '0 12px 32px rgba(16, 185, 129, 0.35)' }}>
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                    <Typography variant="caption" sx={{ opacity: 0.9, display: 'block', fontWeight: 600 }}>Total Bonus Earned</Typography>
+                                    <Typography variant="h4" fontWeight={900}>{formatCurrency(milestoneData.totalUSDT)}</Typography>
                                 </CardContent>
                             </Card>
                         </Box>
@@ -776,13 +761,13 @@ export default function ReferralsPage() {
                     {milestonesLoading ? (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {[...Array(5)].map((_, i) => (
-                                <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: 3 }} />
+                                <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: 2 }} />
                             ))}
                         </Box>
                     ) : !milestoneData ? (
-                        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, bgcolor: '#f8fafc' }}>
-                            <EmojiEventsOutlinedIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1 }} />
-                            <Typography variant="body1" fontWeight={600} color="text.secondary">No data yet</Typography>
+                        <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2, background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                            <EmojiEventsOutlinedIcon sx={{ fontSize: 48, color: '#64748b', mb: 1 }} />
+                            <Typography variant="body1" fontWeight={700} color="#f8fafc">No data yet</Typography>
                         </Paper>
                     ) : (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -790,37 +775,38 @@ export default function ReferralsPage() {
                                 <Card
                                     key={m.threshold}
                                     sx={{
-                                        borderRadius: 3,
+                                        borderRadius: 2,
+                                        background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
                                         border: m.isAchieved
-                                            ? '1.5px solid #10b981'
+                                            ? '1.5px solid #34d399'
                                             : milestoneData.nextMilestone?.threshold === m.threshold
-                                            ? '1.5px solid #f59e0b'
-                                            : '1px solid #f1f5f9',
-                                        boxShadow: m.isAchieved ? '0 4px 16px rgba(16,185,129,0.12)' : '0 2px 8px rgba(0,0,0,0.04)',
+                                            ? '1.5px solid #fbbf24'
+                                            : '1px solid rgba(255, 255, 255, 0.08)',
+                                        boxShadow: m.isAchieved ? '0 8px 24px rgba(52, 211, 153, 0.2)' : '0 12px 32px rgba(0,0,0,0.35)',
                                         opacity: !m.isAchieved && milestoneData.nextMilestone && milestoneData.nextMilestone.threshold < m.threshold ? 0.55 : 1,
                                     }}
                                 >
-                                    <CardContent sx={{ p: 2 }}>
+                                    <CardContent sx={{ p: 2.2 }}>
                                         {/* Header */}
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 {m.isAchieved
-                                                    ? <CheckCircleIcon sx={{ color: '#10b981', fontSize: 22 }} />
-                                                    : <EmojiEventsOutlinedIcon sx={{ color: milestoneData.nextMilestone?.threshold === m.threshold ? '#f59e0b' : '#94a3b8', fontSize: 22 }} />
+                                                    ? <CheckCircleIcon sx={{ color: '#34d399', fontSize: 24 }} />
+                                                    : <EmojiEventsOutlinedIcon sx={{ color: milestoneData.nextMilestone?.threshold === m.threshold ? '#fbbf24' : '#64748b', fontSize: 24 }} />
                                                 }
                                                 <Box>
-                                                    <Typography variant="body2" fontWeight={800} color={m.isAchieved ? '#065f46' : '#1e293b'}>
+                                                    <Typography variant="body1" fontWeight={900} color={m.isAchieved ? '#34d399' : '#f8fafc'}>
                                                         {m.threshold >= 1_000_000
                                                             ? `${(m.threshold / 1_000_000).toFixed(m.threshold % 1_000_000 === 0 ? 0 : 1)}M`
                                                             : `${(m.threshold / 1000).toFixed(0)}K`} USDT
                                                     </Typography>
                                                     {m.isAchieved && m.achievedAt && (
-                                                        <Typography variant="caption" color="#10b981" fontWeight={600}>
+                                                        <Typography variant="caption" color="#34d399" fontWeight={700}>
                                                             ✅ Achieved {new Date(m.achievedAt).toLocaleDateString()}
                                                         </Typography>
                                                     )}
                                                     {!m.isAchieved && milestoneData.nextMilestone?.threshold === m.threshold && (
-                                                        <Typography variant="caption" color="#b45309" fontWeight={700}>
+                                                        <Typography variant="caption" color="#fbbf24" fontWeight={800}>
                                                             🎯 Next Target
                                                         </Typography>
                                                     )}
@@ -830,11 +816,12 @@ export default function ReferralsPage() {
                                                 label={`+${m.reward >= 1000 ? `$${(m.reward / 1000).toFixed(m.reward % 1000 === 0 ? 0 : 1)}K` : `$${m.reward}`}`}
                                                 size="small"
                                                 sx={{
-                                                    bgcolor: m.isAchieved ? '#dcfce7' : '#fef3c7',
-                                                    color: m.isAchieved ? '#15803d' : '#92400e',
-                                                    fontWeight: 800,
-                                                    fontSize: '0.75rem',
-                                                    height: 22,
+                                                    background: m.isAchieved ? 'rgba(52, 211, 153, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                                                    color: m.isAchieved ? '#34d399' : '#fbbf24',
+                                                    border: m.isAchieved ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid rgba(251, 191, 36, 0.3)',
+                                                    fontWeight: 900,
+                                                    fontSize: '0.78rem',
+                                                    height: 24,
                                                 }}
                                             />
                                         </Box>
@@ -843,25 +830,25 @@ export default function ReferralsPage() {
                                         {!m.isAchieved && (
                                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                 {[
-                                                    { label: 'Leg A (40%)', pct: m.legAPct, current: m.legA, required: m.legARequired, color: '#f59e0b' },
-                                                    { label: 'Leg B (30%)', pct: m.legBPct, current: m.legB, required: m.legBRequired, color: '#10b981' },
-                                                    { label: 'Leg C (30%)', pct: m.legCPct, current: m.legC, required: m.legCRequired, color: '#3b82f6' },
+                                                    { label: 'Leg A (40%)', pct: m.legAPct, current: m.legA, required: m.legARequired, color: '#fbbf24' },
+                                                    { label: 'Leg B (30%)', pct: m.legBPct, current: m.legB, required: m.legBRequired, color: '#34d399' },
+                                                    { label: 'Leg C (30%)', pct: m.legCPct, current: m.legC, required: m.legCRequired, color: '#38bdf8' },
                                                 ].map(leg => (
                                                     <Box key={leg.label}>
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.4 }}>
-                                                            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ fontSize: '0.62rem' }}>
+                                                            <Typography variant="caption" fontWeight={700} color="#94a3b8" sx={{ fontSize: '0.65rem' }}>
                                                                 {leg.label}
                                                             </Typography>
-                                                            <Typography variant="caption" fontWeight={700} sx={{ fontSize: '0.62rem', color: leg.pct >= 100 ? '#10b981' : '#64748b' }}>
+                                                            <Typography variant="caption" fontWeight={700} sx={{ fontSize: '0.65rem', color: leg.pct >= 100 ? '#34d399' : '#94a3b8' }}>
                                                                 {formatCurrency(leg.current)} / {formatCurrency(leg.required)}
                                                             </Typography>
                                                         </Box>
-                                                        <Box sx={{ height: 6, bgcolor: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                                                        <Box sx={{ height: 6, bgcolor: 'rgba(255, 255, 255, 0.08)', borderRadius: 3, overflow: 'hidden' }}>
                                                             <Box
                                                                 sx={{
                                                                     height: '100%',
                                                                     width: `${leg.pct}%`,
-                                                                    bgcolor: leg.pct >= 100 ? '#10b981' : leg.color,
+                                                                    bgcolor: leg.pct >= 100 ? '#34d399' : leg.color,
                                                                     borderRadius: 3,
                                                                     transition: 'width 0.6s ease',
                                                                 }}
@@ -875,7 +862,6 @@ export default function ReferralsPage() {
                                         {/* Achieved snapshot */}
                                         {m.isAchieved && (
                                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
-                                                <Chip label={`Leg A: ${formatCurrency(m.legA)}`} size="small" sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 600, fontSize: '0.6rem', height: 18 }} />
                                                 <Chip label={`Leg B: ${formatCurrency(m.legB)}`} size="small" sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 600, fontSize: '0.6rem', height: 18 }} />
                                                 <Chip label={`Leg C: ${formatCurrency(m.legC)}`} size="small" sx={{ bgcolor: '#dbeafe', color: '#1e3a8a', fontWeight: 600, fontSize: '0.6rem', height: 18 }} />
                                             </Box>

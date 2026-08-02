@@ -17,7 +17,6 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
 import ReinvestModal from '../_components/ReinvestModal';
 import PromoModal from '../_components/PromoModal';
-import TelegramVpnModal from '../_components/TelegramVpnModal';
 import { useAuth } from '@/context/AuthContext';
 import { pusherClient } from '@/lib/pusher-client';
 import { formatCurrency } from '@/lib/utils';
@@ -84,31 +83,15 @@ export default function DashboardPage() {
     const [countdown, setCountdown] = useState(getTimeUntilSettlement());
     const [reinvestModalOpen, setReinvestModalOpen] = useState(false);
     const [promoOpen, setPromoOpen] = useState(false);
-    const [vpnNoticeOpen, setVpnNoticeOpen] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-    // Check localStorage on mount to show the modals sequentially
+    // Check localStorage on mount to show promo modal
     useEffect(() => {
-        const hasSeenVpn = localStorage.getItem('hasSeenTelegramVpnNotice');
-        const hasSeenPromo = localStorage.getItem('hasSeenMin10Promo');
-        
-        if (!hasSeenVpn) {
-            setVpnNoticeOpen(true);
-        } else if (!hasSeenPromo) {
-            setPromoOpen(true);
-        }
-    }, []);
-
-    const handleCloseVpnNotice = () => {
-        localStorage.setItem('hasSeenTelegramVpnNotice', 'true');
-        setVpnNoticeOpen(false);
-        
-        // Show promo after VPN notice if user hasn't seen it yet
         const hasSeenPromo = localStorage.getItem('hasSeenMin10Promo');
         if (!hasSeenPromo) {
             setPromoOpen(true);
         }
-    };
+    }, []);
 
     const handleClosePromo = () => {
         localStorage.setItem('hasSeenMin10Promo', 'true');
@@ -223,23 +206,24 @@ export default function DashboardPage() {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     mb: 2,
-                    p: 1.5,
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                    p: 1.8,
+                    borderRadius: 2,
+                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.4)',
+                    transition: 'all 0.2s ease-in-out',
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Avatar sx={{ bgcolor: '#10b981', width: 32, height: 32 }}>
+                    <Avatar sx={{ bgcolor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', width: 38, height: 38 }}>
                         <AccountBalanceWalletIcon fontSize="small" />
                     </Avatar>
                     <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                        <Typography variant="caption" color="#94a3b8" fontWeight={600} sx={{ letterSpacing: '0.2px' }}>
                             Your Balance
                         </Typography>
-                        <Typography variant="h6" fontWeight={700} color="#10b981">
+                        <Typography variant="h6" fontWeight={800} color="#34d399" sx={{ letterSpacing: '-0.3px', textShadow: '0 0 12px rgba(52, 211, 153, 0.3)' }}>
                             {formatCurrency(dashboard?.walletBalance || 0)}
                         </Typography>
                     </Box>
@@ -250,13 +234,17 @@ export default function DashboardPage() {
                     endIcon={<ArrowForwardIcon fontSize="small" />}
                     onClick={() => router.push('/withdraw')}
                     sx={{
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: '#ffffff',
                         textTransform: 'none',
-                        borderRadius: 3,
-                        px: 2,
-                        py: 0.5,
-                        fontWeight: 600,
-                        boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)',
+                        borderRadius: 2,
+                        px: 2.4,
+                        py: 0.8,
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        boxShadow: '0 6px 20px rgba(16, 185, 129, 0.35)',
+                        transition: 'all 0.15s ease',
+                        '&:active': { transform: 'scale(0.96)' },
                     }}
                 >
                     Withdraw
@@ -267,64 +255,65 @@ export default function DashboardPage() {
             <Card
                 sx={{
                     mb: 2,
-                    borderRadius: 4,
-                    background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                    borderRadius: 2,
+                    background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
                 }}
             >
-                <CardContent sx={{ p: 2.5, textAlign: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1, mt: 2 }}>
-                        <ShowChartIcon sx={{ color: '#8b5cf6', fontSize: 20 }} />
-                        <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+                <CardContent sx={{ p: 2.8, textAlign: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1, mt: 1 }}>
+                        <ShowChartIcon sx={{ color: '#38bdf8', fontSize: 22 }} />
+                        <Typography variant="subtitle2" fontWeight={700} color="#94a3b8" sx={{ letterSpacing: '0.3px' }}>
                             Mining Power (MP)
                         </Typography>
                     </Box>
 
                     <Typography
                         variant="h3"
-                        fontWeight={800}
+                        fontWeight={900}
                         sx={{
-                            color: '#1e293b',
-                            mb: 1,
+                            color: '#ffffff',
+                            mb: 1.2,
+                            letterSpacing: '-1px',
+                            textShadow: '0 4px 20px rgba(255, 255, 255, 0.1)',
                         }}
                     >
                         {tradePower.toLocaleString()}
                     </Typography>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2.5, mb: 2.2 }}>
                         <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary">Daily Earnings</Typography>
-                            <Typography variant="h6" fontWeight={700} color="#10b981">
+                            <Typography variant="caption" color="#94a3b8" fontWeight={600}>Daily Earnings</Typography>
+                            <Typography variant="h6" fontWeight={800} color="#34d399">
                                 {totalDailyEarnings > 0 ? `+${totalDailyEarnings.toFixed(2)}` : '0.00'} USDT
                             </Typography>
                         </Box>
-                        <Divider orientation="vertical" flexItem />
+                        <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
                         <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary">Active Plans</Typography>
-                            <Typography variant="h6" fontWeight={700}>
+                            <Typography variant="caption" color="#94a3b8" fontWeight={600}>Active Plans</Typography>
+                            <Typography variant="h6" fontWeight={800} color="#f8fafc">
                                 {dashboard?.activePlans ?? 0}
                             </Typography>
                         </Box>
                     </Box>
 
                     <Chip
-                        icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
+                        icon={<AccessTimeIcon sx={{ fontSize: 16, color: '#38bdf8 !important' }} />}
                         label={`Next settlement in ${countdown}`}
                         size="small"
                         sx={{
-                            bgcolor: '#f3e8ff',
-                            color: '#7c3aed',
-                            fontWeight: 600,
-                            px: 1,
+                            background: 'rgba(56, 189, 248, 0.1)',
+                            color: '#38bdf8',
+                            fontWeight: 700,
+                            px: 1.2,
+                            py: 0.3,
+                            border: '1px solid rgba(56, 189, 248, 0.25)',
                             fontFamily: 'monospace',
                         }}
                     />
-
-
                 </CardContent>
             </Card>
-
-
 
             {/* Action Buttons */}
             <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
@@ -335,13 +324,16 @@ export default function DashboardPage() {
                     startIcon={<TrendingUpIcon />}
                     onClick={() => router.push('/buy-tp')}
                     sx={{
-                        background: 'linear-gradient(135deg, var(--brand-main) 0%, var(--brand-dark) 100%)',
-                        borderRadius: 3,
-                        py: 1.2,
+                        background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                        color: '#ffffff',
+                        borderRadius: 2,
+                        py: 1.4,
                         textTransform: 'none',
-                        fontSize: '0.9rem',
-                        fontWeight: 600,
-                        boxShadow: '0 4px 14px rgba(132, 204, 22, 0.4)',
+                        fontSize: '0.92rem',
+                        fontWeight: 700,
+                        boxShadow: '0 8px 25px rgba(16, 185, 129, 0.35)',
+                        transition: 'all 0.15s ease',
+                        '&:active': { transform: 'scale(0.97)' },
                     }}
                 >
                     Buy Mining Power
@@ -353,13 +345,16 @@ export default function DashboardPage() {
                     startIcon={<GroupAddIcon />}
                     onClick={() => router.push('/referrals')}
                     sx={{
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                        borderRadius: 3,
-                        py: 1.2,
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                        color: '#ffffff',
+                        borderRadius: 2,
+                        py: 1.4,
                         textTransform: 'none',
-                        fontSize: '0.9rem',
-                        fontWeight: 600,
-                        boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)',
+                        fontSize: '0.92rem',
+                        fontWeight: 700,
+                        boxShadow: '0 8px 25px rgba(99, 102, 241, 0.35)',
+                        transition: 'all 0.15s ease',
+                        '&:active': { transform: 'scale(0.97)' },
                     }}
                 >
                     Refer & Earn
@@ -367,10 +362,21 @@ export default function DashboardPage() {
             </Box>
 
             {/* Investment Return Tiers */}
-            <Card sx={{ mb: 3, borderRadius: 3, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-                <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>
-                    <Typography variant="subtitle2" fontWeight={700}>Investment Return Tiers</Typography>
-                    <Chip label="Daily ROI" size="small" sx={{ bgcolor: '#ecfdf5', color: '#10b981', fontWeight: 600, fontSize: '0.65rem' }} />
+            <Card
+                sx={{
+                    mb: 3,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
+                }}
+            >
+                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <Typography variant="subtitle2" fontWeight={800} color="#f8fafc" sx={{ letterSpacing: '-0.2px' }}>
+                        Investment Return Tiers
+                    </Typography>
+                    <Chip label="Daily ROI" size="small" sx={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 800, fontSize: '0.7rem' }} />
                 </Box>
                 <TableContainer>
                     <Table size="small">
@@ -379,20 +385,25 @@ export default function DashboardPage() {
                                 plans.map((plan, index) => (
                                     <TableRow
                                         key={plan.id}
-                                        sx={{ '&:last-child td': { border: 0 }, bgcolor: index % 2 === 0 ? 'transparent' : '#fafafa' }}
+                                        sx={{
+                                            '&:last-child td': { border: 0 },
+                                            bgcolor: index % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
+                                            transition: 'background-color 0.15s ease',
+                                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
+                                        }}
                                     >
-                                        <TableCell sx={{ py: 1.5 }}>
-                                            <Typography variant="body2" fontWeight={600}>{plan.name}</Typography>
-                                            <Typography variant="caption" color="text.secondary">
+                                        <TableCell sx={{ py: 1.6, px: 2 }}>
+                                            <Typography variant="body2" fontWeight={700} color="#f1f5f9">{plan.name}</Typography>
+                                            <Typography variant="caption" color="#94a3b8" fontWeight={500}>
                                                 {formatCurrency(plan.minAmount)}
                                                 {plan.maxAmount ? ` – ${formatCurrency(plan.maxAmount)}` : '+'}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right" sx={{ py: 1.5 }}>
+                                        <TableCell align="right" sx={{ py: 1.6, px: 2 }}>
                                             <Chip
                                                 label={`${plan.dailyRoi}% / day`}
                                                 size="small"
-                                                sx={{ bgcolor: '#ecfdf5', color: '#10b981', fontWeight: 700 }}
+                                                sx={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 800 }}
                                             />
                                         </TableCell>
                                     </TableRow>
@@ -400,7 +411,7 @@ export default function DashboardPage() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
-                                        <Typography color="text.secondary" variant="body2">No tiers configured</Typography>
+                                        <Typography color="#94a3b8" variant="body2" fontWeight={500}>No tiers configured</Typography>
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -410,16 +421,25 @@ export default function DashboardPage() {
             </Card>
 
             {/* Tabs: Portfolio */}
-            <Paper sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+            <Paper
+                elevation={0}
+                sx={{
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
+                }}
+            >
                 <Tabs
                     value={tabValue}
                     onChange={(e, v) => setTabValue(v)}
                     variant="fullWidth"
                     sx={{
-                        borderBottom: '1px solid #f1f5f9',
-                        '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, py: 1.5, fontSize: '0.85rem' },
-                        '& .Mui-selected': { color: '#8b5cf6 !important' },
-                        '& .MuiTabs-indicator': { bgcolor: '#8b5cf6', height: 3 },
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                        '& .MuiTab-root': { textTransform: 'none', fontWeight: 700, py: 1.6, fontSize: '0.88rem', color: '#94a3b8' },
+                        '& .Mui-selected': { color: '#06b6d4 !important' },
+                        '& .MuiTabs-indicator': { bgcolor: '#06b6d4', height: 3, borderRadius: '3px 3px 0 0' },
                     }}
                 >
                     <Tab label="My Subscriptions" />
@@ -510,7 +530,7 @@ export default function DashboardPage() {
                                     variant="contained"
                                     size="small"
                                     onClick={() => router.push('/buy-tp')}
-                                    sx={{ background: 'linear-gradient(135deg, var(--brand-main) 0%, var(--brand-dark) 100%)', textTransform: 'none', borderRadius: 2 }}
+                                    sx={{ background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)', textTransform: 'none', borderRadius: 2, fontWeight: 700 }}
                                 >
                                     Buy Mining Power
                                 </Button>
@@ -596,11 +616,6 @@ export default function DashboardPage() {
             <PromoModal
                 open={promoOpen}
                 onClose={handleClosePromo}
-            />
-
-            <TelegramVpnModal
-                open={vpnNoticeOpen}
-                onClose={handleCloseVpnNotice}
             />
 
             <Snackbar

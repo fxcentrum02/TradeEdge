@@ -139,14 +139,25 @@ export default function BuyMiningPowerPage() {
         <Box sx={{ pb: 10 }}>
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                <IconButton onClick={() => router.back()} size="small">
+                <IconButton onClick={() => router.back()} size="small" sx={{ color: '#06b6d4' }}>
                     <ArrowBackIcon />
                 </IconButton>
-                <Typography variant="h6" fontWeight={700}>Buy Mining Power</Typography>
+                <Typography variant="h6" fontWeight={800} color="#f8fafc">Buy Mining Power</Typography>
             </Box>
 
             {/* Stepper */}
-            <Stepper activeStep={step} sx={{ mb: 4 }}>
+            <Stepper
+                activeStep={step}
+                sx={{
+                    mb: 4,
+                    '& .MuiStepLabel-label': { color: '#64748b', fontWeight: 600 },
+                    '& .MuiStepLabel-label.Mui-active': { color: '#06b6d4', fontWeight: 800 },
+                    '& .MuiStepLabel-label.Mui-completed': { color: '#34d399' },
+                    '& .MuiStepIcon-root': { color: 'rgba(255, 255, 255, 0.1)' },
+                    '& .MuiStepIcon-root.Mui-active': { color: '#06b6d4' },
+                    '& .MuiStepIcon-root.Mui-completed': { color: '#34d399' },
+                }}
+            >
                 <Step><StepLabel>Amount</StepLabel></Step>
                 <Step><StepLabel>Payment</StepLabel></Step>
                 <Step><StepLabel>Submitted</StepLabel></Step>
@@ -155,12 +166,20 @@ export default function BuyMiningPowerPage() {
             {/* ─── STEP 0: Amount Entry ─── */}
             {step === 0 && (
                 <Box>
-                    <Card sx={{ borderRadius: 4, mb: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                    <Card
+                        sx={{
+                            borderRadius: 2,
+                            mb: 3,
+                            background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
+                        }}
+                    >
                         <CardContent sx={{ p: 3 }}>
-                            <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                            <Typography variant="subtitle1" fontWeight={800} color="#f8fafc" gutterBottom>
                                 Enter Investment Amount (USDT)
                             </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            <Typography variant="body2" color="#94a3b8" sx={{ mb: 2 }}>
                                 Minimum: 10 USDT. Payment via BEP20 network.
                             </Typography>
 
@@ -172,9 +191,22 @@ export default function BuyMiningPowerPage() {
                                 type="number"
                                 inputProps={{ min: 10, step: 1 }}
                                 placeholder="e.g. 100"
-                                sx={{ mb: 2 }}
+                                sx={{
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2,
+                                        bgcolor: 'rgba(30, 41, 59, 0.8)',
+                                        color: '#ffffff',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        '& fieldset': { border: 'none' },
+                                        '&:hover': { border: '1px solid rgba(6, 182, 212, 0.4)' },
+                                        '&.Mui-focused': { border: '1px solid #06b6d4' },
+                                    },
+                                    '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                    '& .MuiInputLabel-root.Mui-focused': { color: '#06b6d4' },
+                                }}
                                 InputProps={{
-                                    endAdornment: <Typography color="text.secondary" variant="body2">USDT</Typography>
+                                    endAdornment: <Typography color="#94a3b8" variant="body2" fontWeight={600}>USDT</Typography>
                                 }}
                             />
 
@@ -185,43 +217,44 @@ export default function BuyMiningPowerPage() {
                                         <Skeleton variant="rounded" height={80} sx={{ borderRadius: 2 }} />
                                     ) : matchedPlan ? (
                                         <Paper
+                                            elevation={0}
                                             sx={{
                                                 p: 2,
-                                                borderRadius: 3,
-                                                bgcolor: '#f0fdf4',
-                                                border: '1px solid #86efac',
+                                                borderRadius: 2,
+                                                background: 'rgba(6, 182, 212, 0.08)',
+                                                border: '1px solid rgba(6, 182, 212, 0.3)',
                                             }}
                                         >
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                                 <Chip
-                                                    icon={<TrendingUpIcon sx={{ fontSize: 16 }} />}
+                                                    icon={<TrendingUpIcon sx={{ fontSize: 16, color: '#ffffff !important' }} />}
                                                     label={matchedPlan.name}
                                                     size="small"
-                                                    sx={{ bgcolor: '#10b981', color: 'white', fontWeight: 700 }}
+                                                    sx={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: 'white', fontWeight: 800 }}
                                                 />
                                                 <Chip
                                                     label={`${matchedPlan.dailyRoi}% / day`}
                                                     size="small"
-                                                    sx={{ bgcolor: '#dcfce7', color: '#16a34a', fontWeight: 700 }}
+                                                    sx={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)', fontWeight: 800 }}
                                                 />
                                             </Box>
-                                            <Divider sx={{ my: 1 }} />
+                                            <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }} />
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <Box sx={{ textAlign: 'center' }}>
-                                                    <Typography variant="caption" color="text.secondary">Daily Earning</Typography>
-                                                    <Typography variant="subtitle1" fontWeight={700} color="#10b981">
+                                                    <Typography variant="caption" color="#94a3b8" fontWeight={600}>Daily Earning</Typography>
+                                                    <Typography variant="subtitle1" fontWeight={800} color="#34d399">
                                                         +{dailyEarning.toFixed(2)} USDT
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ textAlign: 'center' }}>
-                                                    <Typography variant="caption" color="text.secondary">Duration</Typography>
-                                                    <Typography variant="subtitle1" fontWeight={700}>
+                                                    <Typography variant="caption" color="#94a3b8" fontWeight={600}>Duration</Typography>
+                                                    <Typography variant="subtitle1" fontWeight={800} color="#f8fafc">
                                                         {matchedPlan.duration} days
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ textAlign: 'center' }}>
-                                                    <Typography variant="caption" color="text.secondary">Total Earning</Typography>
-                                                    <Typography variant="subtitle1" fontWeight={700} color="#10b981">
+                                                    <Typography variant="caption" color="#94a3b8" fontWeight={600}>Total Earning</Typography>
+                                                    <Typography variant="subtitle1" fontWeight={800} color="#38bdf8">
                                                         ~{totalEarning.toFixed(2)} USDT
                                                     </Typography>
                                                 </Box>
@@ -250,13 +283,15 @@ export default function BuyMiningPowerPage() {
                         onClick={handleProceedToPayment}
                         disabled={!isValidAmount || !matchedPlan}
                         sx={{
-                            background: 'linear-gradient(135deg, var(--brand-main) 0%, var(--brand-dark) 100%)',
-                            borderRadius: 3,
-                            py: 2,
-                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                            borderRadius: 2,
+                            py: 1.8,
+                            fontWeight: 800,
                             fontSize: '1rem',
                             textTransform: 'none',
-                            boxShadow: '0 4px 14px rgba(132,204,22,0.4)',
+                            boxShadow: '0 8px 25px rgba(16, 185, 129, 0.35)',
+                            transition: 'all 0.15s ease',
+                            '&:active': { transform: 'scale(0.97)' },
                         }}
                     >
                         Proceed to Payment →
@@ -401,12 +436,13 @@ export default function BuyMiningPowerPage() {
                             fullWidth
                             size="large"
                             sx={{
-                                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                                borderRadius: 3,
+                                background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                                borderRadius: 2,
                                 py: 1.5,
                                 fontWeight: 700,
                                 textTransform: 'none',
                                 flex: 0.6,
+                                boxShadow: '0 8px 25px rgba(16, 185, 129, 0.35)',
                             }}
                         >
                             {submitting ? <CircularProgress size={20} color="inherit" /> : 'Submit for Approval'}

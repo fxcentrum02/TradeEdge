@@ -19,7 +19,7 @@ import ReinvestModal from '../_components/ReinvestModal';
 import { formatCurrency, formatRelativeTime, truncateAddress } from '@/lib/utils';
 import { pusherClient } from '@/lib/pusher-client';
 import { WITHDRAWAL_CONFIG } from '@/lib/constants';
-import type { Withdrawal, WalletSummary } from '@/types';
+import type { Withdrawal, WalletSummary, Plan } from '@/types';
 
 export default function WithdrawalPage() {
     const router = useRouter();
@@ -31,7 +31,7 @@ export default function WithdrawalPage() {
     const [address, setAddress] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
-    const [plans, setPlans] = useState<any[]>([]);
+    const [plans, setPlans] = useState<Plan[]>([]);
     const [reinvestModalOpen, setReinvestModalOpen] = useState(false);
 
     const fetchData = useCallback(async () => {
@@ -194,37 +194,39 @@ export default function WithdrawalPage() {
         <Box sx={{ pb: 4 }}>
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
-                <IconButton onClick={() => router.back()} sx={{ bgcolor: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <IconButton onClick={() => router.back()} sx={{ color: '#06b6d4', bgcolor: 'rgba(30, 41, 59, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     <ArrowBackIcon fontSize="small" />
                 </IconButton>
-                <Typography variant="h6" fontWeight={800} color="#1e293b">Withdraw USDT</Typography>
+                <Typography variant="h6" fontWeight={800} color="#f8fafc">Withdraw USDT</Typography>
             </Box>
 
             {/* Balance Card */}
             <Paper
+                elevation={0}
                 sx={{
-                    p: 2,
-                    borderRadius: 4,
-                    bgcolor: 'white',
-                    color: '#1e293b',
+                    p: 2.2,
+                    borderRadius: 2,
+                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#f8fafc',
                     mb: 3,
-                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.4)',
                     position: 'relative',
                     overflow: 'hidden',
-                    border: '1px solid #f1f5f9'
                 }}
             >
                 <Box sx={{ position: 'relative', zIndex: 1 }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 1 }}>Available Balance</Typography>
-                    <Typography variant="h4" fontWeight={900} sx={{ my: 0.5, letterSpacing: -1, color: '#1e293b' }}>
-                        {formatCurrency(wallet?.balance || 0)} <span style={{ fontSize: '1.2rem', fontWeight: 500, color: '#64748b' }}>USDT</span>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, letterSpacing: 1 }}>Available Balance</Typography>
+                    <Typography variant="h4" fontWeight={900} sx={{ my: 0.5, letterSpacing: -1, color: '#34d399', textShadow: '0 0 12px rgba(52, 211, 153, 0.3)' }}>
+                        {formatCurrency(wallet?.balance || 0)} <span style={{ fontSize: '1.2rem', fontWeight: 600, color: '#94a3b8' }}>USDT</span>
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, flexWrap: 'wrap' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <AccountBalanceWalletIcon sx={{ color: '#10b981', fontSize: 20 }} />
-                            <Box sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <AccountBalanceWalletIcon sx={{ color: '#34d399', fontSize: 20 }} />
+                            <Box sx={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Typography variant="body2" component="span">Network:</Typography> 
-                                <Chip label="BEP20" size="small" sx={{ height: 20, bgcolor: '#ecfdf5', color: '#10b981', fontWeight: 700, fontSize: 10 }} />
+                                <Chip label="BEP20" size="small" sx={{ height: 20, bgcolor: 'rgba(52, 211, 153, 0.15)', color: '#34d399', fontWeight: 800, fontSize: 10, border: '1px solid rgba(52, 211, 153, 0.3)' }} />
                             </Box>
                         </Box>
                         <Button
@@ -233,31 +235,42 @@ export default function WithdrawalPage() {
                             sx={{
                                 textTransform: 'none',
                                 fontWeight: 700,
-                                color: '#8b5cf6',
-                                bgcolor: 'rgba(139, 92, 246, 0.08)',
-                                px: 1.2,
-                                py: 0.2,
+                                color: '#38bdf8',
+                                bgcolor: 'rgba(56, 189, 248, 0.12)',
+                                border: '1px solid rgba(56, 189, 248, 0.25)',
+                                px: 1.4,
+                                py: 0.3,
                                 borderRadius: 2,
-                                fontSize: '0.7rem',
+                                fontSize: '0.72rem',
                                 minWidth: 'auto',
-                                '&:hover': { bgcolor: 'rgba(139, 92, 246, 0.15)' }
+                                '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)' }
                             }}
                         >
                             Exchange to Compounding Power
                         </Button>
                     </Box>
                 </Box>
-                <Box sx={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.05 }}>
-                    <AccountBalanceWalletIcon sx={{ fontSize: 150 }} />
+                <Box sx={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.04 }}>
+                    <AccountBalanceWalletIcon sx={{ fontSize: 150, color: '#ffffff' }} />
                 </Box>
             </Paper>
 
             {/* Form */}
-            <Paper sx={{ p: 2, borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', mb: 3 }}>
-                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>Request Withdrawal</Typography>
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2.5,
+                    borderRadius: 2,
+                    background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)',
+                    mb: 3
+                }}
+            >
+                <Typography variant="subtitle2" fontWeight={800} color="#f8fafc" sx={{ mb: 1.5 }}>Request Withdrawal</Typography>
 
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600} gutterBottom display="block">Withdrawal Amount (USDT)</Typography>
+                    <Typography variant="caption" color="#94a3b8" fontWeight={600} gutterBottom display="block">Withdrawal Amount (USDT)</Typography>
                     <TextField
                         fullWidth
                         placeholder={`Min ${wallet?.withdrawalSettings?.minWithdrawalAmount || WITHDRAWAL_CONFIG.MIN_AMOUNT} USDT`}
@@ -266,17 +279,25 @@ export default function WithdrawalPage() {
                         type="number"
                         size="small"
                         InputProps={{
-                            sx: { borderRadius: 3, bgcolor: '#f8fafc', fontWeight: 600, fontSize: '1rem' }
+                            sx: {
+                                borderRadius: 2,
+                                bgcolor: 'rgba(30, 41, 59, 0.8)',
+                                color: '#ffffff',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                fontWeight: 700,
+                                fontSize: '1rem',
+                                '& fieldset': { border: 'none' },
+                            }
                         }}
                     />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, px: 1 }}>
-                        <Typography variant="caption" color="text.secondary">Fee: {formatCurrency(fee)}</Typography>
-                        <Typography variant="caption" color="#10b981" fontWeight={700}>Receive: {formatCurrency(netAmount)}</Typography>
+                        <Typography variant="caption" color="#94a3b8">Fee: {formatCurrency(fee)}</Typography>
+                        <Typography variant="caption" color="#34d399" fontWeight={800}>Receive: {formatCurrency(netAmount)}</Typography>
                     </Box>
                 </Box>
 
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600} gutterBottom display="block">USDT BEP20 Address</Typography>
+                    <Typography variant="caption" color="#94a3b8" fontWeight={600} gutterBottom display="block">USDT BEP20 Address</Typography>
                     <TextField
                         fullWidth
                         placeholder="Paste your BEP20 wallet address"
@@ -286,16 +307,24 @@ export default function WithdrawalPage() {
                         rows={2}
                         size="small"
                         InputProps={{
-                            sx: { borderRadius: 3, bgcolor: '#f8fafc', fontFamily: 'monospace', fontSize: '0.85rem' }
+                            sx: {
+                                borderRadius: 2,
+                                bgcolor: 'rgba(30, 41, 59, 0.8)',
+                                color: '#38bdf8',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                fontFamily: 'monospace',
+                                fontSize: '0.85rem',
+                                '& fieldset': { border: 'none' },
+                            }
                         }}
                     />
-                    <Alert severity="warning" sx={{ mt: 1, py: 0, borderRadius: 2, '& .MuiAlert-message': { fontSize: '0.7rem' } }}>
+                    <Alert severity="warning" sx={{ mt: 1, py: 0.5, borderRadius: 2, '& .MuiAlert-message': { fontSize: '0.72rem' } }}>
                         Double check your address! We only support <strong>BEP20 (BNB Smart Chain)</strong>. Funds sent to wrong addresses or networks cannot be recovered.
                     </Alert>
                 </Box>
 
                 {cooldownActive && nextAvailableAt && (
-                    <Alert severity="info" sx={{ mb: 2, borderRadius: 3, '& .MuiAlert-message': { fontSize: '0.8rem' } }}>
+                    <Alert severity="info" sx={{ mb: 2, borderRadius: 2, '& .MuiAlert-message': { fontSize: '0.8rem' } }}>
                         Withdrawals are limited to once every 24 hours. Next available: <strong>{nextAvailableAt.toLocaleString()}</strong> ({hoursRemaining}h remaining).
                     </Alert>
                 )}
@@ -308,21 +337,23 @@ export default function WithdrawalPage() {
                     onClick={handleWithdraw}
                     startIcon={<SendIcon fontSize="small" />}
                     sx={{
-                        borderRadius: 3,
-                        py: 1.2,
-                        fontWeight: 700,
+                        borderRadius: 2,
+                        py: 1.4,
+                        fontWeight: 800,
                         textTransform: 'none',
-                        fontSize: '0.9rem',
-                        boxShadow: cooldownActive ? 'none' : '0 8px 20px rgba(59, 130, 246, 0.3)',
-                        bgcolor: 'var(--brand-main)',
-                        '&:hover': { bgcolor: 'var(--brand-dark)' }
+                        fontSize: '0.92rem',
+                        background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                        color: '#ffffff',
+                        boxShadow: cooldownActive ? 'none' : '0 8px 25px rgba(6, 182, 212, 0.35)',
+                        transition: 'all 0.15s ease',
+                        '&:active': { transform: 'scale(0.97)' },
                     }}
                 >
                     {submitting ? 'Processing...' : cooldownActive ? 'Cooldown Active' : 'Submit Request'}
                 </Button>
 
-                <Divider sx={{ my: 2 }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600}>OR</Typography>
+                <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+                    <Typography variant="caption" color="#94a3b8" fontWeight={600}>OR</Typography>
                 </Divider>
 
                 <Button
@@ -332,13 +363,13 @@ export default function WithdrawalPage() {
                     onClick={() => setReinvestModalOpen(true)}
                     startIcon={<SwapHorizIcon fontSize="small" />}
                     sx={{
-                        borderRadius: 3,
-                        py: 1,
-                        fontWeight: 600,
+                        borderRadius: 2,
+                        py: 1.2,
+                        fontWeight: 700,
                         textTransform: 'none',
-                        color: '#8b5cf6',
-                        borderColor: '#8b5cf6',
-                        '&:hover': { borderColor: '#7c3aed', bgcolor: 'rgba(139, 92, 246, 0.04)' }
+                        color: '#818cf8',
+                        borderColor: 'rgba(129, 140, 248, 0.4)',
+                        '&:hover': { borderColor: '#818cf8', bgcolor: 'rgba(129, 140, 248, 0.08)' }
                     }}
                 >
                     Exchange to Compounding Power

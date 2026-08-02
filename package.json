@@ -15,6 +15,7 @@
     "@mui/material": "^7.3.6",
     "@mui/material-nextjs": "^7.3.6",
     "@mui/x-data-grid": "^8.22.1",
+    "@next/swc-darwin-arm64": "16.1.1",
     "clsx": "^2.1.1",
     "jose": "^5.9.0",
     "mongodb": "^7.1.0",

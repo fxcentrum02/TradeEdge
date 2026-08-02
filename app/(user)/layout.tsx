@@ -275,15 +275,65 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <Box
             sx={{
                 minHeight: '100vh',
-                bgcolor: '#f3e8ff', // Light purple background from image
+                background: 'linear-gradient(180deg, #070b15 0%, #0f172a 50%, #020617 100%)',
+                color: '#f8fafc',
+                position: 'relative',
+                overflowX: 'hidden',
                 pb: 10,
             }}
         >
-            <Container maxWidth="sm" sx={{ px: 2, py: 2 }}>
+            {/* Ambient Background Glowing Orbs */}
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: -120,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 500,
+                    height: 500,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(99, 102, 241, 0.08) 40%, transparent 70%)',
+                    pointerEvents: 'none',
+                    zIndex: 0,
+                    filter: 'blur(60px)',
+                }}
+            />
+            <Box
+                sx={{
+                    position: 'fixed',
+                    bottom: 0,
+                    right: -100,
+                    width: 400,
+                    height: 400,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
+                    pointerEvents: 'none',
+                    zIndex: 0,
+                    filter: 'blur(60px)',
+                }}
+            />
+
+            <Container maxWidth="sm" sx={{ px: 2, py: 2, position: 'relative', zIndex: 1 }}>
                 {children}
             </Container>
 
-            <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, borderRadius: '20px 20px 0 0', overflow: 'hidden' }} elevation={3}>
+            {/* Midnight Glassmorphic Bottom Navigation Bar */}
+            <Paper
+                elevation={0}
+                sx={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    borderRadius: '24px 24px 0 0',
+                    overflow: 'hidden',
+                    background: 'rgba(15, 23, 42, 0.92)',
+                    backdropFilter: 'blur(24px) saturate(180%)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    boxShadow: '0 -12px 40px rgba(0, 0, 0, 0.5)',
+                }}
+            >
                 <BottomNavigation
                     showLabels
                     value={value}
@@ -294,11 +344,23 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                         if (newValue === 2) router.push('/transactions');
                     }}
                     sx={{
-                        height: 70,
+                        height: 72,
+                        background: 'transparent',
                         '& .MuiBottomNavigationAction-root': {
-                            color: 'text.secondary',
+                            color: '#64748b',
+                            py: 1,
+                            transition: 'all 0.2s ease',
+                            '& .MuiSvgIcon-root': {
+                                fontSize: '1.4rem',
+                                transition: 'transform 0.2s ease',
+                            },
                             '&.Mui-selected': {
-                                color: '#10b981', // Green for active
+                                color: '#06b6d4',
+                                fontWeight: 700,
+                                '& .MuiSvgIcon-root': {
+                                    transform: 'scale(1.18)',
+                                    filter: 'drop-shadow(0 2px 8px rgba(6, 182, 212, 0.4))',
+                                },
                             },
                         },
                     }}
