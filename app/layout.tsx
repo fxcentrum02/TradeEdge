@@ -12,8 +12,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Trade-Edge',
+  title: 'Infinity Global - Trade Edge',
   description: 'Earn USDT through our multi-level referral system',
+  icons: {
+    icon: '/logo.jpg',
+    shortcut: '/logo.jpg',
+    apple: '/logo.jpg',
+  },
 };
 
 export const viewport: Viewport = {

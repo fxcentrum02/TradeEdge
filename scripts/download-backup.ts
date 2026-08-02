@@ -1,6 +1,6 @@
 // ==========================================================
 // PHYSICAL DATABASE BACKUP SCRIPT
-// Downloads all collections from backup DB to local JSON files
+// Downloads all collections from primary live DB to local JSON files
 // Usage: npx tsx scripts/download-backup.ts
 // ==========================================================
 
@@ -26,19 +26,24 @@ try {
     }
 } catch { /* ignore if .env doesn't exist */ }
 
-const BACKUP_URI = process.env.BACKUP_DATABASE_URL;
-const DB_NAME = process.env.BACKUP_MONGODB_DB_NAME || 'TradeEdge';
+const URI = process.env.DATABASE_URL || process.env.BACKUP_DATABASE_URL;
+const DB_NAME = process.env.MONGODB_DB_NAME || 'TradeEdge';
 
 async function downloadBackup() {
-    if (!BACKUP_URI) {
-        console.error('❌ Error: BACKUP_DATABASE_URL is not set in .env');
+    if (!URI) {
+        console.error('❌ Error: DATABASE_URL is not set');
         process.exit(1);
     }
     
     console.log('🚀 Initiating Local Database Export...');
-    console.log(`Connecting to: ${BACKUP_URI.replace(/:([^@]+)@/, ':****@')}`);
+    console.log(`Connecting to: ${URI.replace(/:([^@]+)@/, ':****@')}`);
     
-    const client = await MongoClient.connect(BACKUP_URI);
+    const client = await MongoClient.connect(URI, {
+        connectTimeoutMS: 20000,
+        serverSelectionTimeoutMS: 20000,
+        tls: true,
+        tlsAllowInvalidCertificates: true,
+    });
     
     try {
         const db = client.db(DB_NAME);
@@ -56,7 +61,6 @@ async function downloadBackup() {
             console.log(`   Fetched ${docs.length} documents.`);
             
             const filePath = join(backupDir, `${colName}.json`);
-            // Format with 2 spaces indentation
             writeFileSync(filePath, JSON.stringify(docs, null, 2), 'utf-8');
             console.log(`   💾 Saved to backup_dump/${colName}.json (${(Buffer.byteLength(JSON.stringify(docs))/1024).toFixed(2)} KB)`);
         }

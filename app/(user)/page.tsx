@@ -97,19 +97,18 @@ export default function UserHomePage() {
         >
             {/* Logo */}
             <Box
+                component="img"
+                src="/logo.jpg"
+                alt="Infinity Global Logo"
                 sx={{
-                    width: 90,
-                    height: 90,
-                    borderRadius: '24px',
-                    background: 'linear-gradient(135deg, var(--brand-main) 0%, var(--brand-dark) 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 40px rgba(132,204,22,0.35)',
+                    width: 100,
+                    height: 100,
+                    borderRadius: '20px',
+                    objectFit: 'cover',
+                    boxShadow: '0 8px 32px rgba(15, 23, 42, 0.15)',
+                    border: '1px solid rgba(255,255,255,0.2)',
                 }}
-            >
-                <Typography sx={{ fontSize: 40 }}>💹</Typography>
-            </Box>
+            />
 
             <Box sx={{ textAlign: 'center' }}>
                 <Typography

@@ -2,20 +2,8 @@
   "regions": ["sin1"],
   "crons": [
     {
-      "path": "/api/cron/roi-settlement",
+      "path": "/api/cron/daily",
       "schedule": "30 4 * * *"
-    },
-    {
-      "path": "/api/cron/backup",
-      "schedule": "0 */3 * * *"
-    },
-    {
-      "path": "/api/cron/sync-live-clones",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/milestone-bonus",
-      "schedule": "30 18 * * *"
     }
   ]
 }
