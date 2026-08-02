@@ -682,12 +682,12 @@
     "totalDownlineCount": 0,
     "totalEarnings": 0,
     "tradePower": 0,
-    "lastIp": "1.38.68.55",
+    "lastIp": "42.108.106.24",
     "isAdmin": true,
     "isActive": true,
-    "currentSessionId": "620c3d4a-a2ac-4ce9-8c9a-3fcfe0bb3baf",
+    "currentSessionId": "f9617ba5-78d0-400e-ae9e-b7086999d4fd",
     "createdAt": "2026-03-21T18:32:15.224Z",
-    "updatedAt": "2026-07-07T19:49:57.031Z"
+    "updatedAt": "2026-08-02T13:49:27.184Z"
   },
   {
     "_id": "69ba4b58f306a04d61acacb0",
@@ -2000,12 +2000,12 @@
     "totalDownlineCount": 1,
     "totalEarnings": 86.332,
     "tradePower": 309,
-    "lastIp": "43.241.193.222",
+    "lastIp": "43.241.193.66",
     "isAdmin": false,
     "isActive": true,
-    "currentSessionId": "2d9474ab-c7ac-4caa-b1f5-436975a36c5b",
+    "currentSessionId": "4a966235-94a6-4766-8de8-7fe35022a573",
     "createdAt": "2026-03-26T13:44:55.448Z",
-    "updatedAt": "2026-08-01T05:47:42.897Z",
+    "updatedAt": "2026-08-02T14:01:13.391Z",
     "lastWithdrawalAddress": "0xaaaEfA89CB6359971C3875d86202C2611c67FD14",
     "lastWithdrawalAt": "2026-07-26T05:23:28.464Z"
   },

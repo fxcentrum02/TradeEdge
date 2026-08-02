@@ -45,11 +45,7 @@ export async function findAllPlans() {
  * The tier is determined by minAmount <= amount <= maxAmount (or maxAmount is null = unlimited).
  */
 export async function findPlanForAmount(amount: number): Promise<PlanDocument | null> {
-    const db = await getDB();
-    const plans = await db.collection<PlanDocument>(Collections.PLANS)
-        .find({ isActive: true })
-        .sort({ minAmount: 1 })
-        .toArray();
+    const plans = await findActivePlans();
 
     // Find the highest matching tier
     let matched: PlanDocument | null = null;

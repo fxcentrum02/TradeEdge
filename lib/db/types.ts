@@ -16,6 +16,7 @@ export interface UserDocument {
     photoUrl?: string;
     referralCode: string;
     referredById?: ObjectId | null;
+    ancestors?: ObjectId[];
     directReferralCount: number;
     totalReferralCount: number; // 20 tiers sum
     totalDownlineCount: number; // Unlimited tiers sum

@@ -3,19 +3,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { WalletSummary, Transaction } from '@/types';
 
+let globalWalletCache: { summary: WalletSummary | null; time: number } = { summary: null, time: 0 };
+const CLIENT_CACHE_TTL_MS = 30000; // 30 seconds client TTL
+
 export function useWallet() {
-    const [summary, setSummary] = useState<WalletSummary | null>(null);
+    const [summary, setSummary] = useState<WalletSummary | null>(globalWalletCache.summary);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(!globalWalletCache.summary);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchWallet = useCallback(async () => {
+    const fetchWallet = useCallback(async (forceRefresh = false) => {
+        const now = Date.now();
+        if (!forceRefresh && globalWalletCache.summary && (now - globalWalletCache.time < CLIENT_CACHE_TTL_MS)) {
+            setSummary(globalWalletCache.summary);
+            setIsLoading(false);
+            return;
+        }
+
         try {
             setIsLoading(true);
             const res = await fetch('/api/wallet');
             const data = await res.json();
             if (data.success) {
                 setSummary(data.data);
+                globalWalletCache = { summary: data.data, time: Date.now() };
             } else {
                 setError(data.error);
             }
@@ -49,7 +60,7 @@ export function useWallet() {
         transactions,
         isLoading,
         error,
-        refresh: fetchWallet,
+        refresh: () => fetchWallet(true),
         fetchTransactions,
     };
 }

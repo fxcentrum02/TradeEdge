@@ -20,7 +20,11 @@ export async function GET(): Promise<NextResponse<ApiResponse<Plan[]>>> {
             maxAmount: p.maxAmount ?? null,
         }));
 
-        return NextResponse.json({ success: true, data: planData });
+        return NextResponse.json({ success: true, data: planData }, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600'
+            }
+        });
 
     } catch (error) {
         console.error('Plans error:', error);

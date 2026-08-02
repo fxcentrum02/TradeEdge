@@ -31,6 +31,10 @@ export async function createIndexes() {
         { createdAt: -1 },
         { name: 'createdAt_desc_index' }
     );
+    await db.collection(Collections.USERS).createIndex(
+        { ancestors: 1 },
+        { name: 'ancestors_index' }
+    );
 
     // WALLETS collection
     await db.collection(Collections.WALLETS).createIndex(

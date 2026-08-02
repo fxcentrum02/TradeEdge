@@ -27,8 +27,37 @@ export async function createUser(userData: Omit<UserDocument, '_id' | 'createdAt
     const db = await getDB();
     const now = new Date();
 
+    let ancestors: ObjectId[] = [];
+    if (userData.referredById) {
+        const parent = await db.collection<UserDocument>(Collections.USERS).findOne(
+            { _id: userData.referredById },
+            { projection: { ancestors: 1, referredById: 1 } }
+        );
+        if (parent) {
+            if (parent.ancestors && Array.isArray(parent.ancestors)) {
+                ancestors = [parent._id, ...parent.ancestors].slice(0, 20);
+            } else {
+                // Fallback for pre-migration parents: traverse referredById up to 20 levels
+                ancestors = [parent._id];
+                let currParentId = parent.referredById;
+                let depth = 1;
+                while (currParentId && depth < 20) {
+                    ancestors.push(currParentId);
+                    const ancestorDoc = await db.collection<UserDocument>(Collections.USERS).findOne(
+                        { _id: currParentId },
+                        { projection: { referredById: 1 } }
+                    );
+                    if (!ancestorDoc || !ancestorDoc.referredById) break;
+                    currParentId = ancestorDoc.referredById;
+                    depth++;
+                }
+            }
+        }
+    }
+
     const user: Omit<UserDocument, '_id'> = {
         ...userData,
+        ancestors,
         createdAt: now,
         updatedAt: now,
     };
@@ -132,6 +161,28 @@ export async function getReferralTreeByTier(
         result.push({ tier, userIds: [] });
     }
 
+    // Fast Path: Check if ancestors are indexed for downlines
+    const descendantsByAncestors = await usersCol.find(
+        { ancestors: _userId, isDeleted: { $ne: true } },
+        { projection: { _id: 1, ancestors: 1 } }
+    ).toArray();
+
+    if (descendantsByAncestors.length > 0) {
+        for (const desc of descendantsByAncestors) {
+            if (desc.ancestors && Array.isArray(desc.ancestors)) {
+                const idx = desc.ancestors.findIndex(id => id.equals(_userId));
+                if (idx !== -1) {
+                    const tier = idx + 1;
+                    if (tier >= 1 && tier <= maxTier) {
+                        result[tier - 1].userIds.push(desc._id);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    // Fallback Path: For pre-migration users without populated ancestors
     const aggResult = await usersCol.aggregate([
         { $match: { _id: _userId } },
         {
