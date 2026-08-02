@@ -35,7 +35,7 @@ export function calculateDailyRoi(planAmount: number, dailyRoiPercentage: number
 export const PLAN_CONFIG = {
     DEFAULT_DURATION_DAYS: 30,
     MIN_INVESTMENT: 10, // Minimum 10 USDT for any MP purchase or withdrawal
-    MIN_REINVESTMENT: 10, // Minimum 10 USDT for reinvestment
+    MIN_REINVESTMENT: 1001, // Minimum 1001 USDT for reinvestment
 } as const;
 
 // Withdrawal Configuration

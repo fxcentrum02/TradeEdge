@@ -17,6 +17,7 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
 import ReinvestModal from '../_components/ReinvestModal';
 import PromoModal from '../_components/PromoModal';
+import NewUiAnnouncementModal from '../_components/NewUiAnnouncementModal';
 import { useAuth } from '@/context/AuthContext';
 import { pusherClient } from '@/lib/pusher-client';
 import { formatCurrency } from '@/lib/utils';
@@ -617,6 +618,8 @@ export default function DashboardPage() {
                 open={promoOpen}
                 onClose={handleClosePromo}
             />
+
+            <NewUiAnnouncementModal />
 
             <Snackbar
                 open={snackbar.open}
