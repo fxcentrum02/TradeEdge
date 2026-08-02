@@ -4,14 +4,7 @@
 
 import { MongoClient, Db } from 'mongodb';
 
-const MONGODB_URI = process.env.DATABASE_URL!;
-const MONGODB_DB = process.env.MONGODB_DB_NAME || 'TradeEdge';
-const BACKUP_MONGODB_URI = process.env.BACKUP_DATABASE_URL;
-const BACKUP_MONGODB_DB = process.env.BACKUP_MONGODB_DB_NAME || MONGODB_DB;
-
-if (!MONGODB_URI) {
-    throw new Error('[DB] DATABASE_URL environment variable is not defined!');
-}
+// URI constants are read lazily inside functions to support build-time importing
 
 // ========================================================
 // SLOW QUERY MONITORING
@@ -72,10 +65,17 @@ export async function connectDB(): Promise<Db> {
         return globalWithMongo._mongoDb;
     }
 
-    console.log('[DB] Connecting to MongoDB...', MONGODB_URI.substring(0, 30) + '...');
+    const uri = process.env.DATABASE_URL;
+    const dbName = process.env.MONGODB_DB_NAME || 'TradeEdge';
+
+    if (!uri) {
+        throw new Error('[DB] DATABASE_URL environment variable is not defined!');
+    }
+
+    console.log('[DB] Connecting to MongoDB...', uri.substring(0, 30) + '...');
 
     try {
-        const client = await MongoClient.connect(MONGODB_URI, {
+        const client = await MongoClient.connect(uri, {
             maxPoolSize: 5,
             minPoolSize: 0,
             maxIdleTimeMS: 15000,
@@ -84,11 +84,11 @@ export async function connectDB(): Promise<Db> {
             monitorCommands: true,
         });
 
-        const db = client.db(MONGODB_DB);
+        const db = client.db(dbName);
 
         // Verify connection
         await db.command({ ping: 1 });
-        console.log('[DB] MongoDB connected successfully. DB:', MONGODB_DB);
+        console.log('[DB] MongoDB connected successfully. DB:', dbName);
 
         // Register slow query monitoring
         registerCommandMonitoring(client);
@@ -110,15 +110,18 @@ export async function getDB(): Promise<Db> {
 }
 
 export async function getBackupDB(): Promise<Db | null> {
-    if (!BACKUP_MONGODB_URI) return null;
-    
+    const backupUri = process.env.BACKUP_DATABASE_URL;
+    if (!backupUri) return null;
+
     if (globalWithMongo._mongoBackupDb && globalWithMongo._mongoBackupClient) {
         return globalWithMongo._mongoBackupDb;
     }
 
+    const backupDbName = process.env.BACKUP_MONGODB_DB_NAME || process.env.MONGODB_DB_NAME || 'TradeEdge';
+
     try {
         console.log('[DB] Connecting to BACKUP MongoDB...');
-        const client = await MongoClient.connect(BACKUP_MONGODB_URI, {
+        const client = await MongoClient.connect(backupUri, {
             maxPoolSize: 3,
             minPoolSize: 0,
             maxIdleTimeMS: 15000,
@@ -126,11 +129,11 @@ export async function getBackupDB(): Promise<Db | null> {
             connectTimeoutMS: 5000,
         });
 
-        const db = client.db(BACKUP_MONGODB_DB);
+        const db = client.db(backupDbName);
         globalWithMongo._mongoBackupClient = client;
         globalWithMongo._mongoBackupDb = db;
         
-        console.log('[DB] Backup MongoDB connected successfully. DB:', BACKUP_MONGODB_DB);
+        console.log('[DB] Backup MongoDB connected successfully. DB:', backupDbName);
         return db;
     } catch (error) {
         console.error('[DB] Backup MongoDB connection FAILED:', error);

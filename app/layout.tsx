@@ -33,7 +33,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const settings = await getSettings();
+  let settings = null;
+  try {
+    settings = await getSettings();
+  } catch (err) {
+    console.warn('[RootLayout] Could not load settings during render/build:', err);
+  }
   const brandColor = settings?.brandColor || '#84cc16';
 
   return (
