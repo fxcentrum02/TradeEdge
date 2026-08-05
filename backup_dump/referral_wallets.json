@@ -1,89 +1,56 @@
 [
   {
-    "_id": "69ba4ecd3bbd24981586ab1a",
-    "userId": "69ba188f4034fec97b0853a4",
-    "balance": 6.043434799999984,
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69ba4ed03bbd24981586ab1b",
-    "userId": "69ba193c4034fec97b0853ab",
-    "balance": 29.995380000000008,
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69c9fc5f3bbd24981586ab56",
-    "userId": "69bf3e83b96477220da244c9",
-    "balance": 27.43999999999993,
+    "_id": "69c9fc5f3bbd24981586ab58",
+    "userId": "69c964b1b2d0f3f9e0ea0408",
+    "balance": 87.2183999999999,
     "createdAt": "2026-03-30T04:30:23.390Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "6a2cdcf67fbfc5214f7d6b4a",
-    "userId": "69c8ce80833d3f3d139c0ce8",
-    "balance": 4.997999999999997,
-    "createdAt": "2026-06-13T04:30:45.686Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69c364df3bbd24981586ab42",
-    "userId": "69c1feb5a0f5f4f213b5d581",
-    "balance": 5.53184,
-    "createdAt": "2026-03-25T04:30:23.281Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "6a479b5ee29ce76dff10b95e",
-    "userId": "6a2bfada596a3aff01b76977",
-    "balance": 0,
-    "createdAt": "2026-07-03T11:22:06.272Z",
-    "updatedAt": "2026-07-03T11:22:06.272Z"
-  },
-  {
-    "_id": "69d48860a59dcec9ba6ca82d",
-    "userId": "69ba5f66e9b0ffe6a0d6b6ee",
-    "balance": 43.24800000000002,
-    "createdAt": "2026-04-07T04:30:23.777Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69cb4ddf3bbd24981586ab5b",
-    "userId": "69be21cffe89f0a8d9f1ac91",
-    "balance": 23.016400000000004,
-    "createdAt": "2026-03-31T04:30:23.277Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "6a2cdcf67fbfc5214f7d6b4b",
-    "userId": "6a2a83170eef454bf8efd9eb",
-    "balance": 1.2240000000000009,
-    "createdAt": "2026-06-13T04:30:45.686Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69bb7beb3bbd24981586ab23",
-    "userId": "69ba22b3eacdb890aee75c6a",
-    "balance": 33.17244399999998,
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "69bb7bf73bbd24981586ab24",
     "userId": "69ba4b58f306a04d61acacb0",
-    "balance": 17.667264000000014,
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "balance": 21.668160000000032,
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69bb7c063bbd24981586ab25",
+    "userId": "69ba52569a4cbdea14c5a1e3",
+    "balance": 37.33210000000001,
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "69bb7c263bbd24981586ab26",
     "userId": "69ba849acd630fd9e10eb049",
-    "balance": 0.9000000000000004,
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "balance": 1.0800000000000005,
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "69d9ce55a59dcec9ba6ca838",
     "userId": "69d63d13d3973faf55dd3a2b",
-    "balance": 12.439999999999976,
+    "balance": 12.799999999999974,
     "createdAt": "2026-04-11T04:30:13.346Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "6a2a39f67fbfc5214f7d6b40",
+    "userId": "6a2173bc6842558ca87de892",
+    "balance": 18.000000000000004,
+    "createdAt": "2026-06-11T04:30:45.787Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69d48860a59dcec9ba6ca82d",
+    "userId": "69ba5f66e9b0ffe6a0d6b6ee",
+    "balance": 45.696000000000026,
+    "createdAt": "2026-04-07T04:30:23.777Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69d87cd6a59dcec9ba6ca837",
+    "userId": "69c53857c5d51366956838a4",
+    "balance": 0.8984,
+    "createdAt": "2026-04-10T04:30:13.739Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "69bf70773bbd24981586ab36",
@@ -93,93 +60,126 @@
     "updatedAt": "2026-05-18T09:09:06.184Z"
   },
   {
-    "_id": "69c364df3bbd24981586ab41",
-    "userId": "69c27579192ed1cf05440fd3",
-    "balance": 8.652000000000001,
-    "createdAt": "2026-03-25T04:30:23.281Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "_id": "69bf70773bbd24981586ab35",
+    "userId": "69be3de74a40f69dc9fcba94",
+    "balance": 0,
+    "createdAt": "2026-03-22T04:30:34.112Z",
+    "updatedAt": "2026-08-05T14:01:29.541Z"
   },
   {
-    "_id": "69c9fc5f3bbd24981586ab58",
-    "userId": "69c964b1b2d0f3f9e0ea0408",
-    "balance": 84.13799999999992,
+    "_id": "69c9fc5f3bbd24981586ab57",
+    "userId": "69c35351a96b75206080b4c1",
+    "balance": 21.61829999999998,
     "createdAt": "2026-03-30T04:30:23.390Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "6a2b8b757fbfc5214f7d6b43",
+    "userId": "6a21428c3aa40d6d78525427",
+    "balance": 43.2432,
+    "createdAt": "2026-06-12T04:30:45.382Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69cb4ddf3bbd24981586ab5b",
+    "userId": "69be21cffe89f0a8d9f1ac91",
+    "balance": 41.30620000000001,
+    "createdAt": "2026-03-31T04:30:23.277Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69c364df3bbd24981586ab42",
+    "userId": "69c1feb5a0f5f4f213b5d581",
+    "balance": 0,
+    "createdAt": "2026-03-25T04:30:23.281Z",
+    "updatedAt": "2026-08-05T07:43:29.783Z"
+  },
+  {
+    "_id": "69ba4ecd3bbd24981586ab1a",
+    "userId": "69ba188f4034fec97b0853a4",
+    "balance": 6.043434799999984,
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69ba4ed03bbd24981586ab1b",
+    "userId": "69ba193c4034fec97b0853ab",
+    "balance": 50.875008000000015,
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "6a2cdcf67fbfc5214f7d6b4b",
+    "userId": "6a2a83170eef454bf8efd9eb",
+    "balance": 1.296000000000001,
+    "createdAt": "2026-06-13T04:30:45.686Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69c364df3bbd24981586ab41",
+    "userId": "69c27579192ed1cf05440fd3",
+    "balance": 9.3936,
+    "createdAt": "2026-03-25T04:30:23.281Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69bb7beb3bbd24981586ab23",
+    "userId": "69ba22b3eacdb890aee75c6a",
+    "balance": 52.34266599999997,
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "69c9fc5f3bbd24981586ab56",
+    "userId": "69bf3e83b96477220da244c9",
+    "balance": 28.159999999999926,
+    "createdAt": "2026-03-30T04:30:23.390Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
+  },
+  {
+    "_id": "6a2cdcf67fbfc5214f7d6b4a",
+    "userId": "69c8ce80833d3f3d139c0ce8",
+    "balance": 5.291999999999996,
+    "createdAt": "2026-06-13T04:30:45.686Z",
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "6a45e96c003c102c56a82aa6",
     "userId": "69cbd5749ac128742992320b",
     "balance": 2.4647999999999994,
     "createdAt": "2026-07-02T04:30:35.131Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
-    "_id": "69bb7c063bbd24981586ab25",
-    "userId": "69ba52569a4cbdea14c5a1e3",
-    "balance": 21.761200000000006,
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "6a2a39f67fbfc5214f7d6b40",
-    "userId": "6a2173bc6842558ca87de892",
-    "balance": 12.600000000000001,
-    "createdAt": "2026-06-11T04:30:45.787Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69c9fc5f3bbd24981586ab57",
-    "userId": "69c35351a96b75206080b4c1",
-    "balance": 20.308199999999985,
-    "createdAt": "2026-03-30T04:30:23.390Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69bf70773bbd24981586ab35",
-    "userId": "69be3de74a40f69dc9fcba94",
-    "balance": 4.091899999999999,
-    "createdAt": "2026-03-22T04:30:34.112Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "6a2b8b757fbfc5214f7d6b43",
-    "userId": "6a21428c3aa40d6d78525427",
-    "balance": 36.036,
-    "createdAt": "2026-06-12T04:30:45.382Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
-  },
-  {
-    "_id": "69d87cd6a59dcec9ba6ca837",
-    "userId": "69c53857c5d51366956838a4",
-    "balance": 4.492,
-    "createdAt": "2026-04-10T04:30:13.739Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "_id": "6a479b5ee29ce76dff10b95e",
+    "userId": "6a2bfada596a3aff01b76977",
+    "balance": 0,
+    "createdAt": "2026-07-03T11:22:06.272Z",
+    "updatedAt": "2026-07-03T11:22:06.272Z"
   },
   {
     "_id": "6a66decd739fa98cf8433648",
     "userId": "6a65c7630c091ccd64021a55",
-    "balance": 2.4024,
+    "balance": 6.006,
     "createdAt": "2026-07-27T04:30:04.381Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "6a66decd739fa98cf8433649",
     "userId": "6a64d1f9435dff53f19af5a9",
-    "balance": 3.8300999999999994,
+    "balance": 5.595,
     "createdAt": "2026-07-27T04:30:04.381Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "6a68304d739fa98cf843a163",
     "userId": "6a65c6b0276dc9bcb9ec38ca",
-    "balance": 6.3654,
+    "balance": 9.5481,
     "createdAt": "2026-07-28T04:30:03.917Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   },
   {
     "_id": "6a68304d739fa98cf843a164",
     "userId": "6a65a4586d34623b50df3804",
-    "balance": 1.7612,
+    "balance": 4.4030000000000005,
     "createdAt": "2026-07-28T04:30:03.917Z",
-    "updatedAt": "2026-08-02T14:07:06.881Z"
+    "updatedAt": "2026-08-05T04:31:32.337Z"
   }
 ]

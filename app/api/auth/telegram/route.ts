@@ -56,33 +56,39 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
         // 2. Resolve Referral logic ONLY if user is new or doesn't have a referrer yet
         if (!user || !user.referredById) {
-            // Check PENDING_REFERRALS collection FIRST for absolute "First-Referrer Loyalty"
-            try {
-                const db = await getDB();
-                const pending = await db.collection(Collections.PENDING_REFERRALS).findOne({ 
-                    telegramId: String(telegramUser.id) 
-                });
-                if (pending?.referralCode) {
-                    referralCode = pending.referralCode;
+            let resolvedCode: string | undefined = referralCode ? referralCode.trim() : undefined;
+
+            // Check initData.start_param next if not provided in body
+            if (!resolvedCode && parsedData.start_param) {
+                resolvedCode = (parsedData.start_param as string).trim();
+            }
+
+            // Check PENDING_REFERRALS as fallback if neither body nor start_param were set
+            if (!resolvedCode) {
+                try {
+                    const db = await getDB();
+                    const pending = await db.collection(Collections.PENDING_REFERRALS).findOne({ 
+                        telegramId: String(telegramUser.id) 
+                    });
+                    if (pending?.referralCode) {
+                        resolvedCode = pending.referralCode.trim();
+                    }
+                } catch (dbError) {
+                    remoteLog('DB ERROR during pending referral lookup', { error: String(dbError) }, 'WARN');
                 }
-            } catch (dbError) {
-                remoteLog('DB ERROR during pending referral lookup', { error: String(dbError) }, 'WARN');
             }
 
-            // Fallback to initData.start_param
-            if (!referralCode && parsedData.start_param) {
-                referralCode = parsedData.start_param as string;
-            }
+            referralCode = resolvedCode;
 
-            // Save sticky referral for new users
+            // Save/update sticky referral intent for new users
             if (referralCode && !user) {
                 try {
                     const db = await getDB();
                     await db.collection(Collections.PENDING_REFERRALS).updateOne(
                         { telegramId: String(telegramUser.id) },
                         { 
-                            $set: { updatedAt: new Date() },
-                            $setOnInsert: { referralCode, createdAt: new Date() }
+                            $set: { referralCode, updatedAt: new Date() },
+                            $setOnInsert: { createdAt: new Date() }
                         },
                         { upsert: true }
                     );
@@ -118,8 +124,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             let referredById = undefined;
             if (referralCode) {
                 try {
-                    const referrer = await findUserByReferralCode(referralCode);
-                    if (referrer) referredById = referrer._id;
+                    const cleanCode = referralCode.trim();
+                    const referrer = await findUserByReferralCode(cleanCode);
+                    // Prevent self-referral
+                    if (referrer && String(referrer.telegramId) !== String(telegramUser.id)) {
+                        referredById = referrer._id;
+                    }
                 } catch {}
             }
 

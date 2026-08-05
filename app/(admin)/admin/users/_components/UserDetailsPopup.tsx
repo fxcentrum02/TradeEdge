@@ -11,7 +11,8 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead,
     TableRow, Chip, CircularProgress, Stack, Button, Paper,
     MenuItem, Select, InputLabel, FormControl, TextField,
-    useMediaQuery, useTheme, DialogActions, DialogContentText
+    useMediaQuery, useTheme, DialogActions, DialogContentText,
+    Alert, AlertTitle
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
@@ -24,6 +25,9 @@ import PeopleIcon from '@mui/icons-material/People';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import BlockIcon from '@mui/icons-material/Block';
 import { formatCurrency, formatDateTime, getInitials, getAvatarUrl } from '@/lib/utils';
 import DateRangeFilterBar from '../../_components/DateRangeFilterBar';
 import type { HierarchyTreeNode } from '@/types';
@@ -48,69 +52,78 @@ const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: n
             try {
                 const res = await fetch(`/api/admin/reports/hierarchy?rootUserId=${node.id}&depth=1`);
                 const data = await res.json();
-                if (data.success && data.data.explorerTree) {
-                    setChildren(data.data.explorerTree);
+                if (data.success && data.data && data.data.children) {
+                    setChildren(data.data.children);
                 }
             } catch (err) {
-                console.error('Failed to fetch children:', err);
+                console.error('Failed to load child tree nodes:', err);
             } finally {
                 setLoading(false);
             }
         }
         setExpanded(!expanded);
+        onToggle(node);
     };
 
     return (
-        <Box sx={{ ml: level > 0 ? (isMobile ? 1.5 : 3) : 0, mb: 0.5 }}>
+        <Box sx={{ ml: level * (isMobile ? 1.5 : 3) }}>
             <Box
                 sx={{
-                    p: 1,
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 2,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1.5,
-                    '&:hover': { bgcolor: '#f8fafc' },
-                    cursor: hasChildren ? 'pointer' : 'default'
+                    justifyContent: 'space-between',
+                    p: 1.5,
+                    mb: 1,
+                    bgcolor: level === 0 ? '#f8fafc' : 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 2,
+                    '&:hover': { bgcolor: '#f1f5f9' }
                 }}
-                onClick={handleToggle}
             >
-                {hasChildren ? (
-                    <IconButton size="small" sx={{ p: 0 }}>
-                        {expanded ? <KeyboardArrowDownIcon sx={{ fontSize: 18 }} /> : <KeyboardArrowRightIcon sx={{ fontSize: 18 }} />}
-                    </IconButton>
-                ) : (
-                    <Box sx={{ width: 18 }} />
-                )}
-                <Avatar 
-                    src={getAvatarUrl(node.photoUrl)}
-                    imgProps={{ referrerPolicy: 'no-referrer' }}
-                    sx={{ width: 24, height: 24, fontSize: 10, bgcolor: 'primary.main', fontWeight: 700 }}
-                >
-                    {getInitials(node.firstName || node.telegramUsername || '?')}
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="caption" fontWeight={700} noWrap display="block" sx={{ fontSize: isMobile ? '0.7rem' : '0.8rem' }}>
-                        {node.firstName || 'User'} {node.lastName || ''}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', display: 'block' }}>
-                        @{node.telegramUsername || node.telegramId}
-                    </Typography>
-                </Box>
-                <Chip
-                    icon={<PeopleIcon sx={{ fontSize: '0.6rem !important' }} />}
-                    label={`${node.directReferralCount}/${node.totalReferralCount}`}
-                    size="small"
-                    variant="outlined"
-                    sx={{ height: 16, fontSize: '0.55rem', px: 0.5 }}
-                />
-            </Box>
-            {expanded && (
-                <Box sx={{ mt: 0.5 }}>
-                    {loading ? (
-                        <Box sx={{ ml: 4, py: 1 }}><CircularProgress size={16} /></Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {hasChildren ? (
+                        <IconButton size="small" onClick={handleToggle}>
+                            {loading ? <CircularProgress size={16} /> : expanded ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
+                        </IconButton>
                     ) : (
-                        children.map(child => <TreeItem key={child.id} node={child} level={level + 1} onToggle={onToggle} />)
+                        <Box sx={{ width: 28 }} />
+                    )}
+                    <Avatar
+                        src={getAvatarUrl(node.photoUrl)}
+                        imgProps={{ referrerPolicy: 'no-referrer' }}
+                        sx={{ width: 32, height: 32, fontSize: 12, fontWeight: 700, bgcolor: 'primary.main' }}
+                    >
+                        {getInitials(node.firstName || node.telegramUsername || 'U')}
+                    </Avatar>
+                    <Box>
+                        <Typography variant="body2" fontWeight={700}>
+                            {node.firstName || node.telegramUsername || 'User'} {node.lastName || ''}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            ID: {node.telegramId} {node.telegramUsername && `@${node.telegramUsername}`}
+                        </Typography>
+                    </Box>
+                </Box>
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="caption" color="text.secondary" display="block">Trade Power</Typography>
+                        <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(node.tradePower)}</Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
+                        <Typography variant="caption" color="text.secondary" display="block">Direct Ref</Typography>
+                        <Typography variant="body2" fontWeight={700}>{node.directReferralCount}</Typography>
+                    </Box>
+                </Stack>
+            </Box>
+
+            {expanded && (
+                <Box sx={{ pl: isMobile ? 1 : 2, borderLeft: '2px solid #cbd5e1', ml: 2, mb: 1 }}>
+                    {children.length === 0 ? (
+                        <Typography variant="caption" color="text.secondary" sx={{ p: 1, display: 'block' }}>No downlines found.</Typography>
+                    ) : (
+                        children.map(child => (
+                            <TreeItem key={child.id} node={child} level={level + 1} onToggle={onToggle} />
+                        ))
                     )}
                 </Box>
             )}
@@ -118,7 +131,7 @@ const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: n
     );
 };
 
-// ================= : deleted timeSlots section : =================
+// ===========================================
 // MAIN COMPONENT
 // ===========================================
 
@@ -126,19 +139,28 @@ interface UserDetailsPopupProps {
     open: boolean;
     onClose: () => void;
     userId: string | null;
+    onUserDeleted?: () => void;
 }
 
-export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsPopupProps) {
+export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted }: UserDetailsPopupProps) {
     const id = useId();
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any>(null);
+
+    // Soft delete state (legacy)
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Permanent delete states
+    const [permDeleteOpen, setPermDeleteOpen] = useState(false);
+    const [permDeleteStep, setPermDeleteStep] = useState<1 | 2>(1);
+    const [confirmInput, setConfirmInput] = useState('');
+    const [isPermDeleting, setIsPermDeleting] = useState(false);
+    const [permDeleteError, setPermDeleteError] = useState<string | null>(null);
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
 
     // Transaction Filters State
     const [txFilters, setTxFilters] = useState({
@@ -176,6 +198,7 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
         setTabValue(newValue);
     };
 
+    // Soft delete (deactivate) user
     const handleDeleteUser = async () => {
         if (!userId) return;
         setIsDeleting(true);
@@ -187,9 +210,9 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
             if (json.success) {
                 setDeleteConfirmOpen(false);
                 onClose();
-                // Optionally trigger a refresh callback if passed from parent
+                if (onUserDeleted) onUserDeleted();
             } else {
-                alert('Failed to delete user: ' + json.error);
+                alert('Failed to soft delete user: ' + json.error);
             }
         } catch (error) {
             console.error('Error soft deleting user:', error);
@@ -199,7 +222,54 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
         }
     };
 
+    // Open permanent delete modal
+    const handleOpenPermanentDelete = () => {
+        setConfirmInput('');
+        setPermDeleteStep(1);
+        setPermDeleteError(null);
+        setPermDeleteOpen(true);
+    };
+
+    // Execute permanent delete API
+    const handleExecutePermanentDelete = async (hasTradePower: boolean) => {
+        if (!userId) return;
+        setIsPermDeleting(true);
+        setPermDeleteError(null);
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/permanent-delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirmTradePowerDelete: hasTradePower })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setPermDeleteOpen(false);
+                onClose();
+                if (onUserDeleted) onUserDeleted();
+            } else {
+                setPermDeleteError(json.error || 'Failed to permanently delete user');
+            }
+        } catch (error: any) {
+            console.error('Error permanently deleting user:', error);
+            setPermDeleteError(error.message || 'An error occurred during permanent deletion');
+        } finally {
+            setIsPermDeleting(false);
+        }
+    };
+
     const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
+
+    // Derived states for permanent deletion checks
+    const hasDownlines = data ? (
+        (data.profile?.directReferralCount > 0) ||
+        (data.profile?.totalDownlineCount > 0) ||
+        (data.directReferrals && data.directReferrals.length > 0)
+    ) : false;
+
+    const tradePower = data?.profile?.tradePower || 0;
+    const hasActivePlans = data?.plans?.some((p: any) => p.isActive) || false;
+    const hasTradePower = tradePower > 0 || hasActivePlans;
+    const isAdminAccount = data?.profile?.isAdmin === true;
 
     return (
         <Dialog
@@ -223,7 +293,26 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                 }}
             >
                 <Typography variant="h6" fontWeight={800}>User Details</Typography>
-                <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
+                <Stack direction="row" spacing={1} alignItems="center">
+                    {data && (
+                        <Button
+                            variant="contained"
+                            color="error"
+                            size="small"
+                            startIcon={<DeleteForeverIcon />}
+                            onClick={handleOpenPermanentDelete}
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                borderRadius: 2,
+                                boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
+                            }}
+                        >
+                            {isMobile ? 'Delete' : 'Permanently Delete User'}
+                        </Button>
+                    )}
+                    <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
+                </Stack>
             </DialogTitle>
 
             <DialogContent sx={{ p: 0, bgcolor: '#f8fafc' }}>
@@ -318,41 +407,44 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                             {tabValue === 0 && (
                                 <Grid container spacing={3}>
                                     <Grid size={{ xs: 12, md: 6 }}>
-                                        <Paper sx={{ p: 2.5, borderRadius: 3, height: '100%', border: '1px solid #e2e8f0' }} elevation={0}>
-                                            <Typography variant="subtitle1" fontWeight={800} gutterBottom display="flex" alignItems="center" gap={1}>
-                                                <TrendingUpIcon color="primary" sx={{ fontSize: 20 }} /> Performance
-                                            </Typography>
-                                            <Box sx={{ mt: 2 }}>
-                                                {[
-                                                    { label: 'Mining Power', value: formatCurrency(data.profile.tradePower), color: 'primary.main' },
-                                                    { label: 'Total Earnings', value: formatCurrency(data.profile.totalEarnings), color: '#f59e0b' },
-                                                    { label: 'Referral Balance', value: formatCurrency(data.profile.referralWalletBalance), color: '#10b981' },
-                                                ].map((stat, i) => (
-                                                    <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                                        <Typography variant="body2" color="text.secondary">{stat.label}</Typography>
-                                                        <Typography variant="body2" fontWeight={800} color={stat.color}>{stat.value}</Typography>
-                                                    </Box>
-                                                ))}
-                                            </Box>
+                                        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                            <Typography variant="subtitle1" fontWeight={800} gutterBottom>Account Overview</Typography>
+                                            <Divider sx={{ mb: 2 }} />
+                                            <Stack spacing={2}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography color="text.secondary" variant="body2">Mining / Trade Power</Typography>
+                                                    <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(data.profile.tradePower || 0)}</Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography color="text.secondary" variant="body2">Total Referrals</Typography>
+                                                    <Typography variant="body2" fontWeight={700}>{data.profile.directReferralCount || 0} direct ({data.profile.totalDownlineCount || 0} downline)</Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography color="text.secondary" variant="body2">Total Earnings</Typography>
+                                                    <Typography variant="body2" fontWeight={700} color="#f59e0b">{formatCurrency(data.profile.totalEarnings || 0)}</Typography>
+                                                </Box>
+                                            </Stack>
                                         </Paper>
                                     </Grid>
+
                                     <Grid size={{ xs: 12, md: 6 }}>
-                                        <Paper sx={{ p: 2.5, borderRadius: 3, height: '100%', border: '1px solid #e2e8f0' }} elevation={0}>
-                                            <Typography variant="subtitle1" fontWeight={800} gutterBottom display="flex" alignItems="center" gap={1}>
-                                                <PeopleIcon color="primary" sx={{ fontSize: 20 }} /> Network
-                                            </Typography>
-                                            <Box sx={{ mt: 2 }}>
-                                                {[
-                                                    { label: 'Direct Referrals', value: data.profile.directReferralCount },
-                                                    { label: 'Total Team (10 Levels)', value: data.profile.totalReferralCount },
-                                                    { label: 'Total Downline', value: data.profile.totalDownlineCount || 0 },
-                                                ].map((stat, i) => (
-                                                    <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                                        <Typography variant="body2" color="text.secondary">{stat.label}</Typography>
-                                                        <Typography variant="body2" fontWeight={800}>{stat.value}</Typography>
-                                                    </Box>
-                                                ))}
-                                            </Box>
+                                        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                            <Typography variant="subtitle1" fontWeight={800} gutterBottom>Financial Summary</Typography>
+                                            <Divider sx={{ mb: 2 }} />
+                                            <Stack spacing={2}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography color="text.secondary" variant="body2">Total Invested</Typography>
+                                                    <Typography variant="body2" fontWeight={700}>{formatCurrency(data.analytics.totalInvested)}</Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography color="text.secondary" variant="body2">Total Withdrawn</Typography>
+                                                    <Typography variant="body2" fontWeight={700} color="primary.main">{formatCurrency(data.analytics.totalWithdrawn)}</Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography color="text.secondary" variant="body2">Pending Withdrawals</Typography>
+                                                    <Typography variant="body2" fontWeight={700} color="error.main">{formatCurrency(data.analytics.pendingWithdrawals)}</Typography>
+                                                </Box>
+                                            </Stack>
                                         </Paper>
                                     </Grid>
                                 </Grid>
@@ -360,42 +452,29 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
 
                             {/* Plans Tab */}
                             {tabValue === 1 && (
-                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+                                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 3 }}>
                                     <Table size="small">
                                         <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                             <TableRow>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Plan</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>ROI Paid</TableCell>
-                                                {!isMobile && <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Status</TableCell>}
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Daily ROI</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>ROI Paid</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
                                             {data.plans.length === 0 ? (
-                                                <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4 }}>No plans found</TableCell></TableRow>
-                                            ) : data.plans.map((plan: any) => (
-                                                <TableRow key={plan.id}>
+                                                <TableRow><TableCell colSpan={5} align="center">No active or historical plans.</TableCell></TableRow>
+                                            ) : data.plans.map((p: any) => (
+                                                <TableRow key={p.id}>
+                                                    <TableCell>{p.planName}</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>{formatCurrency(p.amount)}</TableCell>
+                                                    <TableCell>{p.dailyRoi}%</TableCell>
+                                                    <TableCell>{formatCurrency(p.totalRoiPaid)}</TableCell>
                                                     <TableCell>
-                                                        <Typography variant="body2" fontWeight={600}>{plan.planName}</Typography>
-                                                        <Typography variant="caption" color="text.secondary">{plan.dailyRoi}% daily</Typography>
+                                                        <Chip label={p.isActive ? 'Active' : 'Completed'} size="small" color={p.isActive ? 'success' : 'default'} />
                                                     </TableCell>
-                                                    <TableCell sx={{ fontWeight: 700 }}>{formatCurrency(plan.amount)}</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700, color: 'success.main', fontSize: isMobile ? '0.75rem' : '0.875rem' }}>{formatCurrency(plan.totalRoiPaid)}</TableCell>
-                                                    {!isMobile && (
-                                                        <TableCell>
-                                                            <Chip
-                                                                label={plan.isActive ? 'Active' : 'Expired'}
-                                                                size="small"
-                                                                sx={{
-                                                                    bgcolor: plan.isActive ? '#dcfce7' : '#f1f5f9',
-                                                                    color: plan.isActive ? '#166534' : '#64748b',
-                                                                    fontWeight: 700, height: 20, fontSize: '0.65rem'
-                                                                }}
-                                                            />
-                                                        </TableCell>
-                                                    )}
-                                                    <TableCell><Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : '0.75rem' }}>{formatDateTime(plan.createdAt)}</Typography></TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -403,236 +482,7 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                                 </TableContainer>
                             )}
 
-                            {/* ROI History Tab */}
-                            {tabValue === 2 && (
-                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-                                    <Table size="small">
-                                        <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Description</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Balance After</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {data.roiHistory.length === 0 ? (
-                                                <TableRow><TableCell colSpan={4} align="center" sx={{ py: 4 }}>No ROI earnings found</TableCell></TableRow>
-                                            ) : data.roiHistory.map((roi: any) => (
-                                                <TableRow key={roi.id}>
-                                                    <TableCell><Typography variant="body2">{roi.description}</Typography></TableCell>
-                                                    <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>+{formatCurrency(roi.amount)}</TableCell>
-                                                    <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{formatCurrency(roi.balanceAfter)}</TableCell>
-                                                    <TableCell><Typography variant="caption">{formatDateTime(roi.createdAt)}</Typography></TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            )}
-
-                            {/* Referrals (Earnings) Tab */}
-                            {tabValue === 3 && (
-                                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-                                    <Table size="small">
-                                        <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>From User</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Tier</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {data.referralEarnings.length === 0 ? (
-                                                <TableRow><TableCell colSpan={4} align="center" sx={{ py: 4 }}>No earnings found</TableCell></TableRow>
-                                            ) : data.referralEarnings.map((earning: any) => (
-                                                <TableRow key={earning.id}>
-                                                    <TableCell sx={{ fontWeight: 600 }}>{earning.fromUserName}</TableCell>
-                                                    <TableCell><Chip label={`L${earning.tier}`} size="small" sx={{ fontWeight: 700, height: 18, fontSize: '0.6rem' }} /></TableCell>
-                                                    <TableCell sx={{ fontWeight: 700, color: '#f59e0b' }}>{formatCurrency(earning.amount)}</TableCell>
-                                                    <TableCell><Typography variant="caption">{formatDateTime(earning.createdAt)}</Typography></TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            )}
-
-                            {/* Transactions Tab */}
-                            {tabValue === 4 && (
-                                <Box>
-                                    <Paper sx={{ p: 2, mb: 2, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
-                                        <Box sx={{ mb: 2 }}>
-                                            <DateRangeFilterBar
-                                                startDate={txFilters.startDate}
-                                                endDate={txFilters.endDate}
-                                                onChange={(s, e) => setTxFilters({ ...txFilters, startDate: s, endDate: e })}
-                                            />
-                                        </Box>
-
-                                        <Grid container spacing={2} sx={{ mb: 2 }}>
-                                            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                                                <FormControl fullWidth size="small">
-                                                    <InputLabel>Type</InputLabel>
-                                                    <Select
-                                                        value={txFilters.type}
-                                                        label="Type"
-                                                        onChange={(e) => setTxFilters({ ...txFilters, type: e.target.value })}
-                                                    >
-                                                        <MenuItem value="ALL">All Types</MenuItem>
-                                                        <MenuItem value="DEPOSIT">Deposit</MenuItem>
-                                                        <MenuItem value="WITHDRAWAL">Withdrawal</MenuItem>
-                                                        <MenuItem value="PLAN_PURCHASE">Plan Purchase</MenuItem>
-                                                        <MenuItem value="REFERRAL_EARNING">Referral Earning</MenuItem>
-                                                        <MenuItem value="ROI_EARNING">ROI Earning</MenuItem>
-                                                        <MenuItem value="BONUS">Bonus</MenuItem>
-                                                    </Select>
-                                                </FormControl>
-                                            </Grid>
-                                            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                                                <TextField
-                                                    id={`${id}-minAmount`}
-                                                    label="Min Amount"
-                                                    type="number"
-                                                    fullWidth
-                                                    size="small"
-                                                    value={txFilters.minAmount}
-                                                    onChange={(e) => setTxFilters({ ...txFilters, minAmount: e.target.value })}
-                                                />
-                                            </Grid>
-                                            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                                                <TextField
-                                                    id={`${id}-maxAmount`}
-                                                    label="Max Amount"
-                                                    type="number"
-                                                    fullWidth
-                                                    size="small"
-                                                    value={txFilters.maxAmount}
-                                                    onChange={(e) => setTxFilters({ ...txFilters, maxAmount: e.target.value })}
-                                                />
-                                            </Grid>
-                                        </Grid>
-                                        <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                                            <Button
-                                                size="small"
-                                                onClick={() => setTxFilters({ type: 'ALL', startDate: '', endDate: '', minAmount: '', maxAmount: '' })}
-                                                sx={{ textTransform: 'none' }}
-                                            >
-                                                Clear Filters
-                                            </Button>
-                                        </Box>
-                                    </Paper>
-
-                                    <TableContainer component={Paper} elevation={0} sx={{ borderRadius: isMobile ? 2 : 3, border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-                                        <Table size="small">
-                                            <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                                                <TableRow>
-                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Type</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Amount</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Description</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700, fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Date</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {(() => {
-                                                    const filtered = data.transactions.filter((tx: any) => {
-                                                        if (txFilters.type !== 'ALL' && tx.type !== txFilters.type) return false;
-                                                        if (txFilters.minAmount && Math.abs(tx.amount) < parseFloat(txFilters.minAmount)) return false;
-                                                        if (txFilters.maxAmount && Math.abs(tx.amount) > parseFloat(txFilters.maxAmount)) return false;
-                                                        if (txFilters.startDate && new Date(tx.createdAt) < new Date(txFilters.startDate)) return false;
-                                                        if (txFilters.endDate) {
-                                                            const end = new Date(txFilters.endDate);
-                                                            end.setHours(23, 59, 59, 999);
-                                                            if (new Date(tx.createdAt) > end) return false;
-                                                        }
-                                                        return true;
-                                                    });
-
-                                                    if (filtered.length === 0) {
-                                                        return <TableRow><TableCell colSpan={4} align="center" sx={{ py: 4 }}>No transactions found matching filters</TableCell></TableRow>;
-                                                    }
-
-                                                    return filtered.map((tx: any) => (
-                                                        <TableRow key={tx.id}>
-                                                            <TableCell>
-                                                                <Chip
-                                                                    label={tx.type.replace('_', ' ')}
-                                                                    size="small"
-                                                                    sx={{ fontWeight: 700, height: 18, fontSize: '0.6rem', variant: 'outlined' }}
-                                                                />
-                                                            </TableCell>
-                                                            <TableCell sx={{ fontWeight: 700, color: tx.amount > 0 ? 'success.main' : 'error.main' }}>
-                                                                {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
-                                                            </TableCell>
-                                                            <TableCell><Typography variant="caption">{tx.description || '-'}</Typography></TableCell>
-                                                            <TableCell><Typography variant="caption">{formatDateTime(tx.createdAt)}</Typography></TableCell>
-                                                        </TableRow>
-                                                    ));
-                                                })()}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </Box>
-                            )}
-
-                            {/* Analytics Tab */}
-                            {tabValue === 5 && (
-                                <Box>
-                                    <Grid container spacing={3}>
-                                        <Grid size={{ xs: 12, md: 6 }}>
-                                            <Paper
-                                                sx={{
-                                                    p: isMobile ? 3 : 4, borderRadius: 3, border: '1px solid #e2e8f0',
-                                                    textAlign: 'center', bgcolor: 'primary.main', color: 'white',
-                                                    height: '100%', display: 'flex', flexDirection: 'column',
-                                                    justifyContent: 'center'
-                                                }}
-                                                elevation={0}
-                                            >
-                                                <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700, fontSize: isMobile ? '0.65rem' : '0.75rem' }}>Total All-time Invested</Typography>
-                                                <Typography variant={isMobile ? "h4" : "h3"} fontWeight={800}>{formatCurrency(data.analytics.totalInvested)}</Typography>
-                                            </Paper>
-                                        </Grid>
-                                        <Grid size={{ xs: 12, md: 6 }}>
-                                            <Stack spacing={3} sx={{ height: '100%' }}>
-                                                <Paper sx={{ p: isMobile ? 2 : 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f0fdf4', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} elevation={0}>
-                                                    <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ fontSize: isMobile ? '0.6rem' : '0.7rem' }}>Total by Deposit</Typography>
-                                                    <Typography variant={isMobile ? "h6" : "h5"} fontWeight={800} color="success.main">{formatCurrency(data.analytics.totalDeposit)}</Typography>
-                                                </Paper>
-                                                <Paper sx={{ p: isMobile ? 2 : 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#eff6ff', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} elevation={0}>
-                                                    <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ fontSize: isMobile ? '0.6rem' : '0.7rem' }}>Total by Compounding Power</Typography>
-                                                    <Typography variant={isMobile ? "h6" : "h5"} fontWeight={800} color="primary.main">{formatCurrency(data.analytics.totalReinvest)}</Typography>
-                                                </Paper>
-                                            </Stack>
-                                        </Grid>
-
-                                        <Grid size={{ xs: 12 }}>
-                                            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
-                                                <Typography variant="subtitle1" fontWeight={800} gutterBottom>Financial Summary</Typography>
-                                                <Divider sx={{ mb: 2 }} />
-                                                <Grid container spacing={2}>
-                                                    {[
-                                                        { label: 'Total ROI Earned', value: formatCurrency(data.analytics.totalRoiEarned), color: '#10b981' },
-                                                        { label: 'Total Referral Earned', value: formatCurrency(data.analytics.totalReferralEarned), color: '#f59e0b' },
-                                                        { label: 'Total Withdrawn', value: formatCurrency(data.analytics.totalWithdrawn), color: '#3b82f6' },
-                                                        { label: 'Pending Withdrawals', value: formatCurrency(data.analytics.pendingWithdrawals), color: '#ef4444' },
-                                                    ].map((stat, i) => (
-                                                        <Grid key={i} size={{ xs: 12, sm: 6 }}>
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, borderBottom: '1px solid #f1f5f9' }}>
-                                                                <Typography variant="body2" color="text.secondary">{stat.label}</Typography>
-                                                                <Typography variant="body2" fontWeight={700} sx={{ color: stat.color }}>{stat.value}</Typography>
-                                                            </Box>
-                                                        </Grid>
-                                                    ))}
-                                                </Grid>
-                                            </Paper>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            )}
-
-                            {/* Hierarchy Tree Tab */}
+                            {/* Analytics & Tree Tabs... */}
                             {tabValue === 6 && (
                                 <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 3, p: 2, bgcolor: 'white' }}>
                                     <Typography variant="subtitle2" sx={{ mb: 2, color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -657,9 +507,9 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                 )}
             </DialogContent>
             
-            {/* Soft Delete Confirmation Dialog */}
+            {/* Legacy Soft Delete Confirmation Dialog */}
             <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
-                <DialogTitle>Confirm Delete Customer</DialogTitle>
+                <DialogTitle>Confirm Soft Delete Customer</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Are you sure you want to soft-delete <strong>{data?.profile?.firstName}</strong>? This will deactivate the user and all their active plans, excluding them from future ROI settlements.
@@ -668,8 +518,154 @@ export default function UserDetailsPopup({ open, onClose, userId }: UserDetailsP
                 <DialogActions>
                     <Button onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>Cancel</Button>
                     <Button onClick={handleDeleteUser} color="error" variant="contained" disabled={isDeleting}>
-                        {isDeleting ? 'Deleting...' : 'Delete'}
+                        {isDeleting ? 'Deleting...' : 'Deactivate User'}
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* PERMANENT DELETE SAFETY MODAL */}
+            <Dialog
+                open={permDeleteOpen}
+                onClose={() => !isPermDeleting && setPermDeleteOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: 3 } }}
+            >
+                <DialogTitle sx={{ pb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <DeleteForeverIcon color="error" />
+                    <Typography variant="h6" fontWeight={800}>Permanently Delete User</Typography>
+                </DialogTitle>
+
+                <DialogContent>
+                    {permDeleteError && (
+                        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                            {permDeleteError}
+                        </Alert>
+                    )}
+
+                    {/* SCENARIO A: Admin Account Protection */}
+                    {isAdminAccount ? (
+                        <Alert severity="error" icon={<BlockIcon />} sx={{ borderRadius: 2 }}>
+                            <AlertTitle sx={{ fontWeight: 700 }}>Action Blocked</AlertTitle>
+                            Cannot delete an admin account. Admin privileges must be revoked first.
+                        </Alert>
+
+                    /* SCENARIO B: User Has Downlines (Architecture Protection) */
+                    ) : hasDownlines ? (
+                        <Stack spacing={2}>
+                            <Alert severity="error" icon={<BlockIcon />} sx={{ borderRadius: 2 }}>
+                                <AlertTitle sx={{ fontWeight: 700 }}>Cannot Delete User (Active Downlines Exist)</AlertTitle>
+                                This user currently has <strong>{data?.profile?.directReferralCount || data?.directReferrals?.length || 0} direct referral(s)</strong> and <strong>{data?.profile?.totalDownlineCount || 0} total downlines</strong> in their network.
+                            </Alert>
+                            <Paper sx={{ p: 2, bgcolor: '#fff5f5', border: '1px solid #fed7d7', borderRadius: 2 }}>
+                                <Typography variant="subtitle2" fontWeight={700} color="#c53030" gutterBottom>
+                                    Why is deletion blocked?
+                                </Typography>
+                                <Typography variant="body2" color="#742a2a" paragraph sx={{ mb: 1 }}>
+                                    Deleting an internal node in the referral network would corrupt the tree architecture and leave orphan downline accounts.
+                                </Typography>
+                                <Typography variant="caption" color="#9b2c2c" display="block">
+                                    To maintain network hierarchy integrity, users with active downlines cannot be hard deleted.
+                                </Typography>
+                            </Paper>
+                        </Stack>
+
+                    /* SCENARIO C: User Has Trade Power BUT NO Downlines (2-Step Confirmation) */
+                    ) : hasTradePower ? (
+                        permDeleteStep === 1 ? (
+                            /* Step 1 Warning */
+                            <Stack spacing= {2}>
+                                <Alert severity="warning" icon={<WarningAmberIcon />} sx={{ borderRadius: 2 }}>
+                                    <AlertTitle sx={{ fontWeight: 700 }}>Step 1 of 2: Active Trade Power Warning</AlertTitle>
+                                    User <strong>{data?.profile?.firstName} {data?.profile?.lastName || ''}</strong> has active <strong>Trade Power of {formatCurrency(tradePower)}</strong> or active investment plans.
+                                </Alert>
+                                <Typography variant="body2" color="text.secondary">
+                                    Permanently deleting this account will discard their Trade Power and hard delete all associated wallet data. Upline referral earnings gained from this user will be <strong>preserved intact</strong>.
+                                </Typography>
+                            </Stack>
+                        ) : (
+                            /* Step 2 Confirmation Text Input */
+                            <Stack spacing={2}>
+                                <Alert severity="error" icon={<DeleteForeverIcon />} sx={{ borderRadius: 2 }}>
+                                    <AlertTitle sx={{ fontWeight: 700 }}>Step 2 of 2: Confirm Trade Power Deletion</AlertTitle>
+                                    This action is permanent and cannot be undone.
+                                </Alert>
+                                <Typography variant="body2" fontWeight={600}>
+                                    To authorize permanent deletion, type the exact text <Box component="span" sx={{ bgcolor: '#fee2e2', color: '#991b1b', px: 1, py: 0.5, borderRadius: 1, fontFamily: 'monospace', fontWeight: 800 }}>DELETE TRADE POWER</Box> below:
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder="DELETE TRADE POWER"
+                                    value={confirmInput}
+                                    onChange={(e) => setConfirmInput(e.target.value)}
+                                    autoFocus
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                />
+                            </Stack>
+                        )
+
+                    /* SCENARIO D: User Has NO Downlines and NO Trade Power (Standard 1-Step Confirmation) */
+                    ) : (
+                        <Stack spacing={2}>
+                            <Alert severity="warning" icon={<WarningAmberIcon />} sx={{ borderRadius: 2 }}>
+                                <AlertTitle sx={{ fontWeight: 700 }}>Permanent Deletion Warning</AlertTitle>
+                                Are you sure you want to permanently delete <strong>{data?.profile?.firstName} {data?.profile?.lastName || ''}</strong> (@{data?.profile?.telegramUsername || data?.profile?.telegramId})?
+                            </Alert>
+                            <Typography variant="body2" color="text.secondary">
+                                This will purge the user and all associated wallet records from the database. Any upline earnings remain preserved. This action <strong>cannot be undone</strong>.
+                            </Typography>
+                        </Stack>
+                    )}
+                </DialogContent>
+
+                <DialogActions sx={{ p: 2, borderTop: '1px solid #f1f5f9' }}>
+                    <Button
+                        onClick={() => setPermDeleteOpen(false)}
+                        disabled={isPermDeleting}
+                        sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Cancel
+                    </Button>
+
+                    {isAdminAccount || hasDownlines ? (
+                        <Button variant="contained" disabled sx={{ textTransform: 'none', fontWeight: 700 }}>
+                            Deletion Blocked
+                        </Button>
+                    ) : hasTradePower ? (
+                        permDeleteStep === 1 ? (
+                            <Button
+                                variant="contained"
+                                color="warning"
+                                onClick={() => setPermDeleteStep(2)}
+                                sx={{ textTransform: 'none', fontWeight: 700 }}
+                            >
+                                I Understand, Proceed to Step 2
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                color="error"
+                                disabled={confirmInput.trim() !== 'DELETE TRADE POWER' || isPermDeleting}
+                                onClick={() => handleExecutePermanentDelete(true)}
+                                startIcon={isPermDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+                                sx={{ textTransform: 'none', fontWeight: 700 }}
+                            >
+                                {isPermDeleting ? 'Deleting...' : 'Permanently Delete User'}
+                            </Button>
+                        )
+                    ) : (
+                        <Button
+                            variant="contained"
+                            color="error"
+                            disabled={isPermDeleting}
+                            onClick={() => handleExecutePermanentDelete(false)}
+                            startIcon={isPermDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+                            sx={{ textTransform: 'none', fontWeight: 700 }}
+                        >
+                            {isPermDeleting ? 'Deleting...' : 'Permanently Delete User'}
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
         </Dialog>

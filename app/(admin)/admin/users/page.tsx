@@ -290,7 +290,7 @@ export default function AdminUsersPage() {
             </Paper>
 
             <AdminAdvancedFilters open={filterOpen} onClose={() => setFilterOpen(false)} fields={FILTER_FIELDS} values={filterValues} onApply={(v) => { setFilterValues(v); setPage(0); }} onClear={() => { setFilterValues({}); setPage(0); }} />
-            <UserDetailsPopup open={detailsOpen} onClose={() => setDetailsOpen(false)} userId={selectedUserId} />
+            <UserDetailsPopup open={detailsOpen} onClose={() => setDetailsOpen(false)} userId={selectedUserId} onUserDeleted={fetchUsers} />
         </Box>
     );
 }

@@ -23,31 +23,31 @@ export async function POST(request: NextRequest) {
             // Handle /start [referralCode]
             if (text.startsWith('/start')) {
                 const parts = text.split(' ');
-                const referralCode = parts.length > 1 ? parts[1] : '';
+                const rawReferralCode = parts.length > 1 ? parts[1].trim() : '';
                 
-                console.log(`[BOT] Processing /start. Referral code extracted: "${referralCode}"`);
+                console.log(`[BOT] Processing /start. Referral code extracted: "${rawReferralCode}"`);
 
                 let startAppLink = `https://t.me/${BOT_USERNAME}/${MINI_APP_NAME}`;
-                if (referralCode) {
-                    startAppLink += `?startapp=${referralCode}`;
+                if (rawReferralCode) {
+                    startAppLink += `?startapp=${rawReferralCode}`;
                     
-                    // Save pending referral intent for static button support
+                    // Save / Update pending referral intent for user
                     try {
                         const db = await getDB();
                         await db.collection(Collections.PENDING_REFERRALS).updateOne(
                             { telegramId: String(chatId) },
                             { 
                                 $set: { 
+                                    referralCode: rawReferralCode,
                                     updatedAt: new Date() 
                                 },
                                 $setOnInsert: { 
-                                    referralCode, 
                                     createdAt: new Date() 
                                 }
                             },
                             { upsert: true }
                         );
-                        console.log(`[BOT] Saved pending referral for user ${chatId}: ${referralCode}`);
+                        console.log(`[BOT] Saved/updated pending referral for user ${chatId}: ${rawReferralCode}`);
                     } catch (dbError) {
                         console.error('[BOT] Failed to save pending referral:', dbError);
                     }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
                 console.log(`[BOT] Generated startapp link for user ${chatId}: ${startAppLink}`);
 
-                const welcomeMessage = `Welcome to Trade Edge! 🚀 (Ref: ${referralCode || 'none'})\n\nClick the button below to launch the Mini App and start earning.`;
+                const welcomeMessage = `Welcome to Trade Edge! 🚀 (Ref: ${rawReferralCode || 'none'})\n\nClick the button below to launch the Mini App and start earning.`;
 
                 const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
                     method: 'POST',
