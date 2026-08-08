@@ -160,6 +160,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
                 return NextResponse.json({ success: false, error: 'User creation failed' }, { status: 500 });
             }
 
+            // Clean up pending referral record once user is created
+            try {
+                const db = await getDB();
+                await db.collection(Collections.PENDING_REFERRALS).deleteOne({ telegramId: String(telegramUser.id) });
+            } catch {}
+
             // Background tasks: wallet and stats
             await getOrCreateWallet(user._id).catch(() => {});
             if (referredById) {
@@ -182,6 +188,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
                     if (referrer && referrer._id.toString() !== user._id.toString()) {
                         updates.referredById = referrer._id;
                         updateUserStatsRecursively(referrer._id).catch(() => {});
+                        // Clean up pending referral document
+                        const db = await getDB();
+                        await db.collection(Collections.PENDING_REFERRALS).deleteOne({ telegramId: String(telegramUser.id) });
                     }
                 } catch {}
             }
@@ -190,7 +199,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             updates.currentSessionId = currentSessionId;
             updates.updatedAt = new Date();
 
-            await updateUser(user._id, updates).catch(() => {});
+            const updatedUserDoc = await updateUser(user._id, updates).catch(() => null);
+            if (updatedUserDoc) {
+                user = updatedUserDoc;
+            }
         }
 
         const userResponse: User = {

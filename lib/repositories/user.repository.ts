@@ -19,8 +19,16 @@ export async function findUserByTelegramId(telegramId: string) {
 }
 
 export async function findUserByReferralCode(referralCode: string) {
+    if (!referralCode) return null;
     const db = await getDB();
-    return db.collection<UserDocument>(Collections.USERS).findOne({ referralCode });
+    const cleanCode = referralCode.trim().toUpperCase();
+    let user = await db.collection<UserDocument>(Collections.USERS).findOne({ referralCode: cleanCode });
+    if (!user) {
+        user = await db.collection<UserDocument>(Collections.USERS).findOne({
+            referralCode: { $regex: new RegExp(`^${cleanCode}$`, 'i') }
+        });
+    }
+    return user;
 }
 
 export async function createUser(userData: Omit<UserDocument, '_id' | 'createdAt' | 'updatedAt'>) {
@@ -75,6 +83,33 @@ export async function updateUser(id: string | ObjectId, updates: Partial<UserDoc
         const currentUser = await findUserById(id);
         if (currentUser?.referredById) {
             delete updates.referredById;
+            delete updates.ancestors;
+        } else {
+            // Calculate ancestors for late referral binding
+            const parent = await db.collection<UserDocument>(Collections.USERS).findOne(
+                { _id: updates.referredById },
+                { projection: { ancestors: 1, referredById: 1 } }
+            );
+            if (parent) {
+                if (parent.ancestors && Array.isArray(parent.ancestors)) {
+                    updates.ancestors = [parent._id, ...parent.ancestors].slice(0, 20);
+                } else {
+                    let ancestors = [parent._id];
+                    let currParentId = parent.referredById;
+                    let depth = 1;
+                    while (currParentId && depth < 20) {
+                        ancestors.push(currParentId);
+                        const ancestorDoc = await db.collection<UserDocument>(Collections.USERS).findOne(
+                            { _id: currParentId },
+                            { projection: { referredById: 1 } }
+                        );
+                        if (!ancestorDoc || !ancestorDoc.referredById) break;
+                        currParentId = ancestorDoc.referredById;
+                        depth++;
+                    }
+                    updates.ancestors = ancestors;
+                }
+            }
         }
     }
 

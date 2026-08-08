@@ -64,6 +64,36 @@ interface TelegramContextType {
 
 const TelegramContext = createContext<TelegramContextType | undefined>(undefined);
 
+// Helper to extract start_param from webApp, location search/hash, or initData string
+function extractStartParam(webApp: WebAppType | null, initDataStr: string): string | null {
+    if (webApp?.initDataUnsafe?.start_param) {
+        return webApp.initDataUnsafe.start_param.trim();
+    }
+
+    if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const param = urlParams.get('startapp') || urlParams.get('tgWebAppStartParam') || urlParams.get('start_param') || urlParams.get('ref') || urlParams.get('start') || urlParams.get('referralCode');
+        if (param) return param.trim();
+
+        if (window.location.hash) {
+            const hashStr = window.location.hash.replace(/^#/, '');
+            const hashParams = new URLSearchParams(hashStr);
+            const hashParam = hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start_param') || hashParams.get('ref') || hashParams.get('start');
+            if (hashParam) return hashParam.trim();
+        }
+    }
+
+    if (initDataStr) {
+        try {
+            const initParams = new URLSearchParams(initDataStr);
+            const initParam = initParams.get('start_param') || initParams.get('tgWebAppStartParam');
+            if (initParam) return initParam.trim();
+        } catch {}
+    }
+
+    return null;
+}
+
 export function TelegramProvider({ children }: { children: ReactNode }) {
     const [isReady, setIsReady] = useState(false);
     const [webApp, setWebApp] = useState<WebAppType | null>(null);
@@ -138,15 +168,18 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(interval);
     }, [checkWebApp]);
 
+    const resolvedInitData = initData || webApp?.initData || '';
+    const resolvedStartParam = extractStartParam(webApp, resolvedInitData);
+
     const value: TelegramContextType = {
         webApp,
         user: webApp?.initDataUnsafe?.user || null,
-        initData: initData || webApp?.initData || '',
-        startParam: webApp?.initDataUnsafe?.start_param || null,
+        initData: resolvedInitData,
+        startParam: resolvedStartParam,
         colorScheme: 'light',
         isReady,
         isTelegramWebApp: !!webApp,
-        hasInitData: !!(initData || webApp?.initData),
+        hasInitData: !!resolvedInitData,
     };
 
     return (

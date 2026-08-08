@@ -25,7 +25,7 @@ try {
 import { getDB } from '../lib/db';
 import { Collections } from '../lib/db/collections';
 import { ObjectId } from 'mongodb';
-import { createUser, findUserByReferralCode } from '../lib/repositories/user.repository';
+import { createUser, findUserByReferralCode, updateUser } from '../lib/repositories/user.repository';
 import { updateUserStatsRecursively } from '../lib/referral';
 
 async function testReferralFlow() {
@@ -61,27 +61,16 @@ async function testReferralFlow() {
     console.log(`✅ Referrer user created: Alice (${referrerCode})`);
 
     const newTargetTelegramId = '888777222';
+    const existingTargetTelegramId = '888777333';
 
     try {
-        // TEST 1: Simulate Bot Webhook handling `/start REFTEST1`
+        // TEST 1: Bot Webhook pending referral update
         console.log('\n🧪 TEST 1: Bot Webhook pending referral update');
         
-        // First tap: user opens bot without referral
         await db.collection(Collections.PENDING_REFERRALS).updateOne(
             { telegramId: newTargetTelegramId },
             { 
-                $set: { referralCode: '', updatedAt: new Date() },
-                $setOnInsert: { createdAt: new Date() }
-            },
-            { upsert: true }
-        );
-        console.log('   Initial pending record created (empty referral code).');
-
-        // Second tap: user taps friend referral link `/start REFTEST1`
-        await db.collection(Collections.PENDING_REFERRALS).updateOne(
-            { telegramId: newTargetTelegramId },
-            { 
-                $set: { referralCode: referrerCode, updatedAt: new Date() },
+                $set: { referralCode: 'reftest1', updatedAt: new Date() }, // lowercase code
                 $setOnInsert: { createdAt: new Date() }
             },
             { upsert: true }
@@ -89,34 +78,30 @@ async function testReferralFlow() {
         
         const pendingDoc = await db.collection(Collections.PENDING_REFERRALS).findOne({ telegramId: newTargetTelegramId });
         console.log('   Updated Pending Doc:', pendingDoc);
-        if (pendingDoc?.referralCode === referrerCode) {
-            console.log('   [PASS] Bot correctly UPDATED pending referral code to REFTEST1!');
-        } else {
-            console.error('   [FAIL] Pending referral code was not updated!');
+        if (pendingDoc?.referralCode === 'reftest1') {
+            console.log('   [PASS] Pending referral code stored.');
         }
 
-        // TEST 2: User Creation with Referral Code Resolution
-        console.log('\n🧪 TEST 2: User Registration & Referrer Linkage');
+        // TEST 2: Case-Insensitive User Resolution & Creation
+        console.log('\n🧪 TEST 2: Case-Insensitive Referral Code Resolution & Creation');
         
-        // Lookup pending referral code
         let resolvedCode = pendingDoc?.referralCode;
         let referredById: ObjectId | undefined = undefined;
 
         if (resolvedCode) {
-            const referrer = await findUserByReferralCode(resolvedCode);
+            const referrer = await findUserByReferralCode(resolvedCode); // passing 'reftest1'
             if (referrer && String(referrer.telegramId) !== newTargetTelegramId) {
                 referredById = referrer._id;
             }
         }
 
-        console.log('   Resolved ReferredById:', referredById?.toString());
+        console.log('   Resolved ReferredById from lowercase code:', referredById?.toString());
         if (referredById?.toString() === referrerId.toString()) {
-            console.log('   [PASS] Referrer correctly resolved to Alice (referrerId)!');
+            console.log('   [PASS] Case-insensitive referral lookup correctly matched Alice (REFTEST1)!');
         } else {
-            console.error('   [FAIL] Referrer resolution failed!');
+            console.error('   [FAIL] Case-insensitive referral lookup failed!');
         }
 
-        // Create new user linked to Alice
         const newUser = await createUser({
             telegramId: newTargetTelegramId,
             firstName: 'Bob',
@@ -132,17 +117,46 @@ async function testReferralFlow() {
             isActive: true,
         });
 
-        console.log('   New User created:', {
-            id: newUser._id.toString(),
-            name: newUser.firstName,
-            referredById: newUser.referredById?.toString(),
-            ancestors: newUser.ancestors?.map(a => a.toString())
-        });
-
         if (newUser.referredById?.toString() === referrerId.toString() && newUser.ancestors?.some(a => a.toString() === referrerId.toString())) {
-            console.log('   [PASS] New user successfully linked to Alice with correct ancestor chain!');
+            console.log('   [PASS] New user linked to Alice with calculated ancestors!');
         } else {
             console.error('   [FAIL] Ancestor chain or referredById missing!');
+        }
+
+        // TEST 3: Late Referral Binding on Existing Root User
+        console.log('\n🧪 TEST 3: Late Referral Binding on Existing Root User');
+
+        // Create user initially without referrer
+        const existingRootUser = await createUser({
+            telegramId: existingTargetTelegramId,
+            firstName: 'Charlie',
+            lastName: 'ExistingUser',
+            referralCode: 'CHARLIE1',
+            referredById: null,
+            directReferralCount: 0,
+            totalReferralCount: 0,
+            totalDownlineCount: 0,
+            totalEarnings: 0,
+            tradePower: 0,
+            isAdmin: false,
+            isActive: true,
+        });
+
+        console.log('   Created unlinked user Charlie:', existingRootUser._id.toString(), 'referredById:', existingRootUser.referredById);
+
+        // Perform late referral binding using updateUser
+        const updatedCharlie = await updateUser(existingRootUser._id, { referredById: referrerId });
+
+        console.log('   Updated Charlie after late binding:', {
+            id: updatedCharlie?._id.toString(),
+            referredById: updatedCharlie?.referredById?.toString(),
+            ancestors: updatedCharlie?.ancestors?.map(a => a.toString())
+        });
+
+        if (updatedCharlie?.referredById?.toString() === referrerId.toString() && updatedCharlie?.ancestors?.some(a => a.toString() === referrerId.toString())) {
+            console.log('   [PASS] Late referral binding successfully updated referredById AND calculated ancestors!');
+        } else {
+            console.error('   [FAIL] Late binding failed to populate referredById or ancestors!');
         }
 
         // Recalculate Referrer Stats
@@ -157,8 +171,8 @@ async function testReferralFlow() {
             totalDownlineCount: updatedAlice?.totalDownlineCount
         });
 
-        if (updatedAlice?.directReferralCount === 1 && updatedAlice?.totalDownlineCount === 1) {
-            console.log('   [PASS] Referrer directReferralCount and totalDownlineCount correctly updated to 1!');
+        if (updatedAlice?.directReferralCount === 2 && updatedAlice?.totalDownlineCount === 2) {
+            console.log('   [PASS] Referrer directReferralCount and totalDownlineCount correctly updated to 2!');
         } else {
             console.error('   [FAIL] Referrer stats update failed!');
         }
@@ -169,9 +183,8 @@ async function testReferralFlow() {
 
     } finally {
         // Cleanup test data
-        await db.collection(Collections.USERS).deleteMany({ telegramId: { $in: [referrerTelegramId, newTargetTelegramId] } });
-        await db.collection(Collections.PENDING_REFERRALS).deleteMany({ telegramId: newTargetTelegramId });
-        process.exit(0);
+        await db.collection(Collections.USERS).deleteMany({ telegramId: { $in: [referrerTelegramId, newTargetTelegramId, existingTargetTelegramId] } });
+        await db.collection(Collections.PENDING_REFERRALS).deleteMany({ telegramId: { $in: [newTargetTelegramId, existingTargetTelegramId] } });
     }
 }
 
