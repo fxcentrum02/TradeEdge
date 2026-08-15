@@ -58,9 +58,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         if (!user || !user.referredById) {
             let resolvedCode: string | undefined = referralCode ? referralCode.trim() : undefined;
 
-            // Check initData.start_param next if not provided in body
-            if (!resolvedCode && parsedData.start_param) {
-                resolvedCode = (parsedData.start_param as string).trim();
+            // Check initData start parameters next if not provided in body
+            if (!resolvedCode) {
+                const rawStart = parsedData.start_param || parsedData.tgWebAppStartParam || parsedData.startapp || parsedData.start;
+                if (rawStart) {
+                    resolvedCode = String(rawStart).trim();
+                }
             }
 
             // Check PENDING_REFERRALS as fallback if neither body nor start_param were set

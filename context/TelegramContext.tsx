@@ -66,32 +66,46 @@ const TelegramContext = createContext<TelegramContextType | undefined>(undefined
 
 // Helper to extract start_param from webApp, location search/hash, or initData string
 function extractStartParam(webApp: WebAppType | null, initDataStr: string): string | null {
+    let param: string | null = null;
+
     if (webApp?.initDataUnsafe?.start_param) {
-        return webApp.initDataUnsafe.start_param.trim();
+        param = webApp.initDataUnsafe.start_param.trim();
     }
 
-    if (typeof window !== 'undefined') {
+    if (!param && typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
-        const param = urlParams.get('startapp') || urlParams.get('tgWebAppStartParam') || urlParams.get('start_param') || urlParams.get('ref') || urlParams.get('start') || urlParams.get('referralCode');
-        if (param) return param.trim();
+        param = urlParams.get('startapp') || urlParams.get('tgWebAppStartParam') || urlParams.get('start_param') || urlParams.get('ref') || urlParams.get('start') || urlParams.get('referralCode');
+        if (param) param = param.trim();
 
-        if (window.location.hash) {
+        if (!param && window.location.hash) {
             const hashStr = window.location.hash.replace(/^#/, '');
             const hashParams = new URLSearchParams(hashStr);
             const hashParam = hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start_param') || hashParams.get('ref') || hashParams.get('start');
-            if (hashParam) return hashParam.trim();
+            if (hashParam) param = hashParam.trim();
         }
     }
 
-    if (initDataStr) {
+    if (!param && initDataStr) {
         try {
             const initParams = new URLSearchParams(initDataStr);
-            const initParam = initParams.get('start_param') || initParams.get('tgWebAppStartParam');
-            if (initParam) return initParam.trim();
+            const initParam = initParams.get('start_param') || initParams.get('tgWebAppStartParam') || initParams.get('startapp') || initParams.get('start');
+            if (initParam) param = initParam.trim();
         } catch {}
     }
 
-    return null;
+    // Persist to localStorage as sticky fallback
+    if (typeof window !== 'undefined') {
+        if (param) {
+            try { localStorage.setItem('trade_edge_ref_code', param); } catch {}
+        } else {
+            try {
+                const cached = localStorage.getItem('trade_edge_ref_code');
+                if (cached) param = cached.trim();
+            } catch {}
+        }
+    }
+
+    return param;
 }
 
 export function TelegramProvider({ children }: { children: ReactNode }) {

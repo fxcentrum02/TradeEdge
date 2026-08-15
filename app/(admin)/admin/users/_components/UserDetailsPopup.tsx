@@ -4,19 +4,17 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useId } from 'react';
+import { useState, useEffect, useCallback, useId, useMemo } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, Box, Typography,
     IconButton, Avatar, Tabs, Tab, Grid, Divider,
     Table, TableBody, TableCell, TableContainer, TableHead,
     TableRow, Chip, CircularProgress, Stack, Button, Paper,
-    MenuItem, Select, InputLabel, FormControl, TextField,
+    MenuItem, Select, FormControl, TextField,
     useMediaQuery, useTheme, DialogActions, DialogContentText,
-    Alert, AlertTitle
+    Alert, AlertTitle, InputAdornment, ToggleButtonGroup, ToggleButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import PersonIcon from '@mui/icons-material/Person';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import HistoryIcon from '@mui/icons-material/History';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -24,16 +22,23 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import PeopleIcon from '@mui/icons-material/People';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import BlockIcon from '@mui/icons-material/Block';
+import SearchIcon from '@mui/icons-material/Search';
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import LocalAtmIcon from '@mui/icons-material/LocalAtm';
+
+import {
+    ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend
+} from 'recharts';
+
 import { formatCurrency, formatDateTime, getInitials, getAvatarUrl } from '@/lib/utils';
-import DateRangeFilterBar from '../../_components/DateRangeFilterBar';
 import type { HierarchyTreeNode } from '@/types';
+import type { AdminUserDetailsData } from '@/app/api/admin/users/[id]/details/route';
 
 // ===========================================
-// HIERARCHY TREE ITEM (Inner)
+// HIERARCHY TREE ITEM (Inner Component)
 // ===========================================
 
 const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: number; onToggle: (node: HierarchyTreeNode) => void }) => {
@@ -131,6 +136,24 @@ const TreeItem = ({ node, level, onToggle }: { node: HierarchyTreeNode; level: n
     );
 };
 
+// Color Palette Constant
+const AVATAR_COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
+
+// Transaction Badge Style Mapping Helper
+const getTxChipProps = (type: string) => {
+    switch (type) {
+        case 'DEPOSIT': return { label: 'DEPOSIT', color: 'info' as const };
+        case 'WITHDRAWAL': return { label: 'WITHDRAWAL', color: 'error' as const };
+        case 'ROI_EARNING': return { label: 'ROI', color: 'success' as const };
+        case 'REFERRAL_EARNING': return { label: 'REFERRAL', color: 'secondary' as const };
+        case 'REINVEST': return { label: 'REINVEST', color: 'primary' as const };
+        case 'ADMIN_CREDIT': return { label: 'ADMIN CREDIT', color: 'warning' as const };
+        case 'ADMIN_DEBIT': return { label: 'ADMIN DEBIT', color: 'error' as const };
+        case 'MILESTONE_BONUS': return { label: 'MILESTONE', color: 'secondary' as const };
+        default: return { label: type, color: 'default' as const };
+    }
+};
+
 // ===========================================
 // MAIN COMPONENT
 // ===========================================
@@ -146,9 +169,9 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
     const id = useId();
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<AdminUserDetailsData | null>(null);
 
-    // Soft delete state (legacy)
+    // Soft delete state
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -163,13 +186,14 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     // Transaction Filters State
-    const [txFilters, setTxFilters] = useState({
-        type: 'ALL',
-        startDate: '',
-        endDate: '',
-        minAmount: '',
-        maxAmount: ''
-    });
+    const [txTypeFilter, setTxTypeFilter] = useState('ALL');
+    const [txSearch, setTxSearch] = useState('');
+
+    // ROI History Filters State
+    const [roiSearch, setRoiSearch] = useState('');
+
+    // Referral Sub-Tab State ('earnings' | 'downlines')
+    const [referralSubTab, setReferralSubTab] = useState<'earnings' | 'downlines'>('earnings');
 
     const fetchData = useCallback(async () => {
         if (!userId) return;
@@ -190,6 +214,10 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
     useEffect(() => {
         if (open && userId) {
             setTabValue(0);
+            setTxTypeFilter('ALL');
+            setTxSearch('');
+            setRoiSearch('');
+            setReferralSubTab('earnings');
             fetchData();
         }
     }, [open, userId, fetchData]);
@@ -257,29 +285,84 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
         }
     };
 
-    const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
-
-    // Derived states for permanent deletion checks
-    const hasDownlines = data ? (
-        (data.profile?.directReferralCount > 0) ||
-        (data.profile?.totalDownlineCount > 0) ||
-        (data.directReferrals && data.directReferrals.length > 0)
-    ) : false;
+    // Derived Memoized Data & Checks
+    const hasDownlines = useMemo(() => {
+        if (!data) return false;
+        return (
+            (data.profile.directReferralCount > 0) ||
+            (data.profile.totalDownlineCount > 0) ||
+            (data.directReferrals && data.directReferrals.length > 0)
+        );
+    }, [data]);
 
     const tradePower = data?.profile?.tradePower || 0;
-    const hasActivePlans = data?.plans?.some((p: any) => p.isActive) || false;
+    const hasActivePlans = useMemo(() => data?.plans?.some((p) => p.isActive) || false, [data?.plans]);
     const hasTradePower = tradePower > 0 || hasActivePlans;
     const isAdminAccount = data?.profile?.isAdmin === true;
+
+    // Filtered Transactions Memo
+    const filteredTransactions = useMemo(() => {
+        if (!data?.transactions) return [];
+        return data.transactions.filter((t) => {
+            const matchesType = txTypeFilter === 'ALL' || t.type === txTypeFilter;
+            const matchesSearch = !txSearch || 
+                t.description?.toLowerCase().includes(txSearch.toLowerCase()) ||
+                t.reference?.toLowerCase().includes(txSearch.toLowerCase()) ||
+                t.type?.toLowerCase().includes(txSearch.toLowerCase());
+            return matchesType && matchesSearch;
+        });
+    }, [data?.transactions, txTypeFilter, txSearch]);
+
+    // Filtered ROI History Memo
+    const filteredRoiHistory = useMemo(() => {
+        if (!data?.roiHistory) return [];
+        return data.roiHistory.filter((r) => {
+            if (!roiSearch) return true;
+            return (
+                r.description?.toLowerCase().includes(roiSearch.toLowerCase()) ||
+                formatCurrency(r.amount).includes(roiSearch) ||
+                formatDateTime(r.createdAt).toLowerCase().includes(roiSearch.toLowerCase())
+            );
+        });
+    }, [data?.roiHistory, roiSearch]);
+
+    // Analytics Recharts Memoized Data
+    const incomeBreakdownData = useMemo(() => {
+        if (!data?.analytics) return [];
+        return [
+            { name: 'ROI Paid', value: data.analytics.totalRoiEarned },
+            { name: 'Referral Earned', value: data.analytics.totalReferralEarned },
+        ];
+    }, [data?.analytics?.totalRoiEarned, data?.analytics?.totalReferralEarned]);
+
+    const portfolioSourceData = useMemo(() => {
+        if (!data?.analytics) return [];
+        return [
+            { name: 'Direct Deposit', value: data.analytics.totalDeposit },
+            { name: 'Reinvested ROI', value: data.analytics.totalReinvest },
+        ];
+    }, [data?.analytics?.totalDeposit, data?.analytics?.totalReinvest]);
+
+    const capitalSummaryData = useMemo(() => {
+        if (!data?.analytics) return [];
+        return [
+            { category: 'Total Invested', amount: data.analytics.totalInvested },
+            { category: 'Total ROI Paid', amount: data.analytics.totalRoiEarned },
+            { category: 'Total Referral Earned', amount: data.analytics.totalReferralEarned },
+            { category: 'Total Withdrawn', amount: data.analytics.totalWithdrawn },
+            { category: 'Pending Withdrawal', amount: data.analytics.pendingWithdrawals },
+        ];
+    }, [data?.analytics]);
 
     return (
         <Dialog
             open={open}
             onClose={onClose}
-            maxWidth="md"
+            maxWidth="lg"
             fullWidth
             fullScreen={isMobile}
             PaperProps={{
-                sx: { borderRadius: isMobile ? 0 : 3, maxHeight: isMobile ? '100%' : '90vh' }
+                sx: { borderRadius: isMobile ? 0 : 3, maxHeight: isMobile ? '100%' : '92vh' }
             }}
         >
             <DialogTitle
@@ -289,10 +372,11 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    borderBottom: '1px solid #f1f5f9'
+                    borderBottom: '1px solid #f1f5f9',
+                    bgcolor: 'white'
                 }}
             >
-                <Typography variant="h6" fontWeight={800}>User Details</Typography>
+                <Typography variant="h6" fontWeight={800} sx={{ color: '#0f172a' }}>User Details & Analytics</Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                     {data && (
                         <Button
@@ -322,7 +406,7 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                     </Box>
                 ) : data ? (
                     <Box>
-                        {/* Header Stats */}
+                        {/* Header Profile Bar */}
                         <Box sx={{ p: isMobile ? 2 : 3, bgcolor: 'white', borderBottom: '1px solid #f1f5f9' }}>
                             <Box sx={{ 
                                 display: 'flex', 
@@ -337,7 +421,7 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                                     sx={{
                                         width: isMobile ? 64 : 80, height: isMobile ? 64 : 80, 
                                         fontSize: isMobile ? 24 : 32, fontWeight: 700,
-                                        bgcolor: COLORS[0], boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)'
+                                        bgcolor: AVATAR_COLORS[0], boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)'
                                     }}
                                 >
                                     {getInitials(data.profile.firstName || data.profile.telegramUsername || 'U')}
@@ -351,12 +435,12 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                                     </Typography>
                                     {!isMobile && (
                                         <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: -0.5 }}>
-                                            ID: {data.profile.id}
+                                            ID: {data.profile.id} | Ref Code: <strong>{data.profile.referralCode}</strong>
                                         </Typography>
                                     )}
                                     {data.profile.referredBy && (
                                         <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: 0.5, fontWeight: 500 }}>
-                                            Referred by: <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>{data.profile.referredBy.name}</Box>
+                                            Referred by: <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>{data.profile.referredBy.name}</Box> {data.profile.referredBy.telegramHandle && `(@${data.profile.referredBy.telegramHandle})`}
                                         </Typography>
                                     )}
                                     <Stack direction="row" spacing={1} sx={{ mt: 1, justifyContent: isMobile ? 'center' : 'flex-start', flexWrap: 'wrap', gap: 1 }}>
@@ -370,133 +454,708 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                                                 fontWeight: 700, borderRadius: 1.5
                                             }}
                                         />
+                                        {data.profile.isAdmin && (
+                                            <Chip label="Admin" size="small" color="primary" sx={{ fontWeight: 700, borderRadius: 1.5 }} />
+                                        )}
                                     </Stack>
                                 </Box>
                                 <Box sx={{ 
                                     textAlign: isMobile ? 'center' : 'right',
                                     mt: isMobile ? 1 : 0,
-                                    bgcolor: isMobile ? '#f8fafc' : 'transparent',
-                                    p: isMobile ? 2 : 0,
-                                    borderRadius: isMobile ? 2 : 0,
-                                    width: isMobile ? '100%' : 'auto'
+                                    bgcolor: isMobile ? '#f8fafc' : '#f1f5f9',
+                                    p: 2,
+                                    borderRadius: 3,
+                                    width: isMobile ? '100%' : 'auto',
+                                    minWidth: 180
                                 }}>
-                                    <Typography variant="overline" color="text.secondary" fontWeight={700}>Main Balance</Typography>
+                                    <Typography variant="overline" color="text.secondary" fontWeight={700} display="block">Main Balance</Typography>
                                     <Typography variant={isMobile ? "h5" : "h4"} fontWeight={800} color="primary.main">
                                         {formatCurrency(data.profile.walletBalance)}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                        Ref Wallet: <strong>{formatCurrency(data.profile.referralWalletBalance)}</strong>
                                     </Typography>
                                 </Box>
                             </Box>
                         </Box>
 
                         {/* Tabs Navigation */}
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white' }}>
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white', px: 2 }}>
                             <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
                                 <Tab label="Overview" icon={<TrendingUpIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
                                 <Tab label={`Plans (${data.plans.length})`} icon={<ReceiptIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
-                                <Tab label="ROI History" icon={<TrendingUpIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
-                                <Tab label="Referrals" icon={<AccountBalanceWalletIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
-                                <Tab label="Transactions" icon={<HistoryIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
-                                <Tab label="Analytics" icon={<TrendingUpIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
-                                <Tab label="Tree" icon={<AccountTreeIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                                <Tab label={`ROI History (${data.roiHistory.length})`} icon={<LocalAtmIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                                <Tab label={`Referrals (${(data.referralEarnings?.length || 0) + (data.directReferrals?.length || 0)})`} icon={<PeopleIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                                <Tab label={`Transactions (${data.transactions.length})`} icon={<HistoryIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                                <Tab label="Analytics" icon={<AutoGraphIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                                <Tab label={`Tree (${data.directReferrals.length})`} icon={<AccountTreeIcon />} iconPosition="start" sx={{ textTransform: 'none', fontWeight: 700 }} />
                             </Tabs>
                         </Box>
 
-                        {/* Tab Content */}
-                        <Box sx={{ p: 3 }}>
-                            {/* Overview Tab */}
+                        {/* Tab Content Body */}
+                        <Box sx={{ p: isMobile ? 2 : 3 }}>
+
+                            {/* ======================================== */}
+                            {/* TAB 0: OVERVIEW */}
+                            {/* ======================================== */}
                             {tabValue === 0 && (
-                                <Grid container spacing={3}>
-                                    <Grid size={{ xs: 12, md: 6 }}>
-                                        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
-                                            <Typography variant="subtitle1" fontWeight={800} gutterBottom>Account Overview</Typography>
-                                            <Divider sx={{ mb: 2 }} />
-                                            <Stack spacing={2}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography color="text.secondary" variant="body2">Mining / Trade Power</Typography>
-                                                    <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(data.profile.tradePower || 0)}</Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography color="text.secondary" variant="body2">Total Referrals</Typography>
-                                                    <Typography variant="body2" fontWeight={700}>{data.profile.directReferralCount || 0} direct ({data.profile.totalDownlineCount || 0} downline)</Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography color="text.secondary" variant="body2">Total Earnings</Typography>
-                                                    <Typography variant="body2" fontWeight={700} color="#f59e0b">{formatCurrency(data.profile.totalEarnings || 0)}</Typography>
-                                                </Box>
-                                            </Stack>
-                                        </Paper>
+                                <Stack spacing={3}>
+                                    {/* Stat Grid */}
+                                    <Grid container spacing={2}>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>Trade / Mining Power</Typography>
+                                                <Typography variant="h5" fontWeight={800} color="success.main" sx={{ my: 0.5 }}>
+                                                    {formatCurrency(data.profile.tradePower || 0)}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {data.plans.filter((p) => p.isActive).length} active plan(s)
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>Total Invested</Typography>
+                                                <Typography variant="h5" fontWeight={800} color="primary.main" sx={{ my: 0.5 }}>
+                                                    {formatCurrency(data.analytics.totalInvested)}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Deposit: {formatCurrency(data.analytics.totalDeposit)} | Reinvest: {formatCurrency(data.analytics.totalReinvest)}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>Total Earnings</Typography>
+                                                <Typography variant="h5" fontWeight={800} color="#f59e0b" sx={{ my: 0.5 }}>
+                                                    {formatCurrency(data.profile.totalEarnings || 0)}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    ROI: {formatCurrency(data.analytics.totalRoiEarned)} | Ref: {formatCurrency(data.analytics.totalReferralEarned)}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>Total Withdrawn</Typography>
+                                                <Typography variant="h5" fontWeight={800} color="error.main" sx={{ my: 0.5 }}>
+                                                    {formatCurrency(data.analytics.totalWithdrawn)}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Pending: {formatCurrency(data.analytics.pendingWithdrawals)}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
                                     </Grid>
 
-                                    <Grid size={{ xs: 12, md: 6 }}>
-                                        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
-                                            <Typography variant="subtitle1" fontWeight={800} gutterBottom>Financial Summary</Typography>
-                                            <Divider sx={{ mb: 2 }} />
-                                            <Stack spacing={2}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography color="text.secondary" variant="body2">Total Invested</Typography>
-                                                    <Typography variant="body2" fontWeight={700}>{formatCurrency(data.analytics.totalInvested)}</Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography color="text.secondary" variant="body2">Total Withdrawn</Typography>
-                                                    <Typography variant="body2" fontWeight={700} color="primary.main">{formatCurrency(data.analytics.totalWithdrawn)}</Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography color="text.secondary" variant="body2">Pending Withdrawals</Typography>
-                                                    <Typography variant="body2" fontWeight={700} color="error.main">{formatCurrency(data.analytics.pendingWithdrawals)}</Typography>
-                                                </Box>
-                                            </Stack>
-                                        </Paper>
+                                    {/* Overview Cards */}
+                                    <Grid container spacing={3}>
+                                        <Grid size={{ xs: 12, md: 6 }}>
+                                            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                                <Typography variant="subtitle1" fontWeight={800} gutterBottom>Account Overview</Typography>
+                                                <Divider sx={{ mb: 2 }} />
+                                                <Stack spacing={2}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">User ID</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>{data.profile.id}</Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Telegram Username</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>@{data.profile.telegramUsername || 'N/A'}</Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Referral Code</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>{data.profile.referralCode}</Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Referral Downlines</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>
+                                                            {data.profile.directReferralCount || 0} Direct / {data.profile.totalDownlineCount || 0} Network Downlines
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Referred By</Typography>
+                                                        <Typography variant="body2" fontWeight={700} color="primary.main">
+                                                            {data.profile.referredBy?.name || 'Direct / None'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                            </Paper>
+                                        </Grid>
+
+                                        <Grid size={{ xs: 12, md: 6 }}>
+                                            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                                                <Typography variant="subtitle1" fontWeight={800} gutterBottom>Financial Balance Summary</Typography>
+                                                <Divider sx={{ mb: 2 }} />
+                                                <Stack spacing={2}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Main Wallet Balance</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>{formatCurrency(data.profile.walletBalance)}</Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Referral Wallet Balance</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>{formatCurrency(data.profile.referralWalletBalance)}</Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Total Direct Capital Deposit</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>{formatCurrency(data.analytics.totalDeposit)}</Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Total ROI Reinvested</Typography>
+                                                        <Typography variant="body2" fontWeight={700}>{formatCurrency(data.analytics.totalReinvest)}</Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography color="text.secondary" variant="body2">Total Withdrawn Payouts</Typography>
+                                                        <Typography variant="body2" fontWeight={700} color="primary.main">{formatCurrency(data.analytics.totalWithdrawn)}</Typography>
+                                                    </Box>
+                                                </Stack>
+                                            </Paper>
+                                        </Grid>
                                     </Grid>
-                                </Grid>
+                                </Stack>
                             )}
 
-                            {/* Plans Tab */}
+                            {/* ======================================== */}
+                            {/* TAB 1: PLANS */}
+                            {/* ======================================== */}
                             {tabValue === 1 && (
-                                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 3 }}>
-                                    <Table size="small">
-                                        <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Daily ROI</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>ROI Paid</TableCell>
-                                                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {data.plans.length === 0 ? (
-                                                <TableRow><TableCell colSpan={5} align="center">No active or historical plans.</TableCell></TableRow>
-                                            ) : data.plans.map((p: any) => (
-                                                <TableRow key={p.id}>
-                                                    <TableCell>{p.planName}</TableCell>
-                                                    <TableCell sx={{ fontWeight: 700 }}>{formatCurrency(p.amount)}</TableCell>
-                                                    <TableCell>{p.dailyRoi}%</TableCell>
-                                                    <TableCell>{formatCurrency(p.totalRoiPaid)}</TableCell>
-                                                    <TableCell>
-                                                        <Chip label={p.isActive ? 'Active' : 'Completed'} size="small" color={p.isActive ? 'success' : 'default'} />
-                                                    </TableCell>
+                                <Stack spacing={2}>
+                                    <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                        <Grid container spacing={2}>
+                                            <Grid size={{ xs: 12, sm: 4 }}>
+                                                <Typography variant="caption" color="text.secondary">Total Plans</Typography>
+                                                <Typography variant="h6" fontWeight={800}>{data.plans.length}</Typography>
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 4 }}>
+                                                <Typography variant="caption" color="text.secondary">Active Plans</Typography>
+                                                <Typography variant="h6" fontWeight={800} color="success.main">
+                                                    {data.plans.filter((p) => p.isActive).length}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 4 }}>
+                                                <Typography variant="caption" color="text.secondary">Total ROI Paid</Typography>
+                                                <Typography variant="h6" fontWeight={800} color="primary.main">
+                                                    {formatCurrency(data.plans.reduce((sum, p) => sum + (p.totalRoiPaid || 0), 0))}
+                                                </Typography>
+                                            </Grid>
+                                        </Grid>
+                                    </Paper>
+
+                                    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 3 }}>
+                                        <Table size="small">
+                                            <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Plan Name</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Daily ROI</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>ROI Paid</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Activated On</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
+                                            </TableHead>
+                                            <TableBody>
+                                                {data.plans.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                                            No active or historical plans found for this user.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : data.plans.map((p) => (
+                                                    <TableRow key={p.id} hover>
+                                                        <TableCell sx={{ fontWeight: 700 }}>{p.planName}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{formatCurrency(p.amount)}</TableCell>
+                                                        <TableCell>{p.dailyRoi}%</TableCell>
+                                                        <TableCell sx={{ color: 'success.main', fontWeight: 600 }}>{formatCurrency(p.totalRoiPaid || 0)}</TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={p.isReinvest ? 'Reinvested' : 'Direct Deposit'}
+                                                                size="small"
+                                                                variant="outlined"
+                                                                color={p.isReinvest ? 'secondary' : 'default'}
+                                                                sx={{ fontWeight: 600, fontSize: '0.7rem' }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>{formatDateTime(p.createdAt)}</TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={p.isActive ? 'Active' : 'Completed'}
+                                                                size="small"
+                                                                color={p.isActive ? 'success' : 'default'}
+                                                                sx={{ fontWeight: 700, borderRadius: 1.5 }}
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </Stack>
                             )}
 
-                            {/* Analytics & Tree Tabs... */}
+                            {/* ======================================== */}
+                            {/* TAB 2: ROI HISTORY */}
+                            {/* ======================================== */}
+                            {tabValue === 2 && (
+                                <Stack spacing={2}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                                        <TextField
+                                            size="small"
+                                            placeholder="Search ROI payouts..."
+                                            value={roiSearch}
+                                            onChange={(e) => setRoiSearch(e.target.value)}
+                                            slotProps={{
+                                                input: {
+                                                    startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#94a3b8' }} /></InputAdornment>
+                                                }
+                                            }}
+                                            sx={{ minWidth: 260, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'white' } }}
+                                        />
+                                        <Typography variant="body2" color="text.secondary">
+                                            Showing <strong>{filteredRoiHistory.length}</strong> ROI payouts (Total: {formatCurrency(data.analytics.totalRoiEarned)})
+                                        </Typography>
+                                    </Box>
+
+                                    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 3 }}>
+                                        <Table size="small">
+                                            <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Date & Time</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Amount Credited</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {filteredRoiHistory.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={4} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                                            No ROI payout history records found.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : filteredRoiHistory.map((item) => (
+                                                    <TableRow key={item.id} hover>
+                                                        <TableCell>{formatDateTime(item.createdAt)}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>
+                                                            +{formatCurrency(item.amount)}
+                                                        </TableCell>
+                                                        <TableCell>{item.description || 'Daily ROI Settlement Payout'}</TableCell>
+                                                        <TableCell>
+                                                            <Chip label="COMPLETED" size="small" color="success" sx={{ fontWeight: 700, fontSize: '0.65rem' }} />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </Stack>
+                            )}
+
+                            {/* ======================================== */}
+                            {/* TAB 3: REFERRALS */}
+                            {/* ======================================== */}
+                            {tabValue === 3 && (
+                                <Stack spacing={2}>
+                                    <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                        <Grid container spacing={2} alignItems="center">
+                                            <Grid size={{ xs: 12, sm: 4 }}>
+                                                <Typography variant="caption" color="text.secondary">Direct Referrals</Typography>
+                                                <Typography variant="h6" fontWeight={800}>{data.profile.directReferralCount || 0}</Typography>
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 4 }}>
+                                                <Typography variant="caption" color="text.secondary">Network Downlines</Typography>
+                                                <Typography variant="h6" fontWeight={800} color="primary.main">{data.profile.totalDownlineCount || 0}</Typography>
+                                            </Grid>
+                                            <Grid size={{ xs: 12, sm: 4 }}>
+                                                <Typography variant="caption" color="text.secondary">Total Referral Commission</Typography>
+                                                <Typography variant="h6" fontWeight={800} color="#8b5cf6">
+                                                    {formatCurrency(data.analytics.totalReferralEarned)}
+                                                </Typography>
+                                            </Grid>
+                                        </Grid>
+                                    </Paper>
+
+                                    {/* Sub Navigation */}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <ToggleButtonGroup
+                                            value={referralSubTab}
+                                            exclusive
+                                            onChange={(_, val) => val && setReferralSubTab(val)}
+                                            size="small"
+                                            sx={{ bg: 'white' }}
+                                        >
+                                            <ToggleButton value="earnings" sx={{ textTransform: 'none', fontWeight: 700, px: 2 }}>
+                                                Referral Earnings ({data.referralEarnings?.length || 0})
+                                            </ToggleButton>
+                                            <ToggleButton value="downlines" sx={{ textTransform: 'none', fontWeight: 700, px: 2 }}>
+                                                Direct Downlines ({data.directReferrals?.length || 0})
+                                            </ToggleButton>
+                                        </ToggleButtonGroup>
+                                    </Box>
+
+                                    {/* Sub-Tab 1: Referral Earnings */}
+                                    {referralSubTab === 'earnings' && (
+                                        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 3 }}>
+                                            <Table size="small">
+                                                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Date & Time</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Earned From</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Tier Level</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Bonus Type</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Amount Credited</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {(!data.referralEarnings || data.referralEarnings.length === 0) ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                                                No referral earnings recorded for this user.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : data.referralEarnings.map((e) => (
+                                                        <TableRow key={e.id} hover>
+                                                            <TableCell>{formatDateTime(e.createdAt)}</TableCell>
+                                                            <TableCell sx={{ fontWeight: 700 }}>{e.fromUserName}</TableCell>
+                                                            <TableCell>
+                                                                <Chip label={`Tier ${e.tier}`} size="small" variant="outlined" sx={{ fontWeight: 700 }} />
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {e.isFirstPurchaseBonus ? (
+                                                                    <Chip label="First Purchase $10 Bonus" size="small" color="secondary" sx={{ fontWeight: 700, fontSize: '0.65rem' }} />
+                                                                ) : (
+                                                                    <Typography variant="body2" color="text.secondary">Tier Commission</Typography>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>
+                                                                +{formatCurrency(e.amount)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    )}
+
+                                    {/* Sub-Tab 2: Direct Downlines */}
+                                    {referralSubTab === 'downlines' && (
+                                        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 3 }}>
+                                            <Table size="small">
+                                                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Telegram ID</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Trade Power</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Direct Ref</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Total Ref</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Joined Date</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {(!data.directReferrals || data.directReferrals.length === 0) ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                                                No direct referrals found.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : data.directReferrals.map((user) => (
+                                                        <TableRow key={user.id} hover>
+                                                            <TableCell>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Avatar
+                                                                        src={getAvatarUrl(user.photoUrl)}
+                                                                        imgProps={{ referrerPolicy: 'no-referrer' }}
+                                                                        sx={{ width: 28, height: 28, fontSize: 11, fontWeight: 700, bgcolor: 'primary.main' }}
+                                                                    >
+                                                                        {getInitials(user.firstName || user.telegramUsername || 'U')}
+                                                                    </Avatar>
+                                                                    <Box>
+                                                                        <Typography variant="body2" fontWeight={700}>
+                                                                            {user.firstName || 'User'} {user.lastName || ''}
+                                                                        </Typography>
+                                                                        {user.telegramUsername && (
+                                                                            <Typography variant="caption" color="text.secondary">@{user.telegramUsername}</Typography>
+                                                                        )}
+                                                                    </Box>
+                                                                </Box>
+                                                            </TableCell>
+                                                            <TableCell>{user.telegramId}</TableCell>
+                                                            <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>
+                                                                {formatCurrency(user.tradePower)}
+                                                            </TableCell>
+                                                            <TableCell>{user.directReferralCount}</TableCell>
+                                                            <TableCell>{user.totalReferralCount}</TableCell>
+                                                            <TableCell>{formatDateTime(user.joinedAt)}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    )}
+                                </Stack>
+                            )}
+
+                            {/* ======================================== */}
+                            {/* TAB 4: TRANSACTIONS */}
+                            {/* ======================================== */}
+                            {tabValue === 4 && (
+                                <Stack spacing={2}>
+                                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: 280 }}>
+                                            <FormControl size="small" sx={{ minWidth: 150, bgcolor: 'white' }}>
+                                                <Select
+                                                    value={txTypeFilter}
+                                                    onChange={(e) => setTxTypeFilter(e.target.value)}
+                                                    displayEmpty
+                                                    sx={{ borderRadius: 2 }}
+                                                >
+                                                    <MenuItem value="ALL">All Types</MenuItem>
+                                                    <MenuItem value="DEPOSIT">Deposit</MenuItem>
+                                                    <MenuItem value="WITHDRAWAL">Withdrawal</MenuItem>
+                                                    <MenuItem value="ROI_EARNING">ROI Earning</MenuItem>
+                                                    <MenuItem value="REFERRAL_EARNING">Referral Earning</MenuItem>
+                                                    <MenuItem value="REINVEST">Reinvest</MenuItem>
+                                                    <MenuItem value="ADMIN_CREDIT">Admin Credit</MenuItem>
+                                                    <MenuItem value="ADMIN_DEBIT">Admin Debit</MenuItem>
+                                                    <MenuItem value="MILESTONE_BONUS">Milestone Bonus</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                            <TextField
+                                                size="small"
+                                                placeholder="Search transaction description..."
+                                                value={txSearch}
+                                                onChange={(e) => setTxSearch(e.target.value)}
+                                                slotProps={{
+                                                    input: {
+                                                        startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#94a3b8' }} /></InputAdornment>
+                                                    }
+                                                }}
+                                                sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'white' } }}
+                                            />
+                                        </Stack>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Showing <strong>{filteredTransactions.length}</strong> transactions
+                                        </Typography>
+                                    </Box>
+
+                                    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 3 }}>
+                                        <Table size="small">
+                                            <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Date & Time</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Balance After</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {filteredTransactions.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                                            No transactions match the selected filters.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : filteredTransactions.map((tx) => {
+                                                    const chipProps = getTxChipProps(tx.type);
+                                                    const isPositive = tx.amount > 0;
+                                                    return (
+                                                        <TableRow key={tx.id} hover>
+                                                            <TableCell>{formatDateTime(tx.createdAt)}</TableCell>
+                                                            <TableCell>
+                                                                <Chip label={chipProps.label} size="small" color={chipProps.color} sx={{ fontWeight: 700, fontSize: '0.65rem' }} />
+                                                            </TableCell>
+                                                            <TableCell sx={{ fontWeight: 800, color: isPositive ? 'success.main' : 'error.main' }}>
+                                                                {isPositive ? '+' : ''}{formatCurrency(tx.amount)}
+                                                            </TableCell>
+                                                            <TableCell sx={{ fontWeight: 600 }}>
+                                                                {formatCurrency(tx.balanceAfter)}
+                                                            </TableCell>
+                                                            <TableCell sx={{ color: 'text.secondary', maxWidth: 300 }}>
+                                                                {tx.description || tx.reference || '—'}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </Stack>
+                            )}
+
+                            {/* ======================================== */}
+                            {/* TAB 5: ANALYTICS (RECHARTS & STATS) */}
+                            {/* ======================================== */}
+                            {tabValue === 5 && (
+                                <Stack spacing={3}>
+                                    {/* Analytics Metrics Cards */}
+                                    <Grid container spacing={2}>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>Net Cash Flow</Typography>
+                                                <Typography variant="h5" fontWeight={800} color={data.analytics.totalInvested >= data.analytics.totalWithdrawn ? 'success.main' : 'error.main'} sx={{ my: 0.5 }}>
+                                                    {formatCurrency(data.analytics.totalInvested - data.analytics.totalWithdrawn)}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Invested vs Withdrawn
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>ROI Yield Rate</Typography>
+                                                <Typography variant="h5" fontWeight={800} color="primary.main" sx={{ my: 0.5 }}>
+                                                    {data.analytics.totalInvested > 0 
+                                                        ? `${((data.analytics.totalRoiEarned / data.analytics.totalInvested) * 100).toFixed(1)}%`
+                                                        : '0%'}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Total ROI / Capital
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>Reinvestment Rate</Typography>
+                                                <Typography variant="h5" fontWeight={800} color="#8b5cf6" sx={{ my: 0.5 }}>
+                                                    {data.analytics.totalInvested > 0 
+                                                        ? `${((data.analytics.totalReinvest / data.analytics.totalInvested) * 100).toFixed(1)}%`
+                                                        : '0%'}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Compounded Deposits
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                                            <Paper sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700}>Referral Contribution</Typography>
+                                                <Typography variant="h5" fontWeight={800} color="#f59e0b" sx={{ my: 0.5 }}>
+                                                    {(data.analytics.totalRoiEarned + data.analytics.totalReferralEarned) > 0 
+                                                        ? `${((data.analytics.totalReferralEarned / (data.analytics.totalRoiEarned + data.analytics.totalReferralEarned)) * 100).toFixed(1)}%`
+                                                        : '0%'}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Ref Share of Income
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                    </Grid>
+
+                                    {/* Visual Charts */}
+                                    <Grid container spacing={3}>
+                                        {/* Donut Chart: Earnings Breakdown */}
+                                        <Grid size={{ xs: 12, md: 6 }}>
+                                            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                                <Typography variant="subtitle2" fontWeight={800} color="text.secondary" gutterBottom>
+                                                    INCOME BREAKDOWN
+                                                </Typography>
+                                                <Divider sx={{ mb: 2 }} />
+                                                <Box sx={{ height: 260, width: '100%' }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <PieChart>
+                                                            <Pie
+                                                                data={incomeBreakdownData}
+                                                                cx="50%"
+                                                                cy="50%"
+                                                                innerRadius={55}
+                                                                outerRadius={85}
+                                                                paddingAngle={5}
+                                                                dataKey="value"
+                                                            >
+                                                                <Cell fill="#10b981" />
+                                                                <Cell fill="#8b5cf6" />
+                                                            </Pie>
+                                                            <Tooltip formatter={(val: any) => formatCurrency(Number(val))} />
+                                                            <Legend />
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                </Box>
+                                            </Paper>
+                                        </Grid>
+
+                                        {/* Donut Chart: Portfolio Funding */}
+                                        <Grid size={{ xs: 12, md: 6 }}>
+                                            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                                <Typography variant="subtitle2" fontWeight={800} color="text.secondary" gutterBottom>
+                                                    INVESTMENT PORTFOLIO SOURCE
+                                                </Typography>
+                                                <Divider sx={{ mb: 2 }} />
+                                                <Box sx={{ height: 260, width: '100%' }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <PieChart>
+                                                            <Pie
+                                                                data={portfolioSourceData}
+                                                                cx="50%"
+                                                                cy="50%"
+                                                                innerRadius={55}
+                                                                outerRadius={85}
+                                                                paddingAngle={5}
+                                                                dataKey="value"
+                                                            >
+                                                                <Cell fill="#3b82f6" />
+                                                                <Cell fill="#f59e0b" />
+                                                            </Pie>
+                                                            <Tooltip formatter={(val: any) => formatCurrency(Number(val))} />
+                                                            <Legend />
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                </Box>
+                                            </Paper>
+                                        </Grid>
+
+                                        {/* Bar Chart: Financial Overview */}
+                                        <Grid size={{ xs: 12 }}>
+                                            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: 'white' }} elevation={0}>
+                                                <Typography variant="subtitle2" fontWeight={800} color="text.secondary" gutterBottom>
+                                                    CAPITAL & FINANCIAL SUMMARY
+                                                </Typography>
+                                                <Divider sx={{ mb: 2 }} />
+                                                <Box sx={{ height: 280, width: '100%' }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <BarChart
+                                                            data={capitalSummaryData}
+                                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                                        >
+                                                            <XAxis dataKey="category" tick={{ fontSize: 12 }} />
+                                                            <YAxis tickFormatter={(v) => `$${v}`} />
+                                                            <Tooltip formatter={(val: any) => formatCurrency(Number(val))} />
+                                                            <Bar dataKey="amount" fill="#3b82f6" radius={[6, 6, 0, 0]}>
+                                                                <Cell fill="#3b82f6" />
+                                                                <Cell fill="#10b981" />
+                                                                <Cell fill="#8b5cf6" />
+                                                                <Cell fill="#ef4444" />
+                                                                <Cell fill="#f59e0b" />
+                                                            </Bar>
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                </Box>
+                                            </Paper>
+                                        </Grid>
+                                    </Grid>
+                                </Stack>
+                            )}
+
+                            {/* ======================================== */}
+                            {/* TAB 6: GENEALOGY TREE */}
+                            {/* ======================================== */}
                             {tabValue === 6 && (
-                                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 3, p: 2, bgcolor: 'white' }}>
+                                <Box sx={{ border: '1px solid #e2e8f0', borderRadius: 3, p: 3, bgcolor: 'white' }}>
                                     <Typography variant="subtitle2" sx={{ mb: 2, color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <AccountTreeIcon sx={{ fontSize: 18 }} /> GENEALOGY TREE
+                                        <AccountTreeIcon sx={{ fontSize: 18 }} /> GENEALOGY TREE HIERARCHY
                                     </Typography>
                                     <Stack spacing={1}>
-                                        {data.directReferrals.length === 0 ? (
-                                            <Typography align="center" variant="body2" color="text.secondary" sx={{ py: 4 }}>No direct referrals found for this user.</Typography>
-                                        ) : data.directReferrals.map((user: any) => (
+                                        {(!data.directReferrals || data.directReferrals.length === 0) ? (
+                                            <Typography align="center" variant="body2" color="text.secondary" sx={{ py: 6 }}>
+                                                No direct downline referrals found for this user network.
+                                            </Typography>
+                                        ) : data.directReferrals.map((user) => (
                                             <TreeItem key={user.id} node={user} level={0} onToggle={() => { }} />
                                         ))}
                                     </Stack>
                                 </Box>
                             )}
+
                         </Box>
                     </Box>
                 ) : (
@@ -574,7 +1233,7 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                     ) : hasTradePower ? (
                         permDeleteStep === 1 ? (
                             /* Step 1 Warning */
-                            <Stack spacing= {2}>
+                            <Stack spacing={2}>
                                 <Alert severity="warning" icon={<WarningAmberIcon />} sx={{ borderRadius: 2 }}>
                                     <AlertTitle sx={{ fontWeight: 700 }}>Step 1 of 2: Active Trade Power Warning</AlertTitle>
                                     User <strong>{data?.profile?.firstName} {data?.profile?.lastName || ''}</strong> has active <strong>Trade Power of {formatCurrency(tradePower)}</strong> or active investment plans.

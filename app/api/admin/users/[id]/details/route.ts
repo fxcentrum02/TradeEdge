@@ -1,23 +1,112 @@
-// ===========================================
-// ADMIN USER DETAILS API
-// GET /api/admin/users/[id]/details
-// ===========================================
-
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSessionFromRequest } from '@/lib/auth';
 import { getDB } from '@/lib/db';
 import { Collections } from '@/lib/db/collections';
-import { findUserPlansByUserId } from '@/lib/repositories/user-plan.repository';
-import { findReferralEarningsByUserId } from '@/lib/repositories/referral-earning.repository';
 import { getTransactionHistory, findWalletByUserId } from '@/lib/repositories/wallet.repository';
 import { findReferralWalletByUserId } from '@/lib/repositories/referral-wallet.repository';
 import { ObjectId } from 'mongodb';
 import type { ApiResponse } from '@/types';
 
+export interface AdminUserDetailProfile {
+    id: string;
+    telegramId: string;
+    telegramUsername?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    photoUrl?: string | null;
+    referralCode: string;
+    tradePower: number;
+    totalEarnings: number;
+    directReferralCount: number;
+    totalDownlineCount: number;
+    walletBalance: number;
+    referralWalletBalance: number;
+    isActive: boolean;
+    isAdmin: boolean;
+    isDeleted?: boolean;
+    createdAt: string | Date;
+    referredBy?: {
+        name: string;
+        telegramHandle?: string | null;
+    } | null;
+}
+
+export interface AdminUserDetailPlan {
+    id: string;
+    planName: string;
+    dailyRoi: number;
+    amount: number;
+    totalRoiPaid: number;
+    isActive: boolean;
+    isReinvest: boolean;
+    createdAt: string | Date;
+}
+
+export interface AdminUserDetailReferralEarning {
+    id: string;
+    amount: number;
+    tier: number;
+    isFirstPurchaseBonus: boolean;
+    fromUserName: string;
+    createdAt: string | Date;
+}
+
+export interface AdminUserDetailTransaction {
+    id: string;
+    type: string;
+    amount: number;
+    balanceAfter: number;
+    description?: string;
+    reference?: string;
+    createdAt: string | Date;
+}
+
+export interface AdminUserDetailRoiHistory {
+    id: string;
+    type: string;
+    amount: number;
+    balanceAfter: number;
+    description?: string;
+    createdAt: string | Date;
+}
+
+export interface AdminUserDetailDirectReferral {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    photoUrl: string | null;
+    telegramUsername: string | null;
+    telegramId: string;
+    tradePower: number;
+    directReferralCount: number;
+    totalReferralCount: number;
+    joinedAt: string;
+}
+
+export interface AdminUserDetailAnalytics {
+    totalInvested: number;
+    totalDeposit: number;
+    totalReinvest: number;
+    totalRoiEarned: number;
+    totalReferralEarned: number;
+    totalWithdrawn: number;
+    pendingWithdrawals: number;
+}
+
+export interface AdminUserDetailsData {
+    profile: AdminUserDetailProfile;
+    plans: AdminUserDetailPlan[];
+    referralEarnings: AdminUserDetailReferralEarning[];
+    transactions: AdminUserDetailTransaction[];
+    roiHistory: AdminUserDetailRoiHistory[];
+    directReferrals: AdminUserDetailDirectReferral[];
+    analytics: AdminUserDetailAnalytics;
+}
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiResponse<any>>> {
+): Promise<NextResponse<ApiResponse<AdminUserDetailsData>>> {
     try {
         const session = await getAdminSessionFromRequest(request);
         if (!session) {
@@ -157,7 +246,7 @@ export async function GET(
             ]).toArray(),
         ]);
 
-        const analytics = {
+        const analytics: AdminUserDetailAnalytics = {
             totalInvested: userPlansSummary?.totalInvested || 0,
             totalDeposit: userPlansSummary?.totalDeposit || 0,
             totalReinvest: userPlansSummary?.totalReinvest || 0,
@@ -168,20 +257,27 @@ export async function GET(
         };
 
         // Format labels/names for UI
-        const formattedUserPlans = userPlans.map(p => ({
-            ...p,
+        const formattedUserPlans: AdminUserDetailPlan[] = userPlans.map(p => ({
             id: p._id.toString(),
             planName: p.planInfo?.name || 'Unknown Plan',
             dailyRoi: p.planInfo?.dailyRoi || 0,
+            amount: p.amount || 0,
+            totalRoiPaid: p.totalRoiPaid || 0,
+            isActive: Boolean(p.isActive),
+            isReinvest: Boolean(p.isReinvest),
+            createdAt: p.createdAt,
         }));
 
-        const formattedReferralEarnings = referralEarnings.map(e => ({
-            ...e,
+        const formattedReferralEarnings: AdminUserDetailReferralEarning[] = referralEarnings.map(e => ({
             id: e._id.toString(),
+            amount: e.amount || 0,
+            tier: e.tier || 1,
+            isFirstPurchaseBonus: Boolean(e.isFirstPurchaseBonus),
             fromUserName: e.fromUser?.firstName || e.fromUser?.telegramUsername || 'Unknown User',
+            createdAt: e.createdAt,
         }));
 
-        const formattedDirectReferrals = directReferrals.map(u => ({
+        const formattedDirectReferrals: AdminUserDetailDirectReferral[] = directReferrals.map(u => ({
             id: u._id.toString(),
             firstName: u.firstName || null,
             lastName: u.lastName || null,
@@ -194,20 +290,52 @@ export async function GET(
             joinedAt: u.createdAt.toISOString(),
         }));
 
+        const formattedTransactions: AdminUserDetailTransaction[] = transactionsResponse.items.map(t => ({
+            id: t._id.toString(),
+            type: t.type,
+            amount: t.amount,
+            balanceAfter: t.balanceAfter,
+            description: t.description,
+            reference: t.reference,
+            createdAt: t.createdAt,
+        }));
+
+        const formattedRoiHistory: AdminUserDetailRoiHistory[] = roiHistory.map(t => ({
+            id: t._id.toString(),
+            type: t.type,
+            amount: t.amount,
+            balanceAfter: t.balanceAfter,
+            description: t.description,
+            createdAt: t.createdAt,
+        }));
+
         return NextResponse.json({
             success: true,
             data: {
                 profile: {
-                    ...user,
                     id: user._id.toString(),
+                    telegramId: user.telegramId,
+                    telegramUsername: user.telegramUsername || null,
+                    firstName: user.firstName || null,
+                    lastName: user.lastName || null,
+                    photoUrl: user.photoUrl || null,
+                    referralCode: user.referralCode,
+                    tradePower: user.tradePower || 0,
+                    totalEarnings: user.totalEarnings || 0,
+                    directReferralCount: user.directReferralCount || 0,
+                    totalDownlineCount: user.totalDownlineCount || 0,
                     walletBalance: wallet?.balance || 0,
                     referralWalletBalance: referralWallet?.balance || 0,
+                    isActive: Boolean(user.isActive),
+                    isAdmin: Boolean(user.isAdmin),
+                    isDeleted: Boolean(user.isDeleted),
+                    createdAt: user.createdAt,
                     referredBy,
                 },
                 plans: formattedUserPlans,
                 referralEarnings: formattedReferralEarnings,
-                transactions: transactionsResponse.items.map(t => ({ ...t, id: t._id.toString() })),
-                roiHistory: roiHistory.map(t => ({ ...t, id: t._id.toString() })),
+                transactions: formattedTransactions,
+                roiHistory: formattedRoiHistory,
                 directReferrals: formattedDirectReferrals,
                 analytics,
             }
@@ -218,3 +346,4 @@ export async function GET(
         return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
 }
+

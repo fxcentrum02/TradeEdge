@@ -21,7 +21,11 @@ export async function findUserByTelegramId(telegramId: string) {
 export async function findUserByReferralCode(referralCode: string) {
     if (!referralCode) return null;
     const db = await getDB();
-    const cleanCode = referralCode.trim().toUpperCase();
+    let rawCode = referralCode.trim();
+    // Strip common Telegram parameter prefixes if present with delimiters (e.g. start_CODE, ref_CODE, startapp_CODE, start=CODE)
+    let cleanCode = rawCode.replace(/^(STARTAPP|START|REF)[_=\-\s]+/i, '').trim().toUpperCase();
+    if (!cleanCode) cleanCode = rawCode.toUpperCase();
+
     let user = await db.collection<UserDocument>(Collections.USERS).findOne({ referralCode: cleanCode });
     if (!user) {
         user = await db.collection<UserDocument>(Collections.USERS).findOne({
