@@ -1,0 +1,12 @@
+[
+  {
+    "_id": "6a3d20c3f4f9e056584be597",
+    "email": "tradeedge@gmail.com",
+    "passwordHash": "$2b$10$y/aIz68Ek06W8JdOrHwtLeOzZVlU6kAKA5ab.D2RV5nmc.VA8ZQDC",
+    "name": "Super Admin",
+    "role": "superadmin",
+    "isActive": true,
+    "createdAt": "2026-06-25T12:36:19.105Z",
+    "updatedAt": "2026-06-25T12:36:19.105Z"
+  }
+]

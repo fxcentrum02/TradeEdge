@@ -1,0 +1,44 @@
+[
+  {
+    "_id": "6a803f901a5fe883bd82f199",
+    "deletedUserId": "6a3d42020dd0118aca2092ba",
+    "userSnapshot": {
+      "telegramId": "6978259323",
+      "telegramUsername": null,
+      "firstName": "Devyani",
+      "lastName": "Shah",
+      "referralCode": "BQYFLMYJ",
+      "tradePower": 613,
+      "totalReinvested": 103,
+      "walletBalance": 0.048,
+      "referralWalletBalance": 0,
+      "withdrawals": {
+        "totalCompletedAmount": 258.16,
+        "totalCompletedCount": 4,
+        "totalRequestedAmount": 416.66,
+        "totalPendingAmount": 103.5
+      },
+      "referral": {
+        "referredById": "69c53857c5d51366956838a4",
+        "referrerName": "Kalpesh Shah",
+        "referrerTelegramId": "943675146",
+        "directReferralCount": 0,
+        "totalDownlineCount": 0
+      },
+      "activePlansCount": 2,
+      "totalPlansCount": 3,
+      "userCreatedAt": "2026-06-25T14:58:10.651Z"
+    },
+    "deletedBy": {
+      "adminId": "system_admin",
+      "email": "admin@tradeedge.io",
+      "name": "System Admin",
+      "role": "superadmin"
+    },
+    "ip": "1.38.152.44",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+    "device": "macOS",
+    "deletedAt": "2026-08-05T13:53:23.441Z",
+    "deletionType": "PERMANENT"
+  }
+]

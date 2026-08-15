@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "backup:regular": "tsx scripts/export-regular-backup.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

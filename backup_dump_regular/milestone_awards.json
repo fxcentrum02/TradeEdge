@@ -1,0 +1,12 @@
+[
+  {
+    "_id": "6a47ffd8a7db724e0968dc1c",
+    "userId": "69be21cffe89f0a8d9f1ac91",
+    "milestoneThreshold": 5000,
+    "rewardAmount": 150,
+    "awardedAt": "2026-07-03T18:30:48.853Z",
+    "snapshotLegA": 2102,
+    "snapshotLegB": 1600,
+    "snapshotLegC": 1810
+  }
+]

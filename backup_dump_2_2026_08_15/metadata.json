@@ -1,0 +1,23 @@
+{
+  "label": "BACKUP 2 (100-User Database Snapshot - 15 Aug 2026)",
+  "databaseName": "TradeEdge",
+  "exportedAt": "2026-08-15T11:14:34.365Z",
+  "totalCollections": 14,
+  "totalDocuments": 65668,
+  "collections": {
+    "feature_requests": 4,
+    "transactions": 16958,
+    "pending_referrals": 106,
+    "wallets": 105,
+    "withdrawals": 409,
+    "users": 100,
+    "referral_earnings": 47684,
+    "payment_tickets": 62,
+    "milestone_awards": 1,
+    "settings": 1,
+    "referral_wallets": 25,
+    "user_plans": 208,
+    "plans": 4,
+    "admins": 1
+  }
+}

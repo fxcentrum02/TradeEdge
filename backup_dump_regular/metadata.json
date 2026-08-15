@@ -1,0 +1,24 @@
+{
+  "label": "Regular Live Production Database Backup",
+  "databaseName": "TradeEdge",
+  "exportedAt": "2026-08-15T11:15:06.122Z",
+  "totalCollections": 15,
+  "totalDocuments": 65582,
+  "collections": {
+    "payment_tickets": 61,
+    "transactions": 16965,
+    "feature_requests": 4,
+    "pending_referrals": 105,
+    "referral_wallets": 26,
+    "wallets": 54,
+    "deletion_logs": 1,
+    "withdrawals": 416,
+    "referral_earnings": 47684,
+    "admins": 1,
+    "plans": 4,
+    "settings": 1,
+    "milestone_awards": 1,
+    "user_plans": 210,
+    "users": 49
+  }
+}
