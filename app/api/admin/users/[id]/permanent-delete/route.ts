@@ -4,6 +4,8 @@ import { Collections } from '@/lib/db/collections';
 import { ObjectId } from 'mongodb';
 import { getAdminSessionFromRequest } from '@/lib/auth';
 import { updateUserStatsRecursively } from '@/lib/referral';
+import { DeletionLogService } from '@/lib/services/deletion-log.service';
+import { verifyDeletionPassword } from '@/lib/constants';
 
 export async function POST(
     req: NextRequest,
@@ -67,7 +69,7 @@ export async function POST(
             );
         }
 
-        // Safety Check 2: Verify Trade Power Confirmation
+        // Safety Check 2: Verify Security Deletion Password & Trade Power Confirmation
         const activePlansCount = await db.collection(Collections.USER_PLANS).countDocuments({
             userId,
             isActive: true
@@ -75,11 +77,25 @@ export async function POST(
         const tradePower = user.tradePower || 0;
 
         let confirmTradePowerDelete = false;
+        let deletionPassword = '';
         try {
             const body = await req.json();
             confirmTradePowerDelete = !!body.confirmTradePowerDelete;
+            deletionPassword = body.deletionPassword || body.password || '';
         } catch {
             // Request body might be empty if no body was sent
+        }
+
+        // Verify Deletion Authorization Password
+        const authCheck = verifyDeletionPassword(deletionPassword);
+        if (!authCheck.valid) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Invalid or missing deletion authorization password. Valid security password is required.'
+                },
+                { status: 401 }
+            );
         }
 
         if ((tradePower > 0 || activePlansCount > 0) && !confirmTradePowerDelete) {
@@ -94,6 +110,19 @@ export async function POST(
 
         // Store parent referrer ID before deleting user document
         const parentId = user.referredById;
+
+        // Audit snapshot before permanent deletion with authorization trace
+        await DeletionLogService.recordUserDeletionSnapshot(
+            db,
+            user as any,
+            session,
+            req,
+            'PERMANENT',
+            {
+                personName: authCheck.personName!,
+                passwordKey: authCheck.passwordKey!
+            }
+        );
 
         // Perform Permanent Multi-Collection Hard Delete (User-Scoped Only)
         // Note: Do NOT delete referral_earnings where fromUserId === userId for OTHER users, so upline earnings remain intact!

@@ -4,6 +4,8 @@ import { Collections } from '@/lib/db/collections';
 import { ObjectId } from 'mongodb';
 import { getAdminSessionFromRequest } from '@/lib/auth';
 import { updateUserStatsRecursively } from '@/lib/referral';
+import { DeletionLogService } from '@/lib/services/deletion-log.service';
+import { verifyDeletionPassword } from '@/lib/constants';
 
 export async function POST(
     req: NextRequest,
@@ -44,6 +46,39 @@ export async function POST(
                 { status: 403 }
             );
         }
+
+        let deletionPassword = '';
+        try {
+            const body = await req.json();
+            deletionPassword = body.deletionPassword || body.password || '';
+        } catch {
+            // Request body might be empty
+        }
+
+        // Verify Deletion Authorization Password
+        const authCheck = verifyDeletionPassword(deletionPassword);
+        if (!authCheck.valid) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Invalid or missing deletion authorization password. Valid security password is required.'
+                },
+                { status: 401 }
+            );
+        }
+
+        // Audit snapshot before soft deletion with authorization trace
+        await DeletionLogService.recordUserDeletionSnapshot(
+            db,
+            user as any,
+            session,
+            req,
+            'SOFT',
+            {
+                personName: authCheck.personName!,
+                passwordKey: authCheck.passwordKey!
+            }
+        );
 
         // Perform Soft Delete
         // 1. Update User Document

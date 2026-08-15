@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSettings, updateSettings } from '@/lib/repositories/settings.repository';
-import type { ApiResponse } from '@/types';
+import { updateSettings } from '@/lib/repositories/settings.repository';
+import { verifyDeletionPassword } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,8 +9,9 @@ export async function POST(request: NextRequest) {
         const body = await request.json().catch(() => ({}));
         const { password, maintenanceMode, maintenanceEstimatedDuration } = body;
 
-        if (password !== 'dwaparedge007@') {
-            return NextResponse.json({ success: false, error: 'Unauthorized: Invalid developer password' }, { status: 401 });
+        const auth = verifyDeletionPassword(password);
+        if (!auth.valid) {
+            return NextResponse.json({ success: false, error: 'Unauthorized: Invalid password' }, { status: 401 });
         }
 
         if (maintenanceMode === undefined) {

@@ -159,6 +159,20 @@ export async function createIndexes() {
         { name: 'awardedAt_desc_index' }
     );
 
+    // DELETION_LOGS collection
+    await db.collection(Collections.DELETION_LOGS).createIndex(
+        { deletedUserId: 1 },
+        { name: 'deletedUserId_index' }
+    );
+    await db.collection(Collections.DELETION_LOGS).createIndex(
+        { deletedAt: -1 },
+        { name: 'deletedAt_desc_index' }
+    );
+    await db.collection(Collections.DELETION_LOGS).createIndex(
+        { 'deletedBy.adminId': 1 },
+        { name: 'deletedBy_adminId_index' }
+    );
+
     console.log('✅ Indexes created successfully');
 }
 

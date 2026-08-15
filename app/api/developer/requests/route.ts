@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDB } from '@/lib/db';
 import { Collections } from '@/lib/db/collections';
+import { verifyDeletionPassword } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json().catch(() => ({}));
         const { password } = body;
 
-        if (password !== 'dwaparedge007@') {
-            return NextResponse.json({ success: false, error: 'Unauthorized: Invalid developer password' }, { status: 401 });
+        const auth = verifyDeletionPassword(password);
+        if (!auth.valid) {
+            return NextResponse.json({ success: false, error: 'Unauthorized: Invalid password' }, { status: 401 });
         }
 
         const db = await getDB();
@@ -18,7 +20,7 @@ export async function POST(request: NextRequest) {
             .sort({ createdAt: -1 })
             .toArray();
 
-        return NextResponse.json({ success: true, data: requests });
+        return NextResponse.json({ success: true, data: requests, authorizedPerson: auth.personName });
     } catch (error: unknown) {
         console.error('Failed to retrieve developer requests:', error);
         return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
@@ -31,7 +33,8 @@ export async function PUT(request: NextRequest) {
         const body = await request.json().catch(() => ({}));
         const { password, requestId, newStatus } = body;
 
-        if (password !== 'dwaparedge007@') {
+        const auth = verifyDeletionPassword(password);
+        if (!auth.valid) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 

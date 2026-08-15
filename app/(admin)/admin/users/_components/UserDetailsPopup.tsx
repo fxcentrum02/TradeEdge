@@ -28,6 +28,8 @@ import BlockIcon from '@mui/icons-material/Block';
 import SearchIcon from '@mui/icons-material/Search';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import LocalAtmIcon from '@mui/icons-material/LocalAtm';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import {
     ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend
@@ -179,6 +181,8 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
     const [permDeleteOpen, setPermDeleteOpen] = useState(false);
     const [permDeleteStep, setPermDeleteStep] = useState<1 | 2>(1);
     const [confirmInput, setConfirmInput] = useState('');
+    const [deletionPasswordInput, setDeletionPasswordInput] = useState('');
+    const [showDeletionPassword, setShowDeletionPassword] = useState(false);
     const [isPermDeleting, setIsPermDeleting] = useState(false);
     const [permDeleteError, setPermDeleteError] = useState<string | null>(null);
 
@@ -229,14 +233,21 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
     // Soft delete (deactivate) user
     const handleDeleteUser = async () => {
         if (!userId) return;
+        if (!deletionPasswordInput.trim()) {
+            alert('Please enter an authorization security password.');
+            return;
+        }
         setIsDeleting(true);
         try {
             const res = await fetch(`/api/admin/users/${userId}/soft-delete`, {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deletionPassword: deletionPasswordInput.trim() })
             });
             const json = await res.json();
             if (json.success) {
                 setDeleteConfirmOpen(false);
+                setDeletionPasswordInput('');
                 onClose();
                 if (onUserDeleted) onUserDeleted();
             } else {
@@ -253,6 +264,7 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
     // Open permanent delete modal
     const handleOpenPermanentDelete = () => {
         setConfirmInput('');
+        setDeletionPasswordInput('');
         setPermDeleteStep(1);
         setPermDeleteError(null);
         setPermDeleteOpen(true);
@@ -261,17 +273,25 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
     // Execute permanent delete API
     const handleExecutePermanentDelete = async (hasTradePower: boolean) => {
         if (!userId) return;
+        if (!deletionPasswordInput.trim()) {
+            setPermDeleteError('Security authorization password is required.');
+            return;
+        }
         setIsPermDeleting(true);
         setPermDeleteError(null);
         try {
             const res = await fetch(`/api/admin/users/${userId}/permanent-delete`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ confirmTradePowerDelete: hasTradePower })
+                body: JSON.stringify({
+                    confirmTradePowerDelete: hasTradePower,
+                    deletionPassword: deletionPasswordInput.trim()
+                })
             });
             const json = await res.json();
             if (json.success) {
                 setPermDeleteOpen(false);
+                setDeletionPasswordInput('');
                 onClose();
                 if (onUserDeleted) onUserDeleted();
             } else {
@@ -1166,17 +1186,48 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                 )}
             </DialogContent>
             
-            {/* Legacy Soft Delete Confirmation Dialog */}
-            <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
-                <DialogTitle>Confirm Soft Delete Customer</DialogTitle>
+            {/* Soft Delete Confirmation Dialog */}
+            <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+                <DialogTitle sx={{ fontWeight: 800 }}>Confirm Soft Delete Customer</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
+                    <DialogContentText sx={{ mb: 2 }}>
                         Are you sure you want to soft-delete <strong>{data?.profile?.firstName}</strong>? This will deactivate the user and all their active plans, excluding them from future ROI settlements.
                     </DialogContentText>
+                    <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                            Authorization Security Password <span style={{ color: '#ef4444' }}>*</span>
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type={showDeletionPassword ? 'text' : 'password'}
+                            placeholder="Enter authorization password"
+                            value={deletionPasswordInput}
+                            onChange={(e) => setDeletionPasswordInput(e.target.value)}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton onClick={() => setShowDeletionPassword(!showDeletionPassword)} edge="end" size="small">
+                                            {showDeletionPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                        />
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>Cancel</Button>
-                    <Button onClick={handleDeleteUser} color="error" variant="contained" disabled={isDeleting}>
+                <DialogActions sx={{ p: 2, borderTop: '1px solid #f1f5f9' }}>
+                    <Button onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting} sx={{ textTransform: 'none', fontWeight: 600 }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleDeleteUser}
+                        color="error"
+                        variant="contained"
+                        disabled={isDeleting || !deletionPasswordInput.trim()}
+                        sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+                    >
                         {isDeleting ? 'Deleting...' : 'Deactivate User'}
                     </Button>
                 </DialogActions>
@@ -1243,7 +1294,7 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                                 </Typography>
                             </Stack>
                         ) : (
-                            /* Step 2 Confirmation Text Input */
+                            /* Step 2 Confirmation Text Input & Password */
                             <Stack spacing={2}>
                                 <Alert severity="error" icon={<DeleteForeverIcon />} sx={{ borderRadius: 2 }}>
                                     <AlertTitle sx={{ fontWeight: 700 }}>Step 2 of 2: Confirm Trade Power Deletion</AlertTitle>
@@ -1261,10 +1312,34 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                                     autoFocus
                                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                                 />
+
+                                <Box sx={{ mt: 1 }}>
+                                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                        Authorization Security Password <span style={{ color: '#ef4444' }}>*</span>
+                                    </Typography>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        type={showDeletionPassword ? 'text' : 'password'}
+                                        placeholder="Enter authorization password"
+                                        value={deletionPasswordInput}
+                                        onChange={(e) => setDeletionPasswordInput(e.target.value)}
+                                        InputProps={{
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton onClick={() => setShowDeletionPassword(!showDeletionPassword)} edge="end" size="small">
+                                                        {showDeletionPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            )
+                                        }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    />
+                                </Box>
                             </Stack>
                         )
 
-                    /* SCENARIO D: User Has NO Downlines and NO Trade Power (Standard 1-Step Confirmation) */
+                    /* SCENARIO D: User Has NO Downlines and NO Trade Power (Standard 1-Step Confirmation + Password) */
                     ) : (
                         <Stack spacing={2}>
                             <Alert severity="warning" icon={<WarningAmberIcon />} sx={{ borderRadius: 2 }}>
@@ -1274,6 +1349,29 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                             <Typography variant="body2" color="text.secondary">
                                 This will purge the user and all associated wallet records from the database. Any upline earnings remain preserved. This action <strong>cannot be undone</strong>.
                             </Typography>
+                            <Box sx={{ mt: 1 }}>
+                                <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                    Authorization Security Password <span style={{ color: '#ef4444' }}>*</span>
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    type={showDeletionPassword ? 'text' : 'password'}
+                                    placeholder="Enter authorization password"
+                                    value={deletionPasswordInput}
+                                    onChange={(e) => setDeletionPasswordInput(e.target.value)}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={() => setShowDeletionPassword(!showDeletionPassword)} edge="end" size="small">
+                                                    {showDeletionPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                />
+                            </Box>
                         </Stack>
                     )}
                 </DialogContent>
@@ -1305,7 +1403,7 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                             <Button
                                 variant="contained"
                                 color="error"
-                                disabled={confirmInput.trim() !== 'DELETE TRADE POWER' || isPermDeleting}
+                                disabled={confirmInput.trim() !== 'DELETE TRADE POWER' || !deletionPasswordInput.trim() || isPermDeleting}
                                 onClick={() => handleExecutePermanentDelete(true)}
                                 startIcon={isPermDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
                                 sx={{ textTransform: 'none', fontWeight: 700 }}
@@ -1317,7 +1415,7 @@ export default function UserDetailsPopup({ open, onClose, userId, onUserDeleted 
                         <Button
                             variant="contained"
                             color="error"
-                            disabled={isPermDeleting}
+                            disabled={!deletionPasswordInput.trim() || isPermDeleting}
                             onClick={() => handleExecutePermanentDelete(false)}
                             startIcon={isPermDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
                             sx={{ textTransform: 'none', fontWeight: 700 }}

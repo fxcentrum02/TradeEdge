@@ -17,6 +17,7 @@ export const Collections = {
     PENDING_REFERRALS: 'pending_referrals',
     MILESTONE_AWARDS: 'milestone_awards',
     FEATURE_REQUESTS: 'feature_requests',
+    DELETION_LOGS: 'deletion_logs',
 } as const;
 
 export type CollectionName = typeof Collections[keyof typeof Collections];

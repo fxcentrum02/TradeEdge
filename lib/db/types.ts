@@ -194,3 +194,53 @@ export interface MilestoneAwardDocument {
     snapshotLegB: number;        // 2nd leg volume at time of award
     snapshotLegC: number;        // remaining legs combined volume at time of award
 }
+
+// ===========================================
+// DELETION LOG DOCUMENT
+// ===========================================
+export interface DeletionLogDocument {
+    _id?: ObjectId;
+    deletedUserId: ObjectId;
+    userSnapshot: {
+        telegramId: string;
+        telegramUsername?: string;
+        firstName?: string;
+        lastName?: string;
+        referralCode: string;
+        tradePower: number;
+        totalReinvested: number;
+        walletBalance: number;
+        referralWalletBalance: number;
+        withdrawals: {
+            totalCompletedAmount: number;
+            totalCompletedCount: number;
+            totalRequestedAmount: number;
+            totalPendingAmount: number;
+        };
+        referral: {
+            referredById?: ObjectId | null;
+            referrerName?: string;
+            referrerTelegramId?: string;
+            directReferralCount: number;
+            totalDownlineCount: number;
+        };
+        activePlansCount: number;
+        totalPlansCount: number;
+        userCreatedAt: Date;
+    };
+    deletedBy: {
+        adminId: ObjectId | string;
+        email?: string;
+        name?: string;
+        role?: string;
+    };
+    authorizedByPassword?: {
+        personName: string;
+        passwordKey: string;
+    };
+    ip: string;
+    userAgent: string;
+    device?: string;
+    deletedAt: Date;
+    deletionType: 'PERMANENT' | 'SOFT';
+}

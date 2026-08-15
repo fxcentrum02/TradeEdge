@@ -99,3 +99,23 @@ export function getTelegramStartLink(referralCode: string): string {
     const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'your_bot';
     return `https://t.me/${botUsername}?start=${referralCode}`;
 }
+
+// ===========================================
+// SECURITY & DELETION AUTHORIZATION PASSWORDS
+// ===========================================
+export const DELETION_AUTH_PASSWORDS: Record<string, string> = {
+    'TradeEdge002': 'Rajeshbhai',
+    '999Tradeedge': 'Kishanbhai',
+    'dwaparedge007@': 'Developer / System',
+} as const;
+
+export function verifyDeletionPassword(password?: string): { valid: boolean; personName?: string; passwordKey?: string } {
+    if (!password) return { valid: false };
+    const trimmed = password.trim();
+    const person = DELETION_AUTH_PASSWORDS[trimmed];
+    if (person) {
+        return { valid: true, personName: person, passwordKey: trimmed };
+    }
+    return { valid: false };
+}
+
