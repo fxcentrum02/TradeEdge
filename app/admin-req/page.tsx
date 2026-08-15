@@ -7,7 +7,7 @@ import {
     TableRow, Paper, Chip, Stack, IconButton, InputAdornment,
     Alert, CircularProgress, Container, Switch, FormControlLabel,
     Dialog, DialogTitle, DialogContent, DialogActions, Grid,
-    Tabs, Tab
+    Tabs, Tab, Avatar
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
@@ -75,6 +75,7 @@ interface DeletionLog {
         telegramUsername?: string;
         firstName?: string;
         lastName?: string;
+        photoUrl?: string;
         referralCode: string;
         tradePower: number;
         downlineTradePower?: number;
@@ -937,23 +938,42 @@ export default function DeveloperRequestsPage() {
 
                                                         {/* Deleted User */}
                                                         <TableCell>
-                                                            <Typography variant="body2" fontWeight={800} sx={{ color: 'white' }}>
-                                                                {snap.firstName || 'Unnamed'} {snap.lastName || ''}
-                                                            </Typography>
-                                                            <Typography variant="caption" sx={{ color: '#fbbf24', display: 'block', fontWeight: 600 }}>
-                                                                TG ID: {snap.telegramId}
-                                                            </Typography>
-                                                            {snap.telegramUsername && (
-                                                                <Typography variant="caption" sx={{ color: '#60a5fa', display: 'block' }}>
-                                                                    @{snap.telegramUsername}
-                                                                </Typography>
-                                                            )}
-                                                            <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>
-                                                                Ref: {snap.referralCode}
-                                                            </Typography>
+                                                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                                                <Avatar
+                                                                    src={snap.photoUrl}
+                                                                    alt={snap.firstName}
+                                                                    sx={{
+                                                                        width: 38,
+                                                                        height: 38,
+                                                                        bgcolor: '#1e293b',
+                                                                        color: '#fbbf24',
+                                                                        fontWeight: 800,
+                                                                        fontSize: '0.85rem',
+                                                                        border: '1px solid rgba(255,255,255,0.1)'
+                                                                    }}
+                                                                >
+                                                                    {snap.firstName?.[0] || 'U'}
+                                                                </Avatar>
+                                                                <Box>
+                                                                    <Typography variant="body2" fontWeight={800} sx={{ color: 'white' }}>
+                                                                        {snap.firstName || 'Unnamed'} {snap.lastName || ''}
+                                                                    </Typography>
+                                                                    <Typography variant="caption" sx={{ color: '#fbbf24', display: 'block', fontWeight: 600 }}>
+                                                                        TG ID: {snap.telegramId}
+                                                                    </Typography>
+                                                                    {snap.telegramUsername && (
+                                                                        <Typography variant="caption" sx={{ color: '#60a5fa', display: 'block' }}>
+                                                                            @{snap.telegramUsername}
+                                                                        </Typography>
+                                                                    )}
+                                                                    <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>
+                                                                        Ref: {snap.referralCode}
+                                                                    </Typography>
+                                                                </Box>
+                                                            </Stack>
                                                         </TableCell>
 
-                                                        {/* Trade Power & Reinvest */}
+                                                        {/* Trade Power & Financials */}
                                                         <TableCell>
                                                             <Typography variant="body2" fontWeight={850} sx={{ color: '#4ade80' }}>
                                                                 ${(snap.tradePower || 0).toLocaleString()} <Typography component="span" variant="caption" sx={{ color: '#94a3b8' }}>TP</Typography>
@@ -961,8 +981,16 @@ export default function DeveloperRequestsPage() {
                                                             <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block' }}>
                                                                 Reinvest: <strong style={{ color: '#facc15' }}>${(snap.totalReinvested || 0).toLocaleString()}</strong>
                                                             </Typography>
-                                                            <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>
-                                                                Wallet: ${snap.walletBalance?.toFixed(2) || '0.00'}
+                                                            <Stack direction="row" spacing={1} sx={{ mt: 0.3 }}>
+                                                                <Typography variant="caption" sx={{ color: '#cbd5e1' }}>
+                                                                    Main: <strong>${snap.walletBalance?.toFixed(2) || '0.00'}</strong>
+                                                                </Typography>
+                                                                <Typography variant="caption" sx={{ color: '#a78bfa' }}>
+                                                                    Ref: <strong>${snap.referralWalletBalance?.toFixed(2) || '0.00'}</strong>
+                                                                </Typography>
+                                                            </Stack>
+                                                            <Typography variant="caption" sx={{ color: '#38bdf8', display: 'block', fontSize: '0.7rem', mt: 0.2 }}>
+                                                                {snap.activePlansCount || 0} active plan(s)
                                                             </Typography>
                                                         </TableCell>
 
@@ -1307,9 +1335,31 @@ export default function DeveloperRequestsPage() {
                                 {/* User Identity Card */}
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 3, p: 2 }}>
-                                        <Typography variant="subtitle2" fontWeight={800} sx={{ color: '#fbbf24', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <AccountCircleIcon fontSize="small" /> User Identification
-                                        </Typography>
+                                        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                                            <Avatar
+                                                src={selectedLog.userSnapshot?.photoUrl}
+                                                alt={selectedLog.userSnapshot?.firstName}
+                                                sx={{
+                                                    width: 48,
+                                                    height: 48,
+                                                    bgcolor: '#1e293b',
+                                                    color: '#fbbf24',
+                                                    fontWeight: 800,
+                                                    fontSize: '1.1rem',
+                                                    border: '1.5px solid rgba(251, 191, 36, 0.4)'
+                                                }}
+                                            >
+                                                {selectedLog.userSnapshot?.firstName?.[0] || 'U'}
+                                            </Avatar>
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight={800} sx={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <AccountCircleIcon fontSize="small" /> User Identification
+                                                </Typography>
+                                                <Typography variant="body2" fontWeight={700} sx={{ color: 'white' }}>
+                                                    {selectedLog.userSnapshot?.firstName} {selectedLog.userSnapshot?.lastName || ''}
+                                                </Typography>
+                                            </Box>
+                                        </Stack>
                                         <Stack spacing={1}>
                                             <Stack direction="row" justifyContent="space-between">
                                                 <Typography variant="caption" sx={{ color: '#64748b' }}>Full Name:</Typography>

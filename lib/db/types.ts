@@ -244,6 +244,7 @@ export interface DeletionLogDocument {
         telegramUsername?: string;
         firstName?: string;
         lastName?: string;
+        photoUrl?: string;
         referralCode: string;
         tradePower: number;
         downlineTradePower?: number;
