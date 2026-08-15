@@ -165,6 +165,14 @@ export async function createIndexes() {
         { name: 'deletedUserId_index' }
     );
     await db.collection(Collections.DELETION_LOGS).createIndex(
+        { 'userSnapshot.telegramId': 1 },
+        { name: 'userSnapshot_telegramId_index' }
+    );
+    await db.collection(Collections.DELETION_LOGS).createIndex(
+        { isRestored: 1 },
+        { name: 'isRestored_index' }
+    );
+    await db.collection(Collections.DELETION_LOGS).createIndex(
         { deletedAt: -1 },
         { name: 'deletedAt_desc_index' }
     );

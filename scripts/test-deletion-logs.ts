@@ -138,6 +138,8 @@ async function testDeletionLogsWithPasswords() {
             },
             activePlansCount: 1,
             totalPlansCount: 1,
+            activePlansSnapshot: [],
+            pendingWithdrawalsSnapshot: [],
             userCreatedAt: now
         },
         deletedBy: {

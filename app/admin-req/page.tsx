@@ -26,6 +26,7 @@ import DevicesIcon from '@mui/icons-material/Devices';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import SettingsBackupRestoreIcon from '@mui/icons-material/SettingsBackupRestore';
 
 interface FeatureRequest {
     _id: string;
@@ -40,6 +41,32 @@ interface FeatureRequest {
     deviceInfo?: string;
 }
 
+interface ActivePlanSnapshot {
+    _id?: string;
+    planId: string;
+    planName?: string;
+    amount: number;
+    startDate: string;
+    endDate: string;
+    isReinvest: boolean;
+    totalRoiPaid: number;
+    lastRoiDate?: string;
+    completedRoiDays: number;
+    remainingDurationDays: number;
+    totalDurationDays: number;
+    dailyRoiRate: number;
+}
+
+interface PendingWithdrawalSnapshot {
+    _id: string;
+    amount: number;
+    fee: number;
+    netAmount: number;
+    walletAddress: string;
+    network: string;
+    createdAt: string;
+}
+
 interface DeletionLog {
     _id: string;
     deletedUserId: string;
@@ -50,6 +77,7 @@ interface DeletionLog {
         lastName?: string;
         referralCode: string;
         tradePower: number;
+        downlineTradePower?: number;
         totalReinvested: number;
         walletBalance: number;
         referralWalletBalance: number;
@@ -61,6 +89,7 @@ interface DeletionLog {
         };
         referral: {
             referredById?: string | null;
+            ancestors?: string[];
             referrerName?: string;
             referrerTelegramId?: string;
             directReferralCount: number;
@@ -68,6 +97,8 @@ interface DeletionLog {
         };
         activePlansCount: number;
         totalPlansCount: number;
+        activePlansSnapshot?: ActivePlanSnapshot[];
+        pendingWithdrawalsSnapshot?: PendingWithdrawalSnapshot[];
         userCreatedAt?: string;
     };
     deletedBy: {
@@ -85,6 +116,19 @@ interface DeletionLog {
     device?: string;
     deletedAt: string;
     deletionType: 'PERMANENT' | 'SOFT';
+    isRestored?: boolean;
+    restoredAt?: string;
+    restoredBy?: {
+        adminId: string;
+        email?: string;
+        name?: string;
+        role?: string;
+    };
+    restoredByPassword?: {
+        personName: string;
+        passwordKey: string;
+    };
+    restorationNotes?: string;
 }
 
 export default function DeveloperRequestsPage() {
@@ -101,6 +145,13 @@ export default function DeveloperRequestsPage() {
     const [deletionSearch, setDeletionSearch] = useState('');
     const [deletionTypeFilter, setDeletionTypeFilter] = useState<'ALL' | 'PERMANENT' | 'SOFT'>('ALL');
     const [selectedLog, setSelectedLog] = useState<DeletionLog | null>(null);
+
+    // User restoration state
+    const [restoreTargetLog, setRestoreTargetLog] = useState<DeletionLog | null>(null);
+    const [restorePassword, setRestorePassword] = useState('');
+    const [showRestorePassword, setShowRestorePassword] = useState(false);
+    const [restoring, setRestoring] = useState(false);
+    const [restoreError, setRestoreError] = useState('');
 
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -245,6 +296,35 @@ export default function DeveloperRequestsPage() {
     const handleRefresh = () => {
         if (password) {
             verifyPassword(password);
+        }
+    };
+
+    const handleRestoreUser = async () => {
+        if (!restoreTargetLog || !restorePassword.trim()) {
+            setRestoreError('Please enter an authorized security password.');
+            return;
+        }
+        setRestoring(true);
+        setRestoreError('');
+        try {
+            const res = await fetch(`/api/developer/deletion-logs/${restoreTargetLog._id}/restore`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: restorePassword })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccessMsg(data.message || 'User restored successfully!');
+                setRestoreTargetLog(null);
+                setRestorePassword('');
+                verifyPassword(password);
+            } else {
+                setRestoreError(data.error || 'Failed to restore user.');
+            }
+        } catch {
+            setRestoreError('Network error. Failed to restore user.');
+        } finally {
+            setRestoring(false);
         }
     };
 
@@ -947,29 +1027,67 @@ export default function DeveloperRequestsPage() {
                                                             </Stack>
                                                         </TableCell>
 
-                                                        {/* View Details Action */}
+                                                        {/* Actions: Restore & Details */}
                                                         <TableCell align="right">
-                                                            <Button
-                                                                variant="outlined"
-                                                                size="small"
-                                                                startIcon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                                onClick={() => setSelectedLog(log)}
-                                                                sx={{
-                                                                    borderRadius: 2,
-                                                                    textTransform: 'none',
-                                                                    fontWeight: 700,
-                                                                    fontSize: '0.75rem',
-                                                                    borderColor: 'rgba(255,255,255,0.15)',
-                                                                    color: '#f8fafc',
-                                                                    '&:hover': {
-                                                                        borderColor: '#fbbf24',
-                                                                        bgcolor: 'rgba(251, 191, 36, 0.05)',
-                                                                        color: '#fbbf24'
-                                                                    }
-                                                                }}
-                                                            >
-                                                                Details
-                                                            </Button>
+                                                            <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+                                                                {log.isRestored ? (
+                                                                    <Chip
+                                                                        label="✅ Restored"
+                                                                        size="small"
+                                                                        sx={{
+                                                                            height: 24,
+                                                                            fontSize: '0.7rem',
+                                                                            fontWeight: 800,
+                                                                            bgcolor: 'rgba(34, 197, 94, 0.15)',
+                                                                            color: '#4ade80',
+                                                                            border: '1px solid rgba(34, 197, 94, 0.3)'
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <Button
+                                                                        variant="contained"
+                                                                        size="small"
+                                                                        startIcon={<SettingsBackupRestoreIcon sx={{ fontSize: 15 }} />}
+                                                                        onClick={() => {
+                                                                            setRestoreTargetLog(log);
+                                                                            setRestorePassword('');
+                                                                            setRestoreError('');
+                                                                        }}
+                                                                        sx={{
+                                                                            borderRadius: 2,
+                                                                            textTransform: 'none',
+                                                                            fontWeight: 800,
+                                                                            fontSize: '0.75rem',
+                                                                            bgcolor: '#f59e0b',
+                                                                            color: '#000',
+                                                                            '&:hover': { bgcolor: '#d97706' }
+                                                                        }}
+                                                                    >
+                                                                        Restore
+                                                                    </Button>
+                                                                )}
+                                                                <Button
+                                                                    variant="outlined"
+                                                                    size="small"
+                                                                    startIcon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                                    onClick={() => setSelectedLog(log)}
+                                                                    sx={{
+                                                                        borderRadius: 2,
+                                                                        textTransform: 'none',
+                                                                        fontWeight: 700,
+                                                                        fontSize: '0.75rem',
+                                                                        borderColor: 'rgba(255,255,255,0.15)',
+                                                                        color: '#f8fafc',
+                                                                        '&:hover': {
+                                                                            borderColor: '#fbbf24',
+                                                                            bgcolor: 'rgba(251, 191, 36, 0.05)',
+                                                                            color: '#fbbf24'
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Details
+                                                                </Button>
+                                                            </Stack>
                                                         </TableCell>
                                                     </TableRow>
                                                 );
@@ -1163,6 +1281,28 @@ export default function DeveloperRequestsPage() {
                         </DialogTitle>
 
                         <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.08)', py: 3 }}>
+                            {selectedLog.isRestored && (
+                                <Alert
+                                    severity="success"
+                                    icon={<CheckCircleOutlineIcon sx={{ color: '#4ade80' }} />}
+                                    sx={{
+                                        mb: 3,
+                                        bgcolor: 'rgba(34, 197, 94, 0.1)',
+                                        color: '#4ade80',
+                                        border: '1px solid rgba(34, 197, 94, 0.3)',
+                                        borderRadius: 2.5
+                                    }}
+                                >
+                                    <Typography variant="body2" fontWeight={800}>
+                                        ✅ Account Successfully Restored on {new Date(selectedLog.restoredAt || '').toLocaleString()}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#86efac', display: 'block', mt: 0.3 }}>
+                                        Authorized Person: {selectedLog.restoredByPassword?.personName || selectedLog.restoredBy?.name || 'Admin'}
+                                        {selectedLog.restorationNotes ? ` — ${selectedLog.restorationNotes}` : ''}
+                                    </Typography>
+                                </Alert>
+                            )}
+
                             <Grid container spacing={3}>
                                 {/* User Identity Card */}
                                 <Grid size={{ xs: 12, md: 6 }}>
@@ -1215,7 +1355,7 @@ export default function DeveloperRequestsPage() {
                                         </Typography>
                                         <Stack spacing={1}>
                                             <Stack direction="row" justifyContent="space-between">
-                                                <Typography variant="caption" sx={{ color: '#64748b' }}>Trade Power Discarded:</Typography>
+                                                <Typography variant="caption" sx={{ color: '#64748b' }}>Trade Power at Deletion:</Typography>
                                                 <Typography variant="body2" fontWeight={800} sx={{ color: '#4ade80' }}>
                                                     ${(selectedLog.userSnapshot?.tradePower || 0).toLocaleString()} USDT
                                                 </Typography>
@@ -1247,6 +1387,83 @@ export default function DeveloperRequestsPage() {
                                         </Stack>
                                     </Card>
                                 </Grid>
+
+                                {/* Detailed Active Plans Snapshot */}
+                                {selectedLog.userSnapshot?.activePlansSnapshot && selectedLog.userSnapshot.activePlansSnapshot.length > 0 && (
+                                    <Grid size={{ xs: 12 }}>
+                                        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 3, p: 2 }}>
+                                            <Typography variant="subtitle2" fontWeight={800} sx={{ color: '#38bdf8', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <AutoAwesomeIcon fontSize="small" /> Active Plans Snapshot & Remaining Lifespan
+                                            </Typography>
+                                            <Grid container spacing={1.5}>
+                                                {selectedLog.userSnapshot.activePlansSnapshot.map((plan, pIdx) => (
+                                                    <Grid size={{ xs: 12, md: 6 }} key={pIdx}>
+                                                        <Paper sx={{ p: 1.5, bgcolor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 2 }}>
+                                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                                <Typography variant="body2" fontWeight={800} sx={{ color: '#f8fafc' }}>
+                                                                    {plan.planName || (plan.isReinvest ? 'Reinvestment Plan' : 'Standard Plan')}
+                                                                </Typography>
+                                                                <Chip
+                                                                    label={`$${plan.amount} USDT`}
+                                                                    size="small"
+                                                                    sx={{ bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontWeight: 800 }}
+                                                                />
+                                                            </Stack>
+                                                            <Stack spacing={0.5} sx={{ mt: 1 }}>
+                                                                <Stack direction="row" justifyContent="space-between">
+                                                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Daily ROI Rate:</Typography>
+                                                                    <Typography variant="caption" fontWeight={700} sx={{ color: '#4ade80' }}>
+                                                                        {(plan.dailyRoiRate * 100).toFixed(2)}% (${(plan.amount * plan.dailyRoiRate).toFixed(3)}/day)
+                                                                    </Typography>
+                                                                </Stack>
+                                                                <Stack direction="row" justifyContent="space-between">
+                                                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Completed ROI Days:</Typography>
+                                                                    <Typography variant="caption" fontWeight={700} sx={{ color: '#cbd5e1' }}>
+                                                                        {plan.completedRoiDays} days (${plan.totalRoiPaid?.toFixed(2)} paid)
+                                                                    </Typography>
+                                                                </Stack>
+                                                                <Stack direction="row" justifyContent="space-between">
+                                                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Remaining Lifespan:</Typography>
+                                                                    <Typography variant="caption" fontWeight={800} sx={{ color: '#fbbf24' }}>
+                                                                        {plan.remainingDurationDays} days left
+                                                                    </Typography>
+                                                                </Stack>
+                                                            </Stack>
+                                                        </Paper>
+                                                    </Grid>
+                                                ))}
+                                            </Grid>
+                                        </Card>
+                                    </Grid>
+                                )}
+
+                                {/* Pending Withdrawals Snapshot */}
+                                {selectedLog.userSnapshot?.pendingWithdrawalsSnapshot && selectedLog.userSnapshot.pendingWithdrawalsSnapshot.length > 0 && (
+                                    <Grid size={{ xs: 12 }}>
+                                        <Card sx={{ bgcolor: 'rgba(245, 158, 11, 0.04)', border: '1px solid rgba(245, 158, 11, 0.2)', borderRadius: 3, p: 2 }}>
+                                            <Typography variant="subtitle2" fontWeight={800} sx={{ color: '#fbbf24', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <MonetizationOnIcon fontSize="small" /> Pending Withdrawal Requests at Deletion ({selectedLog.userSnapshot.pendingWithdrawalsSnapshot.length})
+                                            </Typography>
+                                            <Stack spacing={1}>
+                                                {selectedLog.userSnapshot.pendingWithdrawalsSnapshot.map((w, wIdx) => (
+                                                    <Paper key={wIdx} sx={{ p: 1.5, bgcolor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 2 }}>
+                                                        <Stack direction="row" justifyContent="space-between">
+                                                            <Typography variant="body2" fontWeight={800} sx={{ color: '#fbbf24' }}>
+                                                                ${w.amount} USDT (Net: ${w.netAmount})
+                                                            </Typography>
+                                                            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                                                                {new Date(w.createdAt).toLocaleString()}
+                                                            </Typography>
+                                                        </Stack>
+                                                        <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontFamily: 'monospace', mt: 0.3 }}>
+                                                            {w.network}: {w.walletAddress}
+                                                        </Typography>
+                                                    </Paper>
+                                                ))}
+                                            </Stack>
+                                        </Card>
+                                    </Grid>
+                                )}
 
                                 {/* Withdrawals Breakdown */}
                                 <Grid size={{ xs: 12, md: 6 }}>
@@ -1377,7 +1594,32 @@ export default function DeveloperRequestsPage() {
                             </Grid>
                         </DialogContent>
 
-                        <DialogActions sx={{ p: 2 }}>
+                        <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+                            <Box>
+                                {!selectedLog.isRestored && (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<SettingsBackupRestoreIcon />}
+                                        onClick={() => {
+                                            const target = selectedLog;
+                                            setSelectedLog(null);
+                                            setRestoreTargetLog(target);
+                                            setRestorePassword('');
+                                            setRestoreError('');
+                                        }}
+                                        sx={{
+                                            bgcolor: '#f59e0b',
+                                            color: '#000',
+                                            fontWeight: 800,
+                                            borderRadius: 2.5,
+                                            px: 3,
+                                            '&:hover': { bgcolor: '#d97706' }
+                                        }}
+                                    >
+                                        Restore This User
+                                    </Button>
+                                )}
+                            </Box>
                             <Button
                                 variant="contained"
                                 onClick={() => setSelectedLog(null)}
@@ -1391,6 +1633,150 @@ export default function DeveloperRequestsPage() {
                                 }}
                             >
                                 Close
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                )}
+
+                {/* RESTORE USER CONFIRMATION & SECURITY AUTHORIZATION DIALOG */}
+                {restoreTargetLog && (
+                    <Dialog
+                        open={Boolean(restoreTargetLog)}
+                        onClose={() => !restoring && setRestoreTargetLog(null)}
+                        maxWidth="sm"
+                        fullWidth
+                        PaperProps={{
+                            sx: {
+                                bgcolor: '#0b132b',
+                                color: 'white',
+                                borderRadius: 4,
+                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                boxShadow: '0 25px 60px rgba(0,0,0,0.9)',
+                                p: 1
+                            }
+                        }}
+                    >
+                        <DialogTitle>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(245, 158, 11, 0.15)' }}>
+                                    <SettingsBackupRestoreIcon sx={{ color: '#fbbf24', fontSize: 24 }} />
+                                </Box>
+                                <Box>
+                                    <Typography variant="h6" fontWeight={850}>
+                                        Restore User Account
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                                        Re-activate and resume investment plans from today
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </DialogTitle>
+
+                        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.08)', py: 2.5 }}>
+                            {restoreError && (
+                                <Alert severity="error" sx={{ mb: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                    {restoreError}
+                                </Alert>
+                            )}
+
+                            <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 3, mb: 2.5 }}>
+                                <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase' }}>
+                                    Snapshot Details To Restore:
+                                </Typography>
+                                <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+                                    <Grid size={{ xs: 6 }}>
+                                        <Typography variant="caption" sx={{ color: '#64748b' }}>User Name:</Typography>
+                                        <Typography variant="body2" fontWeight={700}>
+                                            {restoreTargetLog.userSnapshot?.firstName} {restoreTargetLog.userSnapshot?.lastName || ''}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={{ xs: 6 }}>
+                                        <Typography variant="caption" sx={{ color: '#64748b' }}>Telegram ID:</Typography>
+                                        <Typography variant="body2" fontWeight={700} sx={{ color: '#60a5fa' }}>
+                                            {restoreTargetLog.userSnapshot?.telegramId}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={{ xs: 6 }}>
+                                        <Typography variant="caption" sx={{ color: '#64748b' }}>Trade Power:</Typography>
+                                        <Typography variant="body2" fontWeight={800} sx={{ color: '#4ade80' }}>
+                                            ${(restoreTargetLog.userSnapshot?.tradePower || 0).toLocaleString()} USDT
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={{ xs: 6 }}>
+                                        <Typography variant="caption" sx={{ color: '#64748b' }}>Wallet Balance:</Typography>
+                                        <Typography variant="body2" fontWeight={700}>
+                                            ${restoreTargetLog.userSnapshot?.walletBalance?.toFixed(3)} USDT
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={{ xs: 12 }}>
+                                        <Typography variant="caption" sx={{ color: '#64748b' }}>Active Plans Resuming:</Typography>
+                                        <Typography variant="body2" fontWeight={700} sx={{ color: '#38bdf8' }}>
+                                            {restoreTargetLog.userSnapshot?.activePlansCount || 0} active plan(s) will resume their remaining days starting today.
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                            </Paper>
+
+                            <Typography variant="body2" sx={{ color: '#cbd5e1', mb: 2, fontSize: '0.85rem' }}>
+                                To confirm this restoration, enter an authorized executive security password (e.g. <b>TradeEdge002</b> or <b>999Tradeedge</b>):
+                            </Typography>
+
+                            <TextField
+                                fullWidth
+                                label="Security Authorization Password"
+                                type={showRestorePassword ? 'text' : 'password'}
+                                value={restorePassword}
+                                onChange={(e) => setRestorePassword(e.target.value)}
+                                placeholder="Enter TradeEdge002 or 999Tradeedge"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={() => setShowRestorePassword(!showRestorePassword)} edge="end" sx={{ color: '#94a3b8' }}>
+                                                {showRestorePassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                                sx={{
+                                    bgcolor: 'rgba(0,0,0,0.3)',
+                                    borderRadius: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        color: 'white',
+                                        '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
+                                        '&:hover fieldset': { borderColor: '#fbbf24' },
+                                        '&.Mui-focused fieldset': { borderColor: '#fbbf24' }
+                                    },
+                                    '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                    '& .MuiInputLabel-root.Mui-focused': { color: '#fbbf24' }
+                                }}
+                            />
+                        </DialogContent>
+
+                        <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => setRestoreTargetLog(null)}
+                                disabled={restoring}
+                                sx={{ color: '#94a3b8', borderColor: 'rgba(255,255,255,0.15)', borderRadius: 2 }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleRestoreUser}
+                                disabled={restoring || !restorePassword.trim()}
+                                startIcon={restoring ? <CircularProgress size={16} color="inherit" /> : <SettingsBackupRestoreIcon />}
+                                sx={{
+                                    bgcolor: '#f59e0b',
+                                    color: '#000',
+                                    fontWeight: 800,
+                                    borderRadius: 2,
+                                    px: 3,
+                                    '&:hover': { bgcolor: '#d97706' },
+                                    '&.Mui-disabled': { bgcolor: 'rgba(245, 158, 11, 0.3)', color: 'rgba(0,0,0,0.4)' }
+                                }}
+                            >
+                                {restoring ? 'Restoring...' : 'Confirm & Restore User'}
                             </Button>
                         </DialogActions>
                     </Dialog>

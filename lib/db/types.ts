@@ -22,6 +22,7 @@ export interface UserDocument {
     totalDownlineCount: number; // Unlimited tiers sum
     totalEarnings: number;
     tradePower: number;
+    downlineTradePower?: number;
     lastIp?: string;
     lastWithdrawalAddress?: string;
     lastWithdrawalAt?: Date;
@@ -198,6 +199,43 @@ export interface MilestoneAwardDocument {
 // ===========================================
 // DELETION LOG DOCUMENT
 // ===========================================
+export interface ActivePlanSnapshotItem {
+    _id?: ObjectId;
+    planId: ObjectId;
+    planName?: string;
+    amount: number;
+    startDate: Date;
+    endDate: Date;
+    isReinvest: boolean;
+    totalRoiPaid: number;
+    lastRoiDate?: Date;
+    completedRoiDays: number;
+    remainingDurationDays: number;
+    totalDurationDays: number;
+    dailyRoiRate: number;
+}
+
+export interface PendingWithdrawalSnapshotItem {
+    _id: ObjectId;
+    amount: number;
+    fee: number;
+    netAmount: number;
+    walletAddress: string;
+    network: string;
+    createdAt: Date;
+}
+
+export interface CompletedWithdrawalSnapshotItem {
+    _id: ObjectId;
+    amount: number;
+    fee: number;
+    netAmount: number;
+    walletAddress: string;
+    network: string;
+    processedAt?: Date;
+    createdAt: Date;
+}
+
 export interface DeletionLogDocument {
     _id?: ObjectId;
     deletedUserId: ObjectId;
@@ -208,9 +246,19 @@ export interface DeletionLogDocument {
         lastName?: string;
         referralCode: string;
         tradePower: number;
+        downlineTradePower?: number;
         totalReinvested: number;
         walletBalance: number;
         referralWalletBalance: number;
+        walletDetails?: {
+            balance: number;
+            totalWithdrawn?: number;
+            totalDeposited?: number;
+        };
+        referralWalletDetails?: {
+            balance: number;
+            totalEarned?: number;
+        };
         withdrawals: {
             totalCompletedAmount: number;
             totalCompletedCount: number;
@@ -219,6 +267,7 @@ export interface DeletionLogDocument {
         };
         referral: {
             referredById?: ObjectId | null;
+            ancestors?: ObjectId[];
             referrerName?: string;
             referrerTelegramId?: string;
             directReferralCount: number;
@@ -226,6 +275,9 @@ export interface DeletionLogDocument {
         };
         activePlansCount: number;
         totalPlansCount: number;
+        activePlansSnapshot: ActivePlanSnapshotItem[];
+        pendingWithdrawalsSnapshot: PendingWithdrawalSnapshotItem[];
+        completedWithdrawalsSnapshot?: CompletedWithdrawalSnapshotItem[];
         userCreatedAt: Date;
     };
     deletedBy: {
@@ -243,4 +295,17 @@ export interface DeletionLogDocument {
     device?: string;
     deletedAt: Date;
     deletionType: 'PERMANENT' | 'SOFT';
+    isRestored?: boolean;
+    restoredAt?: Date;
+    restoredBy?: {
+        adminId: ObjectId | string;
+        email?: string;
+        name?: string;
+        role?: string;
+    };
+    restoredByPassword?: {
+        personName: string;
+        passwordKey: string;
+    };
+    restorationNotes?: string;
 }
