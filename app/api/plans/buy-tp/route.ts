@@ -12,9 +12,10 @@ import type { ApiResponse, PaymentTicket } from '@/types';
 import { ObjectId } from 'mongodb';
 import { remoteLog } from '@/lib/logger';
 import { pusherServer } from '@/lib/pusher';
+import { PLAN_CONFIG } from '@/lib/constants';
 
 const BEP20_ADDRESS = process.env.PAYMENT_BEP20_ADDRESS || '';
-const MIN_DEPOSIT = 10; // Minimum 10 USDT
+const MIN_DEPOSIT = PLAN_CONFIG.MIN_INVESTMENT;
 
 /**
  * POST /api/plans/buy-tp

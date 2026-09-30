@@ -42,7 +42,7 @@
     "_id": "6a106546104a98deb9193c8b",
     "name": "Beginner",
     "description": null,
-    "minAmount": 10,
+    "minAmount": 100,
     "maxAmount": 1000,
     "dailyRoi": 0.4,
     "duration": 500,

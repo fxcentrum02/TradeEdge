@@ -1,11 +1,25 @@
-import { createAdmin, findAdminByEmail } from '../lib/repositories/admin.repository';
+import fs from 'fs';
+import path from 'path';
 import bcrypt from 'bcryptjs';
+import { createAdmin, findAdminByEmail } from '../lib/repositories/admin.repository';
 
 async function seed() {
     console.log('--- Admin Seed Script ---');
     try {
-        const email = 'admin@example.com';
-        const passwordStr = process.argv[2] || 'Admin123!';
+        const envPath = path.join(process.cwd(), '.env');
+        if (fs.existsSync(envPath)) {
+            const envFile = fs.readFileSync(envPath, 'utf8');
+            envFile.split('\n').forEach(line => {
+                const idx = line.indexOf('=');
+                if (idx > 0) {
+                    const k = line.slice(0, idx).trim();
+                    const v = line.slice(idx + 1).trim().replace(/^['"]|['"]$/g, '');
+                    if (k) process.env[k] = v;
+                }
+            });
+        }
+        const email = 'admin@tradeedge.io';
+        const passwordStr = process.argv[2] || 'TradeEdge#2026!Admin';
 
         const existingAdmin = await findAdminByEmail(email);
 

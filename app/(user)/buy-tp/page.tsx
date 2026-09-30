@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
 import type { Plan, PaymentTicket } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { PLAN_CONFIG } from '@/lib/constants';
 
 export default function BuyMiningPowerPage() {
     const router = useRouter();
@@ -56,7 +57,7 @@ export default function BuyMiningPowerPage() {
     // Look up matching plan tier as user types amount
     useEffect(() => {
         const numAmount = parseFloat(amount);
-        if (isNaN(numAmount) || numAmount < 10) {
+        if (isNaN(numAmount) || numAmount < PLAN_CONFIG.MIN_INVESTMENT) {
             setMatchedPlan(null);
             return;
         }
@@ -85,7 +86,7 @@ export default function BuyMiningPowerPage() {
     }, [amount]);
 
     const numAmount = parseFloat(amount);
-    const isValidAmount = !isNaN(numAmount) && numAmount >= 10;
+    const isValidAmount = !isNaN(numAmount) && numAmount >= PLAN_CONFIG.MIN_INVESTMENT;
     const dailyEarning = matchedPlan ? (numAmount * matchedPlan.dailyRoi) / 100 : 0;
     const totalEarning = matchedPlan ? dailyEarning * matchedPlan.duration : 0;
 
@@ -98,7 +99,7 @@ export default function BuyMiningPowerPage() {
     const handleProceedToPayment = () => {
         setError('');
         if (!isValidAmount) {
-            setError('Please enter a valid amount (minimum 10 USDT)');
+            setError(`Please enter a valid amount (minimum ${PLAN_CONFIG.MIN_INVESTMENT} USDT)`);
             return;
         }
         if (!matchedPlan) {
@@ -180,7 +181,7 @@ export default function BuyMiningPowerPage() {
                                 Enter Investment Amount (USDT)
                             </Typography>
                             <Typography variant="body2" color="#94a3b8" sx={{ mb: 2 }}>
-                                Minimum: 10 USDT. Payment via BEP20 network.
+                                Minimum: {PLAN_CONFIG.MIN_INVESTMENT} USDT. Payment via BEP20 network.
                             </Typography>
 
                             <TextField
@@ -189,7 +190,7 @@ export default function BuyMiningPowerPage() {
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 type="number"
-                                inputProps={{ min: 10, step: 1 }}
+                                inputProps={{ min: PLAN_CONFIG.MIN_INVESTMENT, step: 1 }}
                                 placeholder="e.g. 100"
                                 sx={{
                                     mb: 2,
@@ -269,7 +270,7 @@ export default function BuyMiningPowerPage() {
                             )}
 
                             {!isValidAmount && amount && (
-                                <Alert severity="error" sx={{ mt: 1 }}>Minimum investment is 10 USDT</Alert>
+                                <Alert severity="error" sx={{ mt: 1 }}>Minimum investment is {PLAN_CONFIG.MIN_INVESTMENT} USDT</Alert>
                             )}
                         </CardContent>
                     </Card>

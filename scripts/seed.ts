@@ -30,8 +30,8 @@ async function seed() {
         {
             name: 'Starter Plan',
             description: 'Perfect for beginners to start earning',
-            minAmount: 10,
-            maxAmount: 100,
+            minAmount: 100,
+            maxAmount: 500,
             dailyRoi: 5.5,
             duration: 30,
             isActive: true,
